@@ -26,6 +26,11 @@ public struct RGBA: Equatable, Sendable {
         blue = Double((value >> 8) & 0xff) / 255
         alpha = Double(value & 0xff) / 255
     }
+
+    /// The same color, fully opaque. For Reduce Transparency.
+    public var opaque: RGBA {
+        RGBA(red: red, green: green, blue: blue)
+    }
 }
 
 /// The tokens every theme sets. Views only read these, so a theme is just a set of values.

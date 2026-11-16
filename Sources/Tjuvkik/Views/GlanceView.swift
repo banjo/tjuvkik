@@ -86,7 +86,8 @@ private struct TileView: View {
                     RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Color(theme.panel))
                 }
             } else {
-                RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Color(theme.panel).opacity(1))
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(Color(reduceTransparency ? theme.panel.opaque : theme.panel))
             }
         }
         .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color(theme.line)))
