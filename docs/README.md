@@ -8,6 +8,7 @@ Hold fn to glance at your agents, pull requests and anything else you plug in. L
 4. [Script output](script-output.md): the JSON a script panel prints.
 5. [Themes](themes.md): colors, blur and corner radius.
 6. [Sync and share](sync.md): dotfiles, export and import.
+7. [Command line](cli.md): `tjuvkik validate`, `run`, `preview`, `new` and `schema`.
 
 Everything lives in `~/.config/tjuvkik/`:
 

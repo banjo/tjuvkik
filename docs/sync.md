@@ -14,6 +14,14 @@ Tjuvkik follows links and reloads when linked files change. Ignore `schemas/`, w
 .config/tjuvkik/schemas/
 ```
 
+Check the folder before committing, or in CI on a Mac:
+
+```sh
+tjuvkik validate --config ~/dotfiles/.config/tjuvkik
+```
+
+It exits 1 on errors. See [Command line](cli.md).
+
 ## Export and import
 
 From the menu bar menu:

@@ -56,6 +56,8 @@ A run fails if it exits with a non-zero status, times out, or a script prints in
 
 A stream that exits is restarted after 1 second, then after up to 30 seconds if it keeps exiting.
 
+`tjuvkik run <panel>` runs a panel once from a terminal, the same way, and prints the error. See [Command line](cli.md).
+
 ## Environment
 
 Commands get your login shell's PATH, so tools from Homebrew, mise and the like are found. `TJUVKIK_PANEL` is the panel's name.
