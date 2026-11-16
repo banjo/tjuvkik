@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
     private var terminationSignal: (any DispatchSourceSignal)?
+    private var launchAtLoginError: String?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         apply(store.config)
         glance.onShow = { [panels] in panels.refreshDue() }
         updateIcon()
+        observeMenuBarPanel()
 
         trigger.onShow = { [glance] in glance.show() }
         trigger.onHide = { [glance] in glance.hide() }
@@ -49,6 +51,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func apply(_ config: Config) {
         trigger.holdDuration = .milliseconds(config.holdMilliseconds)
         panels.update(config.tiles)
+        launchAtLoginError = LaunchAtLogin.apply(config.launchAtLogin)
+        updateIcon()
+    }
+
+    /// The `menuBar` panel's summary, when it has one.
+    private var menuBarSummary: [RowsContent.Chip] {
+        guard let name = store.config.menuBar, case .rows(let rows)? = panels.states[name]?.content else { return [] }
+        return rows.summary ?? []
+    }
+
+    private func observeMenuBarPanel() {
+        withObservationTracking {
+            _ = menuBarSummary
+        } onChange: {
+            Task { @MainActor in
+                self.updateIcon()
+                self.observeMenuBarPanel()
+            }
+        }
     }
 
     /// A broken config shows as a warning sign in the menu bar until it's fixed.
@@ -63,11 +84,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// The grid, or a warning sign while the config is broken. With a `menuBar` panel, its first
+    /// summary chip replaces the grid: "❓ 2".
     private func updateIcon() {
-        let name = store.errors.isEmpty ? "square.grid.2x2" : "exclamationmark.triangle"
-        let icon = NSImage(systemSymbolName: name, accessibilityDescription: "Tjuvkik")
+        guard let button = statusItem?.button else { return }
+        let chip = menuBarSummary.first
+        let title = chip.map { [$0.icon, $0.value].compactMap { $0 }.joined(separator: " ") } ?? ""
+        let symbol: String? = !store.errors.isEmpty ? "exclamationmark.triangle" : (title.isEmpty ? "square.grid.2x2" : nil)
+        let icon = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: "Tjuvkik") }
         icon?.isTemplate = true
-        statusItem?.button?.image = icon
+        button.image = icon
+        button.imagePosition = .imageLeading
+        button.title = title
     }
 
     private func startTrigger() {
@@ -85,6 +113,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        let summary = menuBarSummary
+        if !summary.isEmpty {
+            let text = summary.map { [$0.icon, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
+            menu.addItem(disabled: text)
+            menu.addItem(.separator())
+        }
         if trigger.isRunning {
             menu.addItem(disabled: "Hold fn to glance")
         } else {
@@ -102,6 +136,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for issue in store.warnings.prefix(8) { menu.addItem(disabled: issue.description, symbol: "exclamationmark.triangle") }
         }
 
+        if LaunchAtLogin.needsApproval {
+            menu.addItem(.separator())
+            menu.addItem(disabled: "Launch at login is waiting for your approval")
+            menu.addItem(action: "Open Login Items…", target: self, #selector(openLoginItems))
+        } else if let launchAtLoginError {
+            menu.addItem(.separator())
+            menu.addItem(disabled: launchAtLoginError, symbol: "exclamationmark.triangle")
+        }
+
         menu.addItem(.separator())
         menu.addItem(action: "Open Config", target: self, #selector(openConfig), key: ",")
         menu.addItem(action: "Show Config Folder", target: self, #selector(showConfigFolder))
@@ -115,6 +158,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openInputMonitoring() {
         InputMonitoring.openSettings()
+    }
+
+    @objc private func openLoginItems() {
+        LaunchAtLogin.openSettings()
     }
 
     @objc private func openConfig() {
