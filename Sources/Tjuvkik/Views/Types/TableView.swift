@@ -21,7 +21,8 @@ struct TableView: View {
             let shown = visible(in: proxy.size.width)
             let widths = TableLayout.widths(
                 shares: shown.map { content.columns[$0].width },
-                available: max(proxy.size.width - Self.spacing * CGFloat(max(shown.count - 1, 0)), 0)
+                available: max(proxy.size.width - Self.spacing * CGFloat(max(shown.count - 1, 0)), 0),
+                needed: shown.map { Double(needed($0)) }
             ).map { CGFloat($0) }
             VStack(alignment: .leading, spacing: 0) {
                 header(shown, widths)
