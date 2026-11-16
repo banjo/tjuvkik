@@ -30,6 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         observeErrors()
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        panels.stopAll()
+    }
+
     private func apply(_ config: Config) {
         trigger.holdDuration = .milliseconds(config.holdMilliseconds)
         panels.update(config.tiles)
