@@ -8,7 +8,7 @@
   "view": "bento",
   "layout": "framed",
   "theme": "dark-glass",
-  "trigger": { "holdMs": 250 },
+  "trigger": { "key": "fn", "mode": "hold", "holdMs": 250 },
   "launchAtLogin": true,
   "menuBar": null,
   "panels": [
@@ -26,10 +26,31 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `view` | `"bento"` | Only `bento` for now. |
 | `layout` | `"framed"` | Only `framed` for now. |
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. See [Themes](themes.md). |
-| `trigger.holdMs` | `250` | How long to hold fn before the glance opens, 50–2000. |
+| `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
 | `menuBar` | none | Panels from `panels` to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `panels` | `[]` | Which panels to show, in order. |
+
+## Trigger
+
+Hold a modifier key on its own:
+
+```jsonc
+"trigger": { "key": "fn", "holdMs": 250 }
+```
+
+Or press a shortcut:
+
+```jsonc
+"trigger": { "shortcut": "⌃⌥Space" }
+```
+
+- `key`: `fn`, `rightOption`, `rightCommand`, `rightControl` or `rightShift`. Pressed with another key or modifier, it doesn't open the glance, so fn+arrows and ⌥+letters still work. Needs Input Monitoring.
+- `shortcut`: `"⌃⌥Space"`, `"ctrl+option+space"`, `"cmd+shift+g"`. It needs ⌃, ⌥ or ⌘, except F1–F20, which work alone. Keys are named by their place on a US keyboard. Tjuvkik takes the shortcut from other apps, and needs no permission for it. If another app already has it, the menu says so.
+- `mode`: `hold` shows the glance while you hold, `toggle` shows it on a tap or press and hides it on the next one or Esc. A key holds by default, a shortcut toggles.
+- `holdMs`: how long to hold before the glance shows, 50–2000. Default 250. Only with `hold`.
+
+Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks it on press. To use it, map it to F18 (with [hidutil](https://developer.apple.com/library/archive/technotes/tn2450/) or Karabiner-Elements) and set `"shortcut": "F18"`.
 
 ## Panels
 
