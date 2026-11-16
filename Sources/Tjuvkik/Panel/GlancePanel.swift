@@ -34,8 +34,8 @@ final class GlanceController {
     private let model = GlanceModel()
     private var hideGeneration = 0
 
-    init() {
-        panel.contentView = NSHostingView(rootView: GlanceView(model: model))
+    init(store: ConfigStore) {
+        panel.contentView = NSHostingView(rootView: GlanceView(model: model, store: store))
     }
 
     func show() {
