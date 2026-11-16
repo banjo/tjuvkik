@@ -23,6 +23,16 @@ rm -rf "$dest"
 cp -R "$app" "$dest"
 echo "Installed $dest"
 
+# The command line tool is the app's own binary.
+bindir="$HOME/.local/bin"
+mkdir -p "$bindir"
+ln -sf "$dest/Contents/MacOS/Tjuvkik" "$bindir/tjuvkik"
+echo "Linked $bindir/tjuvkik"
+case ":$PATH:" in
+  *":$bindir:"*) ;;
+  *) echo "Add $bindir to your PATH to run tjuvkik" ;;
+esac
+
 if [ "${1:-}" = "--open" ]; then
   open "$dest"
 fi

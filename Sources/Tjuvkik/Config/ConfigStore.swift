@@ -22,9 +22,14 @@ final class ConfigStore {
     }
 
     init() {
+        directory = Self.defaultDirectory
+    }
+
+    /// `$XDG_CONFIG_HOME/tjuvkik`, or `~/.config/tjuvkik`.
+    nonisolated static var defaultDirectory: URL {
         let base = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"].map { URL(fileURLWithPath: $0) }
             ?? FileManager.default.homeDirectoryForCurrentUser.appending(path: ".config")
-        directory = base.appending(path: "tjuvkik")
+        return base.appending(path: "tjuvkik")
     }
 
     func start() {
