@@ -81,7 +81,7 @@ public struct ChecklistContent: Equatable, Sendable, Decodable {
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        items = try container.decode([Item].self, forKey: .items)
+        items = try container.decodeOneOrMany(Item.self, forKey: .items)
         foldDone = try container.decodeIfPresent(Bool.self, forKey: .foldDone) ?? false
         caption = try container.decodeTextIfPresent(forKey: .caption)
         extras = try PanelExtras(from: decoder)

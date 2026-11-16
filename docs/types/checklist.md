@@ -29,7 +29,7 @@ Steps that don't fit are cut, never scrolled.
 
 | Field | |
 |---|---|
-| `items` | Required. Steps and sections, in order. |
+| `items` | Required. Steps and sections, in order. A single step works without an array. |
 | `caption` | Next to the count, like `steps · release Thu 14:00`. |
 | `foldDone` | `true` hides done and skipped steps in an `l` tile. Off by default. |
 
