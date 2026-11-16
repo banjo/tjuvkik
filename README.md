@@ -22,20 +22,36 @@ Hold fn for a moment to glance; let go to close. fn together with another key (f
 
 ## Config
 
-`~/.config/tjuvkik/config.json` is written on first run and reloaded when you save it. It allows comments and trailing commas, and `config.schema.json` next to it gives completion in editors that read `$schema`. If an edit breaks it, Tjuvkik keeps the last good config and lists the errors in the menu bar menu.
+Everything is in `~/.config/tjuvkik/`, so you can keep it in your dotfiles:
 
-```jsonc
-{
-  "theme": "dracula", // "dark-glass", "light-glass", "dracula", or your own
-  "themes": { "mine": { "extends": "dracula", "accent": "#ff79c6" } },
-  "tiles": [
-    { "module": "agents", "size": "xl" },
-    { "type": "cli", "title": "Disk", "size": "m", "every": "5m", "command": "df -h /" },
-  ],
-}
+```
+config.json               theme, fn, and which panels go where
+panels/<name>/panel.json  what a panel shows; its command runs in that folder
+themes/<name>.json        your own themes
 ```
 
-Tiles fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3.
+The defaults are written on first run, and every file is reloaded within a second of saving. Comments and trailing commas are fine, and the `$schema` keys give completion in editors that read them. If an edit breaks something, Tjuvkik keeps the last good config and lists the errors in the menu bar menu.
+
+```jsonc
+// config.json
+{
+  "theme": "mine",
+  "panels": [
+    { "panel": "agents", "size": "xl" },
+    { "panel": "pods", "size": "m" },
+  ],
+}
+
+// panels/pods/panel.json
+{ "type": "cli", "title": "Pods", "command": "kubectl get pods", "every": "30s" }
+
+// themes/mine.json
+{ "extends": "dracula", "accent": "#ff79c6" }
+```
+
+Panels fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3; a size in `config.json` wins over the panel's own.
+
+The menu bar menu can also export the folder as a zip and import one. Importing checks the zip first and backs up your current config to `~/Library/Application Support/Tjuvkik/Backups/`.
 
 ## Development
 

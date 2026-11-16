@@ -9,7 +9,7 @@ In v1:
 - Hold fn: show the Framed Bento glance. Release: hide it. fn together with another key (fn+arrows, fn+F-keys) cancels.
 - Passive: no keyboard capture, no clicks (the panel ignores the mouse).
 - Modules: **agents** (native, from agent-watcher), **script** (a command printing rows as JSON), **cli** (a command's plain text output).
-- Config in `~/.config/tjuvkik/config.json` (JSON with comments), reloaded when saved.
+- Config in `~/.config/tjuvkik/` (JSON with comments): `config.json`, a folder per panel, a file per theme. Reloaded when saved, syncable with dotfiles, exportable as a zip.
 - Themes: Dark glass, Light glass, Dracula, plus custom themes in the config.
 - Menu bar icon with the most urgent agent icon and count; menu with Open config, Reload, Launch at login, Quit.
 - Launch at login.
@@ -39,37 +39,46 @@ Later, not in v1, but the code leaves room for them:
 
 ## Config
 
-`$XDG_CONFIG_HOME/tjuvkik/config.json`, defaulting to `~/.config/tjuvkik/config.json`. It is written with defaults on first run. The app keeps `config.schema.json` (from `schema/` in the repo) next to it, so `"$schema": "./config.schema.json"` gives editor completion; the repo is private, so a GitHub URL wouldn't resolve.
+Everything lives in one folder, `$XDG_CONFIG_HOME/tjuvkik/` (default `~/.config/tjuvkik/`), so it can be kept in dotfiles and stowed:
 
-```jsonc
-{
-  "$schema": "./config.schema.json",
-  "view": "bento",          // "spotlight" later
-  "layout": "framed",       // "fullscreen", "edges" later
-  "theme": "dark-glass",    // "light-glass", "dracula", or a key in "themes"
-  "trigger": { "holdMs": 250 },
-  "launchAtLogin": true,
-  "themes": {
-    "mine": { "extends": "dracula", "accent": "#ff79c6" }
-  },
-  "tiles": [
-    { "module": "agents", "size": "xl" },
-    {
-      "type": "script", "title": "GitHub", "size": "s", "every": "5m",
-      "command": "~/.config/tjuvkik/modules/github.sh"
-    },
-    {
-      "type": "cli", "title": "Pods", "size": "m", "every": "30s",
-      "command": "kubectl get pods -n logbook-qa"
-    }
-  ]
-}
+```
+config.json               theme, fn, and which panels go where, in order, at what size
+panels/<name>/panel.json  what a panel is: type, title, command, interval, default size
+panels/<name>/*.sh        its scripts; commands run in the panel's folder
+themes/<name>.json        custom themes
+schemas/                  written by the app, for editor completion through "$schema"
 ```
 
-- Tile sizes on the 4×3 grid: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3. Tiles that don't fit are left out and reported.
+```jsonc
+// config.json
+{
+  "$schema": "./schemas/config.schema.json",
+  "view": "bento",          // "spotlight" later
+  "layout": "framed",       // "fullscreen", "edges" later
+  "theme": "dark-glass",    // "light-glass", "dracula", or a file in themes/
+  "trigger": { "holdMs": 250 },
+  "launchAtLogin": true,
+  "panels": [
+    { "panel": "agents", "size": "xl" },   // built in, no folder
+    { "panel": "github" },                 // the panel's own size
+    { "panel": "pods", "size": "m" }       // overrides it
+  ]
+}
+
+// panels/pods/panel.json
+{ "type": "cli", "title": "Pods", "command": "kubectl get pods -n logbook-qa", "every": "30s", "size": "m" }
+
+// themes/mine.json
+{ "extends": "dracula", "accent": "#ff79c6" }
+```
+
+- The default files are written on first run; existing files are never overwritten.
+- Sizes on the 4×3 grid: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3. Panels that don't fit are left out with a warning.
 - `every`: `30s`, `5m`, `1h`. Minimum 5s.
-- Invalid config: keep the last good one and show the error in the menu (file, path in the JSON, message).
+- Reload: the app compares the files' modification dates once a second, following symlinks, so it works whether stow links the folder or single files.
+- Invalid config: keep the last good one and show the errors in the menu (file, path in the JSON, message).
 - Values not available in v1 (`"view": "spotlight"`) fall back to the default with a warning, so configs written for later versions still load.
+- Export/Import in the menu: a zip of the folder (without `schemas/`, symlinks followed). Import checks the zip's config first, backs up the current one to `~/Library/Application Support/Tjuvkik/Backups/`, and replaces the folder's contents (not the folder, so a stow link survives).
 
 ### Script module output
 
@@ -113,7 +122,7 @@ Sources/
 Tests/TjuvkikCoreTests/
 schema/config.schema.json
 scripts/bundle.sh          build, assemble Tjuvkik.app, sign, install to ~/Applications
-examples/modules/          github.sh (gh), example cli tiles
+examples/panels/           github/ (gh script panel), example cli panels
 design/prototype.html
 ```
 
@@ -151,7 +160,7 @@ Done when holding fn shows a placeholder panel over any app and Space, letting g
 4. Themes: tokens for panel color, blur on/off, well, ink, text levels, line, tones, corner radius. Built-ins: Dark glass, Light glass, Dracula. Custom themes `extends` one and override tokens.
 5. JSON Schema and unit tests: JSON5 parsing, durations, validation messages, theme resolution.
 
-Done when changing `theme` or `tiles` in the file updates the panel within a second, and a broken edit shows an error in the menu without losing the board.
+Done when changing `theme` or `panels` in the file updates the panel within a second, and a broken edit shows an error in the menu without losing the board.
 
 ## Phase 3: Modules and Bento grid
 
@@ -160,7 +169,7 @@ Done when changing `theme` or `tiles` in the file updates the panel within a sec
 3. `ScriptModule` (decodes the JSON above) and `CLIModule` (text, ANSI stripped, as many lines as fit).
 4. Tile placement on the grid (dense packing is done in Phase 2, `BentoPacking`).
 5. `TileView`: header (title, kind tag, interval or "live", stale marker), then the content renderer: hero, progress bar, rows (icon, title, subtitle, trailing, tone), or monospace text. Rows that don't fit are cut, not scrolled.
-6. Example `examples/modules/github.sh` using `gh` (review requests and your open PRs).
+6. Example panel `examples/panels/github/` (`panel.json` + `github.sh` using `gh`: review requests and your open PRs).
 7. Tests: script output decoding, runner timeout and output cap, layout packing.
 
 Done when the GitHub script tile and a `kubectl`/`git status` CLI tile render and refresh, and a failing command shows its error.
