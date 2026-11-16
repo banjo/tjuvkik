@@ -13,6 +13,13 @@ scripts/bundle.sh --open # build, sign, install to ~/Applications and start
 
 Every build is signed with the same certificate, so macOS keeps its permissions across rebuilds.
 
+Then, once:
+
+1. **Input Monitoring.** Tjuvkik asks on first start. Turn it on in System Settings → Privacy & Security → Input Monitoring. The menu bar icon has a shortcut there until it's granted.
+2. **The 🌐 key.** In System Settings → Keyboard, set "Press 🌐 key to" to "Do nothing". Otherwise a tap switches input source and a double tap starts dictation.
+
+Hold fn for a moment to glance; let go to close. fn together with another key (fn+arrows, fn+F-keys) doesn't open it.
+
 ## Development
 
 ```sh
