@@ -6,6 +6,7 @@ import TjuvkikCore
 struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
+    let panels: PanelStore
 
     private let gap: CGFloat = 10
 
@@ -20,7 +21,7 @@ struct GlanceView: View {
                 if let slot = tile.slot {
                     let width = cell.width * CGFloat(slot.columns) + gap * CGFloat(slot.columns - 1)
                     let height = cell.height * CGFloat(slot.rows) + gap * CGFloat(slot.rows - 1)
-                    TileView(tile: tile, theme: config.theme, index: index, isVisible: model.isVisible)
+                    TileView(tile: tile, state: panels.states[tile.panel], theme: config.theme, index: index, isVisible: model.isVisible)
                         .frame(width: width, height: height)
                         .position(
                             x: (cell.width + gap) * CGFloat(slot.column) + width / 2,
@@ -36,6 +37,7 @@ struct GlanceView: View {
 
 private struct TileView: View {
     let tile: Tile
+    let state: PanelStore.State?
     let theme: Theme
     let index: Int
     let isVisible: Bool
@@ -57,11 +59,23 @@ private struct TileView: View {
                     .padding(.vertical, 1)
                     .background(Color(theme.well), in: RoundedRectangle(cornerRadius: 4))
                 Spacer()
-                Text(tile.kind == .agents ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(width: .narrow)))")
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(Color(theme.tertiaryText))
+                if state?.error != nil && state?.content != nil {
+                    Text("stale").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Color(theme.warning))
+                } else {
+                    Text(tile.kind == .agents ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(width: .narrow)))")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Color(theme.tertiaryText))
+                }
             }
-            Spacer()
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .clipped()
+            if let error = state?.error {
+                Text(error)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(Color(theme.error))
+                    .lineLimit(2)
+            }
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -80,5 +94,20 @@ private struct TileView: View {
         .opacity(isVisible ? 1 : 0)
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)
         .animation(.easeOut(duration: 0.22).delay(Double(index) * 0.03), value: isVisible)
+    }
+
+    @ViewBuilder private var content: some View {
+        switch state?.content {
+        case .rows(let rows):
+            RowsView(content: rows, theme: theme)
+        case .text(let text):
+            TextOutputView(text: text, theme: theme)
+        case nil:
+            if tile.kind == .agents {
+                Text("Agents arrive in the next phase").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
+            } else if state?.error == nil {
+                Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
+            }
+        }
     }
 }

@@ -5,8 +5,9 @@ import TjuvkikCore
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let store = ConfigStore()
+    private let panels = PanelStore()
     private let trigger = FnTrigger()
-    private lazy var glance = GlanceController(store: store)
+    private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -18,7 +19,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         store.onChange = { [weak self] config in self?.apply(config) }
         store.start()
+        panels.start()
         apply(store.config)
+        glance.onShow = { [panels] in panels.refreshDue() }
         updateIcon()
 
         trigger.onShow = { [glance] in glance.show() }
@@ -29,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func apply(_ config: Config) {
         trigger.holdDuration = .milliseconds(config.holdMilliseconds)
+        panels.update(config.tiles)
     }
 
     /// A broken config shows as a warning sign in the menu bar until it's fixed.
