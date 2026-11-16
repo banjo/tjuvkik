@@ -164,7 +164,7 @@ Done when holding fn shows a placeholder panel over any app and Space, letting g
 
 Done when changing `theme` or `panels` in the file updates the panel within a second, and a broken edit shows an error in the menu without losing the board.
 
-## Phase 3: Modules and Bento grid
+## Phase 3: Modules and Bento grid (done)
 
 1. `Module` protocol, `ModuleContent`, and a `Scheduler` that refreshes each tile on its interval, and on open when stale.
 2. `CommandRunner`: login-shell PATH, timeout, output cap, exit status, stderr tail.

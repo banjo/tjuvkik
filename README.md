@@ -53,6 +53,25 @@ Panels fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3
 
 The menu bar menu can also export the folder as a zip and import one. Importing checks the zip first and backs up your current config to `~/Library/Application Support/Tjuvkik/Backups/`.
 
+## Panels
+
+A panel is a folder in `panels/` with a `panel.jsonc`. Its command runs with `/bin/sh -c` in that folder, with your login shell's `PATH`, on its interval (`every`, at least `5s`) and with a `timeout`. If a run fails, the tile keeps what it last showed, marks it stale and shows the error.
+
+- **`cli`** shows the command's output as is, color codes removed, as many lines as fit.
+- **`script`** prints JSON, and the tile shows it as rows:
+
+```jsonc
+{
+  "hero": { "value": "2", "label": "reviews requested", "tone": "warning" }, // optional
+  "progress": 0.62,                                                           // optional, 0 to 1
+  "rows": [
+    { "icon": "👀", "title": "Export bookings", "subtitle": "logbook #1284", "trailing": "1h", "tone": "warning" }
+  ]
+}
+```
+
+Everything but `rows` and each row's `title` is optional. `tone` is `normal`, `muted`, `warning`, `error`, `success`, `info` or `accent`; the theme picks the color. See [examples/panels/github](examples/panels/github) for a script panel using `gh`.
+
 ## Development
 
 ```sh
