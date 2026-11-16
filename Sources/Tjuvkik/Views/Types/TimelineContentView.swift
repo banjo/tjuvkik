@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import TjuvkikCore
 
@@ -163,22 +164,23 @@ private struct TimelineStrip: View {
     }
 }
 
-/// Tick labels under the strip: centered on their place, kept inside at the ends.
+/// Tick labels under the strip: centered on their place, moved in where they'd stick out at the ends.
 private struct TimelineAxis: View {
     let ticks: [TimelineContent.Snapshot.Tick]
     let width: CGFloat
     let theme: Theme
 
+    private static let font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             ForEach(Array(ticks.enumerated()), id: \.offset) { _, tick in
-                let alignment: Alignment = tick.position < 0.001 ? .leading : tick.position > 0.999 ? .trailing : .center
+                let label = ceil((tick.label as NSString).size(withAttributes: [.font: Self.font]).width)
                 Text(tick.label)
                     .font(.system(size: 10).monospacedDigit())
                     .foregroundStyle(Color(theme.tertiaryText))
                     .fixedSize()
-                    .frame(width: 0, alignment: alignment)
-                    .offset(x: width * tick.position)
+                    .offset(x: min(max(width * tick.position - label / 2, 0), max(width - label, 0)))
             }
         }
         .frame(width: width, alignment: .topLeading)
