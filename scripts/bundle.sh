@@ -8,8 +8,9 @@ bin=$(swift build -c release --show-bin-path)
 
 app=build/Tjuvkik.app
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp Resources/Info.plist "$app/Contents/"
+cp schema/config.schema.json "$app/Contents/Resources/"
 cp "$bin/Tjuvkik" "$app/Contents/MacOS/"
 
 codesign --force --options runtime --sign "Tjuvkik Dev" "$app"
