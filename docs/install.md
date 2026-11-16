@@ -5,7 +5,7 @@ scripts/create-cert.sh   # once: a self-signed "Tjuvkik Dev" signing certificate
 scripts/bundle.sh --open # build, sign, install to ~/Applications and start
 ```
 
-Needs macOS 15 and the Xcode Command Line Tools. Every build is signed with the same certificate, so macOS keeps the permissions across rebuilds.
+Needs macOS 15 and the Xcode Command Line Tools. It also links the [command line tool](cli.md) to `~/.local/bin/tjuvkik`. Every build is signed with the same certificate, so macOS keeps the permissions across rebuilds.
 
 ## Once
 

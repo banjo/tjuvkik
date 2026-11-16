@@ -19,6 +19,7 @@ Turn on Input Monitoring when asked, then hold fn. Config lives in `~/.config/tj
 - [Script output](docs/script-output.md)
 - [Themes](docs/themes.md)
 - [Sync and share](docs/sync.md)
+- [Command line](docs/cli.md)
 
 ## Development
 
