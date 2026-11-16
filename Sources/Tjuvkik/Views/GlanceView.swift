@@ -105,8 +105,26 @@ private struct TileView: View {
             TextOutputView(text: text, theme: theme)
         case .tail(let text):
             TextOutputView(text: text, tail: true, theme: theme)
-        case .stats(let stats):
-            StatsView(content: stats, size: tile.size, theme: theme)
+        case .chart(let content):
+            ChartView(content: content, size: tile.size, theme: theme)
+        case .meters(let content):
+            MetersView(content: content, size: tile.size, theme: theme)
+        case .grid(let content):
+            GridView(content: content, size: tile.size, theme: theme)
+        case .timeline(let content):
+            TimelineContentView(content: content, size: tile.size, theme: theme)
+        case .stats(let content):
+            StatsView(content: content, size: tile.size, theme: theme)
+        case .markdown(let content):
+            MarkdownView(content: content, size: tile.size, theme: theme)
+        case .keyvalue(let content):
+            KeyValueView(content: content, size: tile.size, theme: theme)
+        case .table(let content):
+            TableView(content: content, size: tile.size, theme: theme)
+        case .feed(let content):
+            FeedView(content: content, size: tile.size, theme: theme)
+        case .checklist(let content):
+            ChecklistView(content: content, size: tile.size, theme: theme)
         case nil:
             if state?.error == nil {
                 Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))

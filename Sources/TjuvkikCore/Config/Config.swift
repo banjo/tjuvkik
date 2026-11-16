@@ -53,6 +53,10 @@ public struct Tile: Equatable, Sendable {
     /// How a script panel's output is drawn, when panel.jsonc's `type` names one. Otherwise the
     /// output's top-level key decides.
     public var content: ContentType?
+    /// How many values a chart panel keeps when its script prints only the current one.
+    public var history: Int?
+    /// A markdown panel's file, read instead of running a command and reloaded when it changes.
+    public var file: URL?
 
     /// What the tile's header calls it: "script", "cli", or the content type.
     public var typeName: String { content?.rawValue ?? kind.rawValue }

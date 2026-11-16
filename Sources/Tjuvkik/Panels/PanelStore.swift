@@ -21,6 +21,10 @@ final class PanelStore {
         fileprivate var restartAt: Date?
         /// A cli stream's latest lines.
         fileprivate var lines: [String] = []
+        /// A chart's values, kept for `history`.
+        fileprivate var history: [Double] = []
+        /// When a file panel's file last changed.
+        fileprivate var fileDate: Date?
     }
 
     /// How many lines a cli stream keeps.
@@ -69,6 +73,10 @@ final class PanelStore {
         let now = Date()
         for tile in tiles {
             guard let state = states[tile.panel], !state.running, !isBlocked(tile) else { continue }
+            if let file = tile.file {
+                read(file, for: tile)
+                continue
+            }
             switch tile.mode {
             case .interval:
                 if let lastRun = state.lastRun, now.timeIntervalSince(lastRun) < tile.every { continue }
@@ -175,6 +183,28 @@ final class PanelStore {
         states[key] = state
     }
 
+    // MARK: File panels
+
+    /// Reads a markdown panel's file when its modification date changes. Checked every second.
+    private func read(_ file: URL, for tile: Tile) {
+        let key = tile.panel
+        let path = (file.path as NSString).abbreviatingWithTildeInPath
+        guard let date = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date else {
+            states[key]?.fileDate = nil
+            states[key]?.error = "can't read \(path)"
+            return
+        }
+        guard date != states[key]?.fileDate else { return }
+        states[key]?.fileDate = date
+        do {
+            states[key]?.content = .markdown(MarkdownContent(markdown: try String(contentsOf: file, encoding: .utf8)))
+            states[key]?.error = nil
+            states[key]?.updated = Date()
+        } catch {
+            states[key]?.error = "can't read \(path): \(error.localizedDescription)"
+        }
+    }
+
     // MARK: Actions
 
     /// Runs a row's command, like the menu's. A failure shows on the panel's tile until it next
@@ -196,7 +226,9 @@ final class PanelStore {
         case .script:
             switch ScriptOutput.content(Data(output.utf8), as: tile.content) {
             case .success(let content):
-                states[key]?.content = content
+                let kept = ChartHistory.apply(to: content, kept: states[key]?.history ?? [], limit: tile.history)
+                states[key]?.content = kept.content
+                states[key]?.history = kept.kept
                 states[key]?.error = nil
                 states[key]?.updated = Date()
             case .failure(let error):
@@ -216,6 +248,6 @@ final class PanelStore {
     }
 
     private static func signature(_ tile: Tile) -> String {
-        "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)"
+        "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)|\(tile.file?.path ?? "")"
     }
 }

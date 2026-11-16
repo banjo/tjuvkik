@@ -119,7 +119,7 @@ struct ConfigLoaderTests {
             #"config.json: panels[0].size: unknown size "huge", expected "s", "m", "l" or "xl""#,
             "panels/pods/panel.json: command: a cli panel needs a command",
             #"panels/pods/panel.json: every: can't read "soon", write it like "30s", "5m" or "1h""#,
-            #"panels/gh/panel.json: type: unknown type "web", expected one of "script", "cli", "stats""#,
+            #"panels/gh/panel.json: type: unknown type "web", expected one of "script", "cli", "chart", "meters", "grid", "timeline", "stats", "markdown", "keyvalue", "table", "feed", "checklist""#,
         ])
     }
 

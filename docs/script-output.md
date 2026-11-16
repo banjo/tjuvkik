@@ -2,7 +2,16 @@
 
 A `script` panel prints JSON to stdout. By default the tile shows it as rows. A top-level key picks another type, drawn its own way at each size:
 
+- [`chart`](types/chart.md): one number and where it's heading.
+- [`meters`](types/meters.md): how full, how far, how close to a limit.
+- [`grid`](types/grid.md): many things at once, a colored cell each, or a heatmap.
+- [`timeline`](types/timeline.md): what's now, what's next, and how long until.
 - [`stats`](types/stats.md): a few numbers, each against its last period.
+- [`markdown`](types/markdown.md): notes, runbooks and answers in Markdown, or a file the panel reads.
+- [`keyvalue`](types/keyvalue.md): exact facts, grouped, with values cut in the middle.
+- [`table`](types/table.md): the same fields for every row, in columns.
+- [`feed`](types/feed.md): who said what, and when, newest first, with unread marked.
+- [`checklist`](types/checklist.md): steps, and what's done, next and stuck.
 
 `summary` and `menuBar` work with every type. Setting `"type"` in [panel.jsonc](panels.md#types) to a type's name, like `"stats"`, makes the panel always read its output as that type.
 

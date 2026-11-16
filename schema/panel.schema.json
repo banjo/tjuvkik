@@ -4,8 +4,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "type",
-    "command"
+    "type"
   ],
   "properties": {
     "$schema": {
@@ -42,7 +41,16 @@
       "enum": [
         "script",
         "cli",
-        "stats"
+        "chart",
+        "meters",
+        "grid",
+        "timeline",
+        "stats",
+        "markdown",
+        "keyvalue",
+        "table",
+        "feed",
+        "checklist"
       ],
       "description": "script prints JSON that the tile draws by its top-level key, rows by default; cli shows the output as is. A content type, like stats, is a script panel drawn as that type."
     },
@@ -93,6 +101,36 @@
       ],
       "description": "Default size; config.json can override it. s 1×1, m 2×1, l 2×2, xl 2×3",
       "default": "s"
+    },
+    "history": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 1000,
+      "description": "For a chart whose script prints only the current value: how many values Tjuvkik keeps as its series."
+    },
+    "file": {
+      "type": "string",
+      "description": "For a markdown panel: a file to show instead of a command's output, reloaded when it changes. ~, an absolute path, or a path in the panel's folder.",
+      "examples": [
+        "~/notes/today.md"
+      ]
     }
+  },
+  "if": {
+    "required": [
+      "file"
+    ]
+  },
+  "then": {
+    "properties": {
+      "type": {
+        "const": "markdown"
+      }
+    }
+  },
+  "else": {
+    "required": [
+      "command"
+    ]
   }
 }
