@@ -119,8 +119,18 @@ struct ConfigLoaderTests {
             #"config.json: panels[0].size: unknown size "huge", expected "s", "m", "l" or "xl""#,
             "panels/pods/panel.json: command: a cli panel needs a command",
             #"panels/pods/panel.json: every: can't read "soon", write it like "30s", "5m" or "1h""#,
-            #"panels/gh/panel.json: type: unknown type "web", expected "script" or "cli""#,
+            #"panels/gh/panel.json: type: unknown type "web", expected one of "script", "cli", "stats""#,
         ])
+    }
+
+    @Test func aContentTypeIsAScriptPanel() throws {
+        let tile = try load([
+            "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+            "panels/x/panel.json": #"{ "type": "stats", "command": "./stats.sh" }"#,
+        ]).config.tiles[0]
+        #expect(tile.kind == .script)
+        #expect(tile.content == .stats)
+        #expect(tile.typeName == "stats")
     }
 
     @Test func intervalHasAMinimum() {

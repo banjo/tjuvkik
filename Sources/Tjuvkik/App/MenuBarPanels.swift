@@ -21,8 +21,7 @@ struct MenuBarPanels {
     init(config: Config, panels: PanelStore) {
         entries = config.menuBar.compactMap { name in
             guard let tile = config.tiles.first(where: { $0.panel == name }),
-                  case .rows(let rows)? = panels.states[name]?.content,
-                  let menuBar = rows.menuBar
+                  let menuBar = panels.states[name]?.content?.menuBar
             else { return nil }
             return Entry(panel: name, title: tile.title, menuBar: menuBar)
         }

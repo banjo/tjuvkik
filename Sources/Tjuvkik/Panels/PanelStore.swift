@@ -118,7 +118,7 @@ final class PanelStore {
                 states[key]?.error = result.failureSummary(timeout: tile.timeout)
                 return
             }
-            show(String(decoding: result.stdout, as: UTF8.self), in: key, kind: tile.kind)
+            show(String(decoding: result.stdout, as: UTF8.self), in: key, tile: tile)
         }
     }
 
@@ -135,7 +135,7 @@ final class PanelStore {
             onLine: { line in
                 Task { @MainActor [weak self] in
                     guard let self, self.states[key]?.signature == signature else { return }
-                    self.receive(line, in: key, kind: tile.kind)
+                    self.receive(line, in: key, tile: tile)
                 }
             },
             onExit: { exit in
@@ -147,11 +147,11 @@ final class PanelStore {
         )
     }
 
-    private func receive(_ line: String, in key: String, kind: Tile.Kind) {
-        switch kind {
+    private func receive(_ line: String, in key: String, tile: Tile) {
+        switch tile.kind {
         case .script:
             guard !line.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-            show(line, in: key, kind: kind)
+            show(line, in: key, tile: tile)
         case .cli:
             var lines = states[key]?.lines ?? []
             lines.append(TerminalText.clean(line))
@@ -191,12 +191,12 @@ final class PanelStore {
 
     // MARK: Shared
 
-    private func show(_ output: String, in key: String, kind: Tile.Kind) {
-        switch kind {
+    private func show(_ output: String, in key: String, tile: Tile) {
+        switch tile.kind {
         case .script:
-            switch ScriptOutput.parse(Data(output.utf8)) {
-            case .success(let rows):
-                states[key]?.content = .rows(rows)
+            switch ScriptOutput.content(Data(output.utf8), as: tile.content) {
+            case .success(let content):
+                states[key]?.content = content
                 states[key]?.error = nil
                 states[key]?.updated = Date()
             case .failure(let error):
@@ -216,6 +216,6 @@ final class PanelStore {
     }
 
     private static func signature(_ tile: Tile) -> String {
-        "\(tile.kind)|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)"
+        "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)"
     }
 }

@@ -41,9 +41,10 @@
     "type": {
       "enum": [
         "script",
-        "cli"
+        "cli",
+        "stats"
       ],
-      "description": "script prints rows as JSON; cli shows the output as is."
+      "description": "script prints JSON that the tile draws by its top-level key, rows by default; cli shows the output as is. A content type, like stats, is a script panel drawn as that type."
     },
     "mode": {
       "enum": [

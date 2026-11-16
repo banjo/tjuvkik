@@ -1,6 +1,14 @@
 # Script output
 
-A `script` panel prints JSON to stdout. Every field:
+A `script` panel prints JSON to stdout. By default the tile shows it as rows. A top-level key picks another type, drawn its own way at each size:
+
+- [`stats`](types/stats.md): a few numbers, each against its last period.
+
+`summary` and `menuBar` work with every type. Setting `"type"` in [panel.jsonc](panels.md#types) to a type's name, like `"stats"`, makes the panel always read its output as that type.
+
+## Rows
+
+Every field:
 
 ```json
 {
