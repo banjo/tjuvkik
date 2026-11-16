@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tjuvkik panel.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "command"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "script",
+        "cli"
+      ],
+      "description": "script prints rows as JSON; cli shows the output as is."
+    },
+    "title": {
+      "type": "string",
+      "description": "Defaults to the folder name."
+    },
+    "command": {
+      "type": "string",
+      "description": "Run with /bin/sh -c in this panel's folder, with your login shell's PATH."
+    },
+    "every": {
+      "type": "string",
+      "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
+      "examples": [
+        "30s",
+        "5m",
+        "1h"
+      ],
+      "default": "60s",
+      "description": "How often to refresh. At least 5s."
+    },
+    "timeout": {
+      "type": "string",
+      "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
+      "examples": [
+        "30s",
+        "5m",
+        "1h"
+      ],
+      "default": "10s",
+      "description": "How long the command may run."
+    },
+    "size": {
+      "enum": [
+        "s",
+        "m",
+        "l",
+        "xl"
+      ],
+      "description": "Default size; config.json can override it. s 1×1, m 2×1, l 2×2, xl 2×3",
+      "default": "s"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tjuvkik theme",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "extends": {
+      "type": "string",
+      "default": "dark-glass",
+      "description": "The theme to start from: a built-in or another file in themes/.",
+      "examples": [
+        "dark-glass",
+        "light-glass",
+        "dracula"
+      ]
+    },
+    "appearance": {
+      "enum": [
+        "dark",
+        "light"
+      ]
+    },
+    "blur": {
+      "type": "boolean",
+      "description": "Blur what's behind the tiles."
+    },
+    "radius": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 40
+    },
+    "panel": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Tile background (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "well": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Inset backgrounds (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "text": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Primary text (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "secondaryText": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Secondary text (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "tertiaryText": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Faint text (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "line": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Borders and dividers (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "warning": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Needs you (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "error": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Failed (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "success": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Done, passing (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "info": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Informational (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "accent": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "Working, highlights (#rgb, #rrggbb or #rrggbbaa)"
+    }
+  }
+}

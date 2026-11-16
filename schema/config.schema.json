@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Tjuvkik config",
+  "title": "Tjuvkik config.json",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "$schema": {
       "type": "string"
@@ -21,12 +22,12 @@
         "edges"
       ],
       "default": "framed",
-      "description": "How the Bento board sits on screen. Only \"framed\" for now."
+      "description": "How the board sits on screen. Only \"framed\" for now."
     },
     "theme": {
       "type": "string",
       "default": "dark-glass",
-      "description": "\"dark-glass\", \"light-glass\", \"dracula\", or a key in \"themes\".",
+      "description": "\"dark-glass\", \"light-glass\", \"dracula\", or a file in themes/ without \".json\".",
       "examples": [
         "dark-glass",
         "light-glass",
@@ -35,6 +36,7 @@
     },
     "trigger": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "holdMs": {
           "type": "integer",
@@ -43,196 +45,40 @@
           "default": 250,
           "description": "How long to hold fn before the glance shows."
         }
-      },
-      "additionalProperties": false
+      }
     },
     "launchAtLogin": {
       "type": "boolean",
       "default": true
     },
-    "themes": {
-      "type": "object",
-      "description": "Your own themes.",
-      "additionalProperties": {
-        "$ref": "#/$defs/theme"
-      }
-    },
-    "tiles": {
+    "panels": {
       "type": "array",
-      "description": "Tiles fill a 4×3 grid in order.",
+      "description": "Panels fill a 4×3 grid in order.",
       "items": {
-        "$ref": "#/$defs/tile"
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "panel"
+        ],
+        "properties": {
+          "panel": {
+            "type": "string",
+            "description": "\"agents\" (built in), or a folder in panels/.",
+            "examples": [
+              "agents"
+            ]
+          },
+          "size": {
+            "enum": [
+              "s",
+              "m",
+              "l",
+              "xl"
+            ],
+            "description": "Size here; overrides the panel's own. s 1×1, m 2×1, l 2×2, xl 2×3"
+          }
+        }
       }
-    }
-  },
-  "additionalProperties": false,
-  "$defs": {
-    "size": {
-      "enum": [
-        "s",
-        "m",
-        "l",
-        "xl"
-      ],
-      "default": "s",
-      "description": "s 1×1, m 2×1, l 2×2, xl 2×3"
-    },
-    "tile": {
-      "oneOf": [
-        {
-          "type": "object",
-          "title": "Module",
-          "properties": {
-            "module": {
-              "enum": [
-                "agents"
-              ]
-            },
-            "title": {
-              "type": "string"
-            },
-            "size": {
-              "$ref": "#/$defs/size"
-            }
-          },
-          "required": [
-            "module"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "title": "Command",
-          "properties": {
-            "type": {
-              "enum": [
-                "script",
-                "cli"
-              ],
-              "description": "script prints rows as JSON; cli shows the output as is."
-            },
-            "title": {
-              "type": "string"
-            },
-            "size": {
-              "$ref": "#/$defs/size"
-            },
-            "command": {
-              "type": "string",
-              "description": "Run with /bin/sh -c and your login shell's PATH."
-            },
-            "every": {
-              "type": "string",
-              "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
-              "examples": [
-                "30s",
-                "5m",
-                "1h"
-              ],
-              "default": "60s",
-              "description": "How often to refresh. At least 5s."
-            },
-            "timeout": {
-              "type": "string",
-              "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
-              "examples": [
-                "30s",
-                "5m",
-                "1h"
-              ],
-              "default": "10s",
-              "description": "How long the command may run."
-            }
-          },
-          "required": [
-            "type",
-            "title",
-            "command"
-          ],
-          "additionalProperties": false
-        }
-      ]
-    },
-    "theme": {
-      "type": "object",
-      "properties": {
-        "extends": {
-          "type": "string",
-          "default": "dark-glass",
-          "description": "The theme to start from."
-        },
-        "appearance": {
-          "enum": [
-            "dark",
-            "light"
-          ]
-        },
-        "blur": {
-          "type": "boolean",
-          "description": "Blur what's behind the tiles."
-        },
-        "radius": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 40
-        },
-        "panel": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Tile background"
-        },
-        "well": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Inset backgrounds"
-        },
-        "text": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Primary text"
-        },
-        "secondaryText": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Secondary text"
-        },
-        "tertiaryText": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Faint text"
-        },
-        "line": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Borders and dividers"
-        },
-        "warning": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Needs you"
-        },
-        "error": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Failed"
-        },
-        "success": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Done, passing"
-        },
-        "info": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Informational"
-        },
-        "accent": {
-          "type": "string",
-          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-          "description": "Working, highlights"
-        }
-      },
-      "additionalProperties": false
     }
   }
 }
