@@ -53,13 +53,27 @@
       "description": "Start Tjuvkik when you log in."
     },
     "menuBar": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
       ],
-      "description": "A panel in panels whose summary shows in the menu bar, like \"agents\". Its first summary chip is shown.",
+      "description": "Panels in panels shown in the menu bar, in order. Each panel decides what it shows there; by default its first summary count.",
       "examples": [
-        "agents"
+        "agents",
+        [
+          "agents",
+          "github"
+        ]
       ]
     },
     "panels": {

@@ -10,8 +10,18 @@ struct RawConfig: Decodable {
     var theme: String?
     var trigger: RawTrigger?
     var launchAtLogin: Bool?
-    var menuBar: String?
+    var menuBar: OneOrMany?
     var panels: [RawPanelRef]?
+}
+
+/// A string or an array of strings.
+struct OneOrMany: Decodable {
+    var values: [String]
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) { values = [value] } else { values = try container.decode([String].self) }
+    }
 }
 
 struct RawTrigger: Decodable {

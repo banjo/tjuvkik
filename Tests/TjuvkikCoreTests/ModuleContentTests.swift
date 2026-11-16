@@ -19,6 +19,19 @@ struct ScriptOutputTests {
         #expect(content.rows[0].tone == .warning)
     }
 
+    @Test func menuBarDefaultsToTheFirstSummaryChip() throws {
+        let content = try parse(#"{ "summary": [{ "icon": "❓", "value": "2", "label": "waiting" }, { "icon": "⏳", "value": "1" }], "rows": [] }"#).get()
+        #expect(content.menuBar?.title == "❓ 2")
+        #expect(content.menuBar?.menu?.map(\.title) == ["❓ 2 waiting  ·  ⏳ 1"])
+        #expect(try parse(#"{ "rows": [] }"#).get().menuBar == nil)
+    }
+
+    @Test func menuBarSetByThePanel() throws {
+        let content = try parse(#"{ "menuBar": { "icon": "⇡", "text": "3", "tone": "info", "menu": [{ "title": "PR", "url": "https://x" }] }, "summary": [{ "value": "9" }], "rows": [] }"#).get()
+        #expect(content.menuBar == .init(icon: "⇡", text: "3", tone: .info, menu: [.init(title: "PR", url: "https://x")]))
+        #expect(try parse(#"{ "menuBar": null, "summary": [{ "value": "9" }], "rows": [] }"#).get().menuBar == nil)
+    }
+
     @Test func groupsNotesAndSummary() throws {
         let content = try parse("""
         { "summary": [{ "icon": "❓", "value": "2", "label": "waiting", "tone": "warning" }],

@@ -61,11 +61,13 @@ public enum ConfigLoader {
             }
         }
 
-        if let name = raw.menuBar {
+        let menuBar = raw.menuBar?.values ?? []
+        for (index, name) in menuBar.enumerated() {
+            let path = raw.menuBar.map { $0.values.count == 1 ? "menuBar" : "menuBar[\(index)]" } ?? "menuBar"
             if !refs.contains(where: { $0.panel == name }) {
-                files.error(file, "menuBar", "\"\(name)\" isn't in panels")
+                files.error(file, path, "\"\(name)\" isn't in panels")
             } else if let tile = tiles.first(where: { $0.panel == name }), tile.slot == nil {
-                files.warning(file, "menuBar", "\"\(name)\" doesn't fit on the grid, so it doesn't run")
+                files.warning(file, path, "\"\(name)\" doesn't fit on the grid, so it doesn't run")
             }
         }
 
@@ -73,7 +75,7 @@ public enum ConfigLoader {
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
             view: view, layout: layout, themeName: themeName, theme: theme,
-            holdMilliseconds: hold, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: raw.menuBar
+            holdMilliseconds: hold, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }

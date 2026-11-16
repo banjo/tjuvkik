@@ -45,8 +45,49 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         public var group: String?
         /// A line under the row, in the row's tone, for what needs attention.
         public var note: String?
-        /// Not used yet; kept for opening rows from Spotlight.
+        /// Opened when the row is picked in the menu.
         public var url: String?
+
+        public init(icon: String? = nil, title: String, subtitle: String? = nil, trailing: String? = nil, tone: Tone? = nil,
+                    group: String? = nil, note: String? = nil, url: String? = nil) {
+            self.icon = icon
+            self.title = title
+            self.subtitle = subtitle
+            self.trailing = trailing
+            self.tone = tone
+            self.group = group
+            self.note = note
+            self.url = url
+        }
+    }
+
+    /// What the panel shows in the menu bar, when it's picked in `config.jsonc`'s `menuBar`.
+    public struct MenuBar: Equatable, Sendable, Decodable {
+        public var icon: String?
+        public var text: String?
+        public var tone: Tone?
+        /// Rows in the menu, under the panel's title.
+        public var menu: [Row]?
+
+        public init(icon: String? = nil, text: String? = nil, tone: Tone? = nil, menu: [Row]? = nil) {
+            self.icon = icon
+            self.text = text
+            self.tone = tone
+            self.menu = menu
+        }
+
+        /// What goes next to the icon: "❓ 2".
+        public var title: String {
+            [icon, text].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        }
+    }
+
+    public enum MenuBarSetting: Equatable, Sendable {
+        /// Not set: the first summary chip, and the summary in the menu.
+        case automatic
+        /// `null`: nothing.
+        case hidden
+        case custom(MenuBar)
     }
 
     public var hero: Hero?
@@ -54,12 +95,43 @@ public struct RowsContent: Equatable, Sendable, Decodable {
     /// 0 to 1.
     public var progress: Double?
     public var rows: [Row]
+    public var menuBarSetting: MenuBarSetting
 
-    public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row]) {
+    public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row], menuBar: MenuBarSetting = .automatic) {
         self.hero = hero
         self.summary = summary
         self.progress = progress
         self.rows = rows
+        self.menuBarSetting = menuBar
+    }
+
+    private enum CodingKeys: String, CodingKey { case hero, summary, progress, rows, menuBar }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hero = try container.decodeIfPresent(Hero.self, forKey: .hero)
+        summary = try container.decodeIfPresent([Chip].self, forKey: .summary)
+        progress = try container.decodeIfPresent(Double.self, forKey: .progress)
+        rows = try container.decode([Row].self, forKey: .rows)
+        if !container.contains(.menuBar) {
+            menuBarSetting = .automatic
+        } else if try container.decodeNil(forKey: .menuBar) {
+            menuBarSetting = .hidden
+        } else {
+            menuBarSetting = .custom(try container.decode(MenuBar.self, forKey: .menuBar))
+        }
+    }
+
+    /// What the menu bar shows for this panel, or nil for nothing.
+    public var menuBar: MenuBar? {
+        switch menuBarSetting {
+        case .hidden: return nil
+        case .custom(let menuBar): return menuBar
+        case .automatic:
+            guard let summary, let first = summary.first else { return nil }
+            let line = summary.map { [$0.icon, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
+            return MenuBar(icon: first.icon, text: first.value, tone: first.tone, menu: [Row(title: line)])
+        }
     }
 }
 

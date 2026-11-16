@@ -170,9 +170,11 @@ struct ConfigLoaderTests {
         let config = try load([
             "config.json": #"{ "menuBar": "x", "panels": [{ "panel": "x" }] }"#, "panels/x/panel.json": panel,
         ]).config
-        #expect(config.menuBar == "x")
+        #expect(config.menuBar == ["x"])
         #expect(errors(["config.json": #"{ "menuBar": "y", "panels": [{ "panel": "x" }] }"#, "panels/x/panel.json": panel])
             == [#"config.json: menuBar: "y" isn't in panels"#])
+        #expect(errors(["config.json": #"{ "menuBar": ["x", "y"], "panels": [{ "panel": "x" }] }"#, "panels/x/panel.json": panel])
+            == [#"config.json: menuBar[1]: "y" isn't in panels"#])
     }
 
     @Test func holdMsRange() {
