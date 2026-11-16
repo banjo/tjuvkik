@@ -8,6 +8,8 @@ struct ChartView: View {
     let size: TileSize
     let theme: Theme
 
+    @Environment(\.tileBleed) private var bleed
+
     var body: some View {
         switch TileLayout(size) {
         case .s: small
@@ -50,12 +52,15 @@ struct ChartView: View {
 
     // MARK: Sizes
 
-    /// The value and change, the sparkline below them filling the rest.
+    /// The value and change, the sparkline below them filling the rest, out to the tile's edges.
     private var small: some View {
         VStack(alignment: .leading, spacing: 0) {
             value(size: 26)
             if content.delta != nil { delta.padding(.top, 4) }
-            plot(threshold: false, grid: false).padding(.top, 8)
+            plot(threshold: false, grid: false)
+                .padding(.top, 8)
+                .padding(.horizontal, -bleed.horizontal)
+                .padding(.bottom, -bleed.bottom)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

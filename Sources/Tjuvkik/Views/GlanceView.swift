@@ -45,8 +45,13 @@ private struct TileView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
+    private let padding: CGFloat = 12
+
     var body: some View {
         let radius = CGFloat(theme.radius)
+        // Content may draw into the padding at the sides, and at the bottom unless an error is
+        // shown there.
+        let bleed = TileBleed(horizontal: padding, bottom: state?.error == nil ? padding : 0)
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text(tile.title)
@@ -68,8 +73,9 @@ private struct TileView: View {
                 }
             }
             content
+                .environment(\.tileBleed, bleed)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .clipped()
+                .clipShape(BleedClip(bleed: bleed))
             if let error = state?.error {
                 Text(error)
                     .font(.system(size: 10.5))
@@ -77,8 +83,9 @@ private struct TileView: View {
                     .lineLimit(2)
             }
         }
-        .padding(12)
+        .padding(padding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .background {
             if theme.blur && !reduceTransparency {
                 ZStack {
@@ -130,5 +137,19 @@ private struct TileView: View {
                 Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
             }
         }
+    }
+}
+
+/// The content's frame, widened by how far it may bleed into the tile's padding.
+private struct BleedClip: Shape {
+    let bleed: TileBleed
+
+    func path(in rect: CGRect) -> Path {
+        Path(CGRect(
+            x: rect.minX - bleed.horizontal,
+            y: rect.minY,
+            width: rect.width + bleed.horizontal * 2,
+            height: rect.height + bleed.bottom
+        ))
     }
 }

@@ -14,6 +14,24 @@ enum TileLayout {
     }
 }
 
+/// How far content may reach past its frame into the tile's padding, to draw up to the tile's
+/// edge: the s chart's sparkline. The tile clips to its rounded shape.
+struct TileBleed: Equatable {
+    var horizontal: CGFloat = 0
+    var bottom: CGFloat = 0
+}
+
+private struct TileBleedKey: EnvironmentKey {
+    static let defaultValue = TileBleed()
+}
+
+extension EnvironmentValues {
+    var tileBleed: TileBleed {
+        get { self[TileBleedKey.self] }
+        set { self[TileBleedKey.self] = newValue }
+    }
+}
+
 /// A big number with a smaller unit after it: "99.71 %".
 struct ValueText: View {
     let value: String
