@@ -16,4 +16,6 @@ Needs macOS 15 and the Xcode Command Line Tools. It also links the [command line
 
 Hold fn to glance, let go to close. fn with another key (fn+arrows, fn+F-keys) doesn't open it. The glance opens on the screen of the window you're in.
 
+No fn key, or using it for something else? Pick right ⌥, right ⌘ or a shortcut like ⌃⌥Space as the [trigger](config.md#trigger).
+
 On first start Tjuvkik writes a default config to `~/.config/tjuvkik/`. Next: [Config](config.md).
