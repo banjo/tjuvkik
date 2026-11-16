@@ -2,96 +2,122 @@ import Foundation
 import Testing
 @testable import TjuvkikCore
 
-private func load(_ text: String) -> Result<LoadedConfig, ConfigErrors> {
-    ConfigLoader.parse(Data(text.utf8))
-}
-
-private func errors(_ text: String) -> [String] {
-    guard case .failure(let errors) = load(text) else { return [] }
-    return errors.issues.map(\.description)
-}
-
-private func config(_ text: String) throws -> LoadedConfig {
-    try load(text).get()
-}
-
 struct ConfigLoaderTests {
-    @Test func defaultConfigLoadsWithoutWarnings() throws {
-        let loaded = try config(DefaultConfig.text)
+    @Test func defaultFilesLoadWithoutWarnings() throws {
+        let fixture = ConfigFixture([:])
+        try DefaultConfig.write(to: fixture.directory)
+        let loaded = try fixture.load().get()
         #expect(loaded.warnings.isEmpty)
         #expect(loaded.config.theme == .darkGlass)
-        #expect(loaded.config.tiles.map(\.title) == ["Agents", "Disk"])
+        #expect(loaded.config.tiles.map(\.panel) == ["agents", "disk"])
         #expect(loaded.config.tiles[1].kind == .cli(command: "df -h /"))
+        #expect(loaded.config.tiles[1].size == .m)
         #expect(loaded.config.tiles[1].every == 300)
+        #expect(loaded.config.tiles[1].directory?.lastPathComponent == "disk")
     }
 
-    @Test func emptyObjectGetsDefaults() throws {
-        let loaded = try config("{}")
-        #expect(loaded.config.holdMilliseconds == 250)
-        #expect(loaded.config.launchAtLogin)
-        #expect(loaded.config.tiles.map(\.kind) == [.agents])
+    @Test func writingDefaultsKeepsExistingFiles() throws {
+        let fixture = ConfigFixture(["config.json": #"{ "theme": "dracula" }"#])
+        try DefaultConfig.write(to: fixture.directory)
+        #expect(try fixture.load().get().config.theme == .dracula)
+        #expect(FileManager.default.fileExists(atPath: fixture.directory.appending(path: "panels/disk/panel.json").path))
+    }
+
+    @Test func emptyConfigGetsDefaults() throws {
+        let config = try load(["config.json": "{}"]).config
+        #expect(config.holdMilliseconds == 250)
+        #expect(config.launchAtLogin)
+        #expect(config.tiles.map(\.kind) == [.agents])
+        #expect(config.tiles[0].size == .xl)
+    }
+
+    @Test func missingConfigIsAnError() {
+        #expect(errors([:]) == ["config.json: can't read the file"])
     }
 
     @Test func commentsAndTrailingCommas() throws {
-        let loaded = try config("""
+        let config = try load(["config.json": """
         {
           // a comment
           "theme": "dracula", /* another */
-          "tiles": [{ "module": "agents", "size": "l", },],
+          "panels": [{ "panel": "agents", "size": "l", },],
         }
-        """)
-        #expect(loaded.config.theme == .dracula)
-        #expect(loaded.config.tiles[0].size == .l)
+        """]).config
+        #expect(config.theme == .dracula)
+        #expect(config.tiles[0].size == .l)
     }
 
     @Test func laterValuesFallBackWithAWarning() throws {
-        let loaded = try config(#"{ "view": "spotlight", "layout": "edges" }"#)
+        let loaded = try load(["config.json": #"{ "view": "spotlight", "layout": "edges" }"#])
         #expect(loaded.config.view == .bento)
         #expect(loaded.config.layout == .framed)
         #expect(loaded.warnings.map(\.path) == ["view", "layout"])
     }
 
     @Test func syntaxErrorIsReported() {
-        let issues = errors(#"{ "theme": "dracula" "view": "bento" }"#)
+        let issues = errors(["config.json": #"{ "theme": "dracula" "view": "bento" }"#])
         #expect(issues.count == 1)
+        #expect(issues[0].hasPrefix("config.json: "))
     }
 
     @Test func wrongTypeHasAPath() {
-        #expect(errors(#"{ "tiles": [{ "module": "agents", "size": 3 }] }"#) == ["tiles[0].size: expected a string"])
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "agents", "size": 3 }] }"#])
+            == ["config.json: panels[0].size: expected a string"])
     }
 
-    @Test func everyProblemIsReported() {
-        let issues = errors("""
-        { "theme": "nope", "tiles": [
-          { "type": "cli", "title": "Pods", "size": "huge", "every": "soon" },
-          { "module": "weather" },
-        ] }
-        """)
+    @Test func panelSizeInConfigWinsOverThePanels() throws {
+        let config = try load([
+            "config.json": #"{ "panels": [{ "panel": "pods", "size": "l" }, { "panel": "pods" }] }"#,
+            "panels/pods/panel.json": #"{ "type": "cli", "command": "kubectl get pods", "size": "m" }"#,
+        ]).config
+        #expect(config.tiles.map(\.size) == [.l, .m])
+        #expect(config.tiles[0].title == "pods")
+    }
+
+    @Test func unknownPanel() {
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "weather" }] }"#])
+            == [#"config.json: panels[0].panel: no panel "weather": create panels/weather/panel.json, or use a built-in (agents)"#])
+    }
+
+    @Test func panelNamesStayInPanels() {
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "../x" }] }"#])
+            == [#"config.json: panels[0].panel: "../x" isn't a panel name"#])
+    }
+
+    @Test func everyProblemIsReportedWithItsFile() {
+        let issues = errors([
+            "config.json": #"{ "theme": "nope", "panels": [{ "panel": "pods", "size": "huge" }, { "panel": "gh" }] }"#,
+            "panels/pods/panel.json": #"{ "type": "cli", "every": "soon" }"#,
+            "panels/gh/panel.json": #"{ "type": "web", "command": "x" }"#,
+        ])
         #expect(issues == [
-            #"theme: unknown theme "nope", expected one of "dark-glass", "dracula", "light-glass""#,
-            "tiles[0].command: a cli tile needs a command",
-            #"tiles[0].size: unknown size "huge", expected "s", "m", "l" or "xl""#,
-            #"tiles[0].every: can't read "soon", write it like "30s", "5m" or "1h""#,
-            #"tiles[1].module: unknown module "weather", expected "agents""#,
+            #"config.json: theme: unknown theme "nope", expected one of "dark-glass", "dracula", "light-glass""#,
+            #"config.json: panels[0].size: unknown size "huge", expected "s", "m", "l" or "xl""#,
+            "panels/pods/panel.json: command: a cli panel needs a command",
+            #"panels/pods/panel.json: every: can't read "soon", write it like "30s", "5m" or "1h""#,
+            #"panels/gh/panel.json: type: unknown type "web", expected "script" or "cli""#,
         ])
     }
 
     @Test func intervalHasAMinimum() {
-        #expect(errors(#"{ "tiles": [{ "type": "cli", "title": "x", "command": "ls", "every": "1s" }] }"#)
-            == [#"tiles[0].every: must be at least 5s, got "1s""#])
+        #expect(errors([
+            "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls", "every": "1s" }"#,
+        ]) == [#"panels/x/panel.json: every: must be at least 5s, got "1s""#])
     }
 
-    @Test func tilesThatDontFitAreWarnedAndLeftOut() throws {
-        let loaded = try config(#"{ "tiles": [{ "module": "agents", "size": "xl" }, { "module": "agents", "size": "xl" }, { "module": "agents" }] }"#)
+    @Test func panelsThatDontFitAreWarnedAndLeftOut() throws {
+        let loaded = try load(["config.json": #"{ "panels": [{ "panel": "agents" }, { "panel": "agents" }, { "panel": "agents", "size": "s" }] }"#])
         #expect(loaded.config.tiles.map(\.slot) == [
             GridSlot(column: 0, row: 0, columns: 2, rows: 3),
             GridSlot(column: 2, row: 0, columns: 2, rows: 3),
             nil,
         ])
-        #expect(loaded.warnings.map(\.path) == ["tiles[2]"])
+        #expect(loaded.warnings.map(\.path) == ["panels[2]"])
     }
 
     @Test func holdMsRange() {
-        #expect(errors(#"{ "trigger": { "holdMs": 10 } }"#) == ["trigger.holdMs: must be between 50 and 2000, got 10"])
+        #expect(errors(["config.json": #"{ "trigger": { "holdMs": 10 } }"#])
+            == ["config.json: trigger.holdMs: must be between 50 and 2000, got 10"])
     }
 }

@@ -1,48 +1,63 @@
-import Foundation
 import Testing
 @testable import TjuvkikCore
 
-private func load(_ text: String) -> Result<LoadedConfig, ConfigErrors> {
-    ConfigLoader.parse(Data(text.utf8))
-}
-
-private func errors(_ text: String) -> [String] {
-    guard case .failure(let errors) = load(text) else { return [] }
-    return errors.issues.map(\.description)
-}
-
-private func config(_ text: String) throws -> LoadedConfig {
-    try load(text).get()
-}
-
 struct ThemeTests {
     @Test func customThemeOverridesTokens() throws {
-        let theme = try config(##"{ "theme": "mine", "themes": { "mine": { "extends": "dracula", "accent": "#ff79c6", "radius": 4 } } }"##).config.theme
+        let theme = try load([
+            "config.json": #"{ "theme": "mine" }"#,
+            "themes/mine.json": ##"{ "extends": "dracula", "accent": "#ff79c6", "radius": 4 }"##,
+        ]).config.theme
         #expect(theme.accent == RGBA(hex: "#ff79c6"))
         #expect(theme.radius == 4)
         #expect(theme.panel == Theme.dracula.panel)
     }
 
     @Test func customThemeDefaultsToDarkGlass() throws {
-        let theme = try config(#"{ "theme": "mine", "themes": { "mine": { "blur": false } } }"#).config.theme
+        let theme = try load([
+            "config.json": #"{ "theme": "mine" }"#,
+            "themes/mine.json": #"{ "blur": false }"#,
+        ]).config.theme
         #expect(theme.blur == false)
         #expect(theme.text == Theme.darkGlass.text)
     }
 
     @Test func themesCanExtendCustomThemes() throws {
-        let theme = try config(#"{ "theme": "b", "themes": { "a": { "extends": "light-glass", "radius": 2 }, "b": { "extends": "a" } } }"#).config.theme
+        let theme = try load([
+            "config.json": #"{ "theme": "b" }"#,
+            "themes/a.json": #"{ "extends": "light-glass", "radius": 2 }"#,
+            "themes/b.json": #"{ "extends": "a" }"#,
+        ]).config.theme
         #expect(theme.appearance == .light)
         #expect(theme.radius == 2)
     }
 
+    @Test func unknownThemeListsTheFiles() {
+        #expect(errors(["config.json": #"{ "theme": "nope" }"#, "themes/mine.json": "{}"])
+            == [#"config.json: theme: unknown theme "nope", expected one of "dark-glass", "dracula", "light-glass", "mine""#])
+    }
+
     @Test func loopIsAnError() {
-        #expect(errors(#"{ "theme": "a", "themes": { "a": { "extends": "b" }, "b": { "extends": "a" } } }"#)
-            == ["themes.a.extends: themes extend each other in a loop: a → b → a"])
+        #expect(errors([
+            "config.json": #"{ "theme": "a" }"#,
+            "themes/a.json": #"{ "extends": "b" }"#,
+            "themes/b.json": #"{ "extends": "a" }"#,
+        ]) == ["themes/b.json: extends: themes extend each other in a loop: a → b → a"])
     }
 
     @Test func badColorIsAnError() {
-        #expect(errors(#"{ "theme": "a", "themes": { "a": { "accent": "pink" } } }"#)
-            == [##"themes.a.accent: can't read color "pink", write it like "#ff79c6" or "#ff79c680""##])
+        #expect(errors([
+            "config.json": #"{ "theme": "a" }"#,
+            "themes/a.json": #"{ "accent": "pink" }"#,
+        ]) == [##"themes/a.json: accent: can't read color "pink", write it like "#ff79c6" or "#ff79c680""##])
+    }
+
+    @Test func builtInNameInThemesIsIgnoredWithAWarning() throws {
+        let loaded = try load([
+            "config.json": #"{ "theme": "dracula" }"#,
+            "themes/dracula.json": #"{ "radius": 0 }"#,
+        ])
+        #expect(loaded.config.theme == .dracula)
+        #expect(loaded.warnings.map(\.file) == ["themes/dracula.json"])
     }
 
     @Test func hexForms() {

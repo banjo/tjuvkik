@@ -1,31 +1,39 @@
 import Foundation
 
-/// The file as written: everything optional, enums as strings, so validation can report each
-/// problem with its path instead of failing on the first one.
+// The files as written: everything optional, enums as strings, so validation can report each
+// problem with its file and path instead of failing on the first one.
+
+/// `config.json`
 struct RawConfig: Decodable {
     var view: String?
     var layout: String?
     var theme: String?
     var trigger: RawTrigger?
     var launchAtLogin: Bool?
-    var themes: [String: RawTheme]?
-    var tiles: [RawTile]?
+    var panels: [RawPanelRef]?
 }
 
 struct RawTrigger: Decodable {
     var holdMs: Int?
 }
 
-struct RawTile: Decodable {
-    var module: String?
-    var type: String?
-    var title: String?
+/// An entry in `config.json`'s `panels`: which panel, and optionally its size here.
+struct RawPanelRef: Decodable {
+    var panel: String?
     var size: String?
-    var every: String?
-    var timeout: String?
-    var command: String?
 }
 
+/// `panels/<name>/panel.json`
+struct RawPanel: Decodable {
+    var type: String?
+    var title: String?
+    var command: String?
+    var every: String?
+    var timeout: String?
+    var size: String?
+}
+
+/// `themes/<name>.json`
 struct RawTheme: Decodable {
     var extends: String?
     var appearance: String?

@@ -1,35 +1,71 @@
-/// Written to `config.json` on first run.
+import Foundation
+
+/// The files written to an empty config directory on first run.
 public enum DefaultConfig {
-    public static let text = """
-    // Tjuvkik: hold fn to glance. This file is reloaded when you save it.
+    public static let files: [(path: String, text: String)] = [
+        (ConfigFiles.config, config),
+        (ConfigFiles.panel("disk"), disk),
+    ]
+
+    /// Used until the directory has been read.
+    public static let fallback = Config(
+        view: .bento, layout: .framed, themeName: "dark-glass", theme: .darkGlass,
+        holdMilliseconds: 250, launchAtLogin: true,
+        tiles: [Tile(panel: "agents", kind: .agents, title: "Agents", size: .xl, every: 1, timeout: 0,
+                     slot: GridSlot(column: 0, row: 0, columns: 2, rows: 3))]
+    )
+
+    /// Writes the default files that don't exist yet.
+    public static func write(to directory: URL) throws {
+        let manager = FileManager.default
+        try manager.createDirectory(at: directory.appending(path: "themes"), withIntermediateDirectories: true)
+        for (path, text) in files {
+            let url = directory.appending(path: path)
+            guard !manager.fileExists(atPath: url.path) else { continue }
+            try manager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: url, atomically: true, encoding: .utf8)
+        }
+    }
+
+    static let config = """
+    // Tjuvkik: hold fn to glance. Everything in this folder is reloaded when you save it:
+    //   config.json               this file: theme, fn, and which panels go where
+    //   panels/<name>/panel.json  what a panel shows; its command runs in that folder
+    //   themes/<name>.json        your own themes
     // Comments and trailing commas are fine. Errors show in the menu bar menu.
     {
-      "$schema": "./config.schema.json",
+      "$schema": "./schemas/config.schema.json",
 
       // "bento" for now. "spotlight" comes later.
       "view": "bento",
       // "framed" for now. "fullscreen" and "edges" come later.
       "layout": "framed",
-      // "dark-glass", "light-glass", "dracula", or one of your own in "themes".
+      // "dark-glass", "light-glass", "dracula", or a file in themes/ without ".json".
       "theme": "dark-glass",
 
       // How long to hold fn before the glance shows.
       "trigger": { "holdMs": 250 },
       "launchAtLogin": true,
 
-      // Your own themes: extend one and override any token.
-      "themes": {
-        // "mine": { "extends": "dracula", "accent": "#ff79c6" },
-      },
-
-      // Tiles fill a 4×3 grid in order. Sizes: s 1×1, m 2×1, l 2×2, xl 2×3.
-      "tiles": [
-        { "module": "agents", "size": "xl" },
-        // A script prints rows as JSON:
-        // { "type": "script", "title": "GitHub", "size": "s", "every": "5m", "command": "~/.config/tjuvkik/modules/github.sh" },
-        // A cli tile shows a command's output as is:
-        { "type": "cli", "title": "Disk", "size": "m", "every": "5m", "command": "df -h /" },
+      // Panels fill a 4×3 grid in order. "agents" is built in; others are folders in panels/.
+      // Sizes: s 1×1, m 2×1, l 2×2, xl 2×3. Leave it out to use the panel's own size.
+      "panels": [
+        { "panel": "agents", "size": "xl" },
+        { "panel": "disk" },
       ],
+    }
+
+    """
+
+    static let disk = """
+    // A cli panel shows a command's output as is. A script panel prints rows as JSON.
+    {
+      "$schema": "../../schemas/panel.schema.json",
+      "type": "cli",
+      "title": "Disk",
+      "command": "df -h /",
+      "every": "5m",
+      "size": "m",
     }
 
     """

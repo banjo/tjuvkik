@@ -1,40 +1,48 @@
 import Foundation
 
-/// Resolves a theme name to tokens. Custom themes extend a built-in or another custom theme
-/// (dark glass when unset) and override only the tokens they set.
-enum ThemeResolver {
-    static func resolve(_ name: String, custom: [String: RawTheme], issues: inout [ConfigIssue]) -> Theme? {
-        resolve(name, custom: custom, seen: [], path: "theme", issues: &issues)
+/// Resolves a theme name to tokens. Custom themes live in `themes/<name>.json`, extend a built-in
+/// or another custom theme (dark glass when unset), and override only the tokens they set.
+struct ThemeResolver {
+    var files: ConfigFiles
+
+    mutating func resolve(_ name: String) -> Theme? {
+        resolve(name, seen: [], file: ConfigFiles.config, path: "theme")
     }
 
-    private static func resolve(_ name: String, custom: [String: RawTheme], seen: [String], path: String, issues: inout [ConfigIssue]) -> Theme? {
+    private mutating func resolve(_ name: String, seen: [String], file: String, path: String) -> Theme? {
         if seen.contains(name) {
-            issues.append(.error("themes.\(name).extends", "themes extend each other in a loop: \((seen + [name]).joined(separator: " → "))"))
+            files.error(file, path, "themes extend each other in a loop: \((seen + [name]).joined(separator: " → "))")
             return nil
         }
-        guard let raw = custom[name] else {
-            if let theme = Theme.builtIn[name] { return theme }
-            let known = (Theme.builtIn.keys.sorted() + custom.keys.sorted()).map { "\"\($0)\"" }.joined(separator: ", ")
-            issues.append(.error(path, "unknown theme \"\(name)\", expected one of \(known)"))
+        if let theme = Theme.builtIn[name] {
+            if files.exists(ConfigFiles.theme(name)) {
+                files.warning(ConfigFiles.theme(name), "", "\"\(name)\" is a built-in theme; rename the file to use it")
+            }
+            return theme
+        }
+        let themeFile = ConfigFiles.theme(name)
+        guard !name.contains("/"), files.exists(themeFile) else {
+            let known = (Theme.builtIn.keys.sorted() + files.themeNames()).map { "\"\($0)\"" }.joined(separator: ", ")
+            files.error(file, path, "unknown theme \"\(name)\", expected one of \(known)")
             return nil
         }
-        guard var theme = resolve(raw.extends ?? "dark-glass", custom: custom, seen: seen + [name], path: "themes.\(name).extends", issues: &issues) else {
-            return nil
-        }
-        apply(raw, to: &theme, path: "themes.\(name)", issues: &issues)
+        guard let raw = files.read(RawTheme.self, from: themeFile),
+              var theme = resolve(raw.extends ?? "dark-glass", seen: seen + [name], file: themeFile, path: "extends")
+        else { return nil }
+        apply(raw, to: &theme, file: themeFile)
         return theme
     }
 
-    private static func apply(_ raw: RawTheme, to theme: inout Theme, path: String, issues: inout [ConfigIssue]) {
+    private mutating func apply(_ raw: RawTheme, to theme: inout Theme, file: String) {
         if let value = raw.appearance {
             if let appearance = Theme.Appearance(rawValue: value) { theme.appearance = appearance } else {
-                issues.append(.error("\(path).appearance", "expected \"dark\" or \"light\", got \"\(value)\""))
+                files.error(file, "appearance", "expected \"dark\" or \"light\", got \"\(value)\"")
             }
         }
         if let blur = raw.blur { theme.blur = blur }
         if let radius = raw.radius {
             if (0...40).contains(radius) { theme.radius = radius } else {
-                issues.append(.error("\(path).radius", "must be between 0 and 40"))
+                files.error(file, "radius", "must be between 0 and 40")
             }
         }
         let colors: [(String, String?, WritableKeyPath<Theme, RGBA>)] = [
@@ -47,7 +55,7 @@ enum ThemeResolver {
         for (key, value, keyPath) in colors {
             guard let value else { continue }
             if let color = RGBA(hex: value) { theme[keyPath: keyPath] = color } else {
-                issues.append(.error("\(path).\(key)", "can't read color \"\(value)\", write it like \"#ff79c6\" or \"#ff79c680\""))
+                files.error(file, key, "can't read color \"\(value)\", write it like \"#ff79c6\" or \"#ff79c680\"")
             }
         }
     }
