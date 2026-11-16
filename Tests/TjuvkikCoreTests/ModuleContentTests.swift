@@ -86,6 +86,11 @@ struct ContentTypeTests {
         #expect(probe.itemKeys == ["a", "b"])
     }
 
+    @Test func oneItemWithoutAnArrayIsDetectedToo() throws {
+        #expect(try content(#"{ "items": { "author": "Sara", "text": "hi" } }"#).get().type == .feed)
+        #expect(try content(#"{ "items": { "title": "Freeze main" } }"#).get().type == .checklist)
+    }
+
     @Test func thePanelsTypeWins() {
         #expect(content(#"{ "rows": [] }"#, as: .stats).failureMessage == #"missing "stats""#)
     }

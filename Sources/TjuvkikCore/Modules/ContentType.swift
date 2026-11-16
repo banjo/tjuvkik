@@ -45,12 +45,18 @@ struct KeyProbe: Decodable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: AnyKey.self)
         keys = Set(container.allKeys.map(\.stringValue))
-        let items = (try? container.decode([Item].self, forKey: AnyKey(stringValue: "items"))) ?? []
+        // `items` may be one object instead of an array. Item never fails, so try the array first.
+        let key = AnyKey(stringValue: "items")
+        let items = (try? container.decode([Item].self, forKey: key))
+            ?? (try? container.nestedContainer(keyedBy: AnyKey.self, forKey: key)).map { [Item(keys: Set($0.allKeys.map(\.stringValue)))] }
+            ?? []
         itemKeys = items.reduce(into: []) { $0.formUnion($1.keys) }
     }
 
     private struct Item: Decodable {
         var keys: Set<String>
+
+        init(keys: Set<String>) { self.keys = keys }
 
         init(from decoder: any Decoder) throws {
             keys = (try? Set(decoder.container(keyedBy: AnyKey.self).allKeys.map(\.stringValue))) ?? []
