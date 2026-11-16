@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tjuvkik — text panel types</title>
+<style>
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* dark-glass, as in Theme.swift */
+  --ink: 255, 255, 255;
+  --panel: rgba(30, 31, 41, 0.55);
+  --well: rgba(0, 0, 0, 0.28);
+  --fg: #f8f8f2;
+  --muted: rgba(248, 248, 242, 0.58);
+  --faint: rgba(248, 248, 242, 0.36);
+  --line: rgba(255, 255, 255, 0.08);
+  --warning: #ffb86c;
+  --error: #ff6e6e;
+  --success: #50fa7b;
+  --info: #8be9fd;
+  --accent: #bd93f9;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: #111; color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Desktop (context, not judged) ---------- */
+.desk {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 12% 88%, #6b3fa0 0%, transparent 60%),
+    radial-gradient(1000px 700px at 88% 8%, #1f6f8b 0%, transparent 55%),
+    radial-gradient(900px 900px at 72% 96%, #b4466b 0%, transparent 55%),
+    #1b1530;
+}
+.menubar {
+  position: fixed; top: 0; left: 0; right: 0; height: 32px; z-index: 5;
+  display: flex; align-items: center; gap: 18px; padding: 0 16px;
+  font-size: 13px; color: #fff;
+  background: rgba(20, 16, 36, 0.35);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+}
+.menubar .spacer { flex: 1; }
+.notch { position: fixed; top: 0; left: 50%; width: 196px; height: 32px; margin-left: -98px; z-index: 6; background: #000; border-radius: 0 0 12px 12px; }
+.backdrop { position: fixed; inset: 0; background: rgba(10, 8, 20, 0.28); }
+
+/* ---------- Board ---------- */
+.board {
+  position: fixed; top: 12vh; left: 50%; transform: translateX(-50%);
+  width: min(1080px, calc(100vw - 48px)); height: min(580px, 68vh);
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px;
+}
+.tile {
+  position: relative; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; padding: 12px;
+  border-radius: 16px; overflow: hidden;
+  background: var(--panel);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8); backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow: 0 0 0 1px var(--line) inset, 0 18px 40px rgba(0, 0, 0, 0.18);
+  animation: tile-in 220ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * 30ms);
+}
+@keyframes tile-in { from { opacity: 0; transform: scale(0.97); } }
+@media (prefers-reduced-motion: reduce) {
+  .tile { animation-name: tile-fade; }
+  @keyframes tile-fade { from { opacity: 0; } }
+}
+.tile-h { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex: none; }
+.tile-h .title { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile-h .kind {
+  flex: none; font: 500 9.5px/1 var(--mono); color: var(--faint);
+  padding: 2px 5px; border-radius: 4px; background: var(--well);
+}
+.tile-h .every { margin-left: auto; flex: none; font-size: 10.5px; color: var(--faint); }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* Tones */
+[data-tone=warning] { --tone: var(--warning); }
+[data-tone=error] { --tone: var(--error); }
+[data-tone=success] { --tone: var(--success); }
+[data-tone=info] { --tone: var(--info); }
+[data-tone=accent] { --tone: var(--accent); }
+[data-tone=muted] { --tone: var(--faint); }
+.t-tone { color: var(--tone, var(--fg)); }
+
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.label { font-size: 11.5px; color: var(--muted); }
+.foot { margin-top: auto; padding-top: 8px; font-size: 11px; color: var(--faint); display: flex; gap: 12px; font-variant-numeric: tabular-nums; }
+.foot b { font-weight: 500; color: var(--muted); }
+.delta { font-size: 11.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--tone, var(--muted)); white-space: nowrap; }
+
+/* ---------- 6. markdown ---------- */
+.md { font-size: 12.5px; line-height: 1.5; color: var(--fg); overflow: hidden; flex: 1; min-height: 0; }
+.md h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.md h4 { margin: 10px 0 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.md p { margin: 0 0 6px; color: var(--muted); }
+.md p b, .md li b { color: var(--fg); font-weight: 600; }
+.md ul, .md ol { margin: 0 0 6px; padding-left: 18px; color: var(--muted); }
+.md li { margin: 1px 0; }
+.md li::marker { color: var(--faint); }
+.md code { white-space: nowrap; font: 11.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--well); color: var(--fg); }
+.md pre { margin: 4px 0 8px; padding: 8px 10px; border-radius: 8px; background: var(--well); font: 11.5px/1.5 var(--mono); color: var(--fg); white-space: pre; overflow: hidden; }
+.md a { color: var(--info); text-decoration: none; }
+.md blockquote { margin: 4px 0 8px; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--warning) 12%, transparent); color: var(--warning); box-shadow: 2px 0 0 var(--warning) inset; }
+.md-cols { columns: 2; column-gap: 20px; }
+.md-cols h4 { break-after: avoid; }
+.md-cols > * { break-inside: avoid; }
+.md-s h3 { font-size: 15px; }
+.md-s p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- 7. key-value ---------- */
+.kv { display: grid; grid-template-columns: auto 1fr; column-gap: 0; align-content: start; flex: 1; min-height: 0; }
+.kv dt, .kv dd { margin: 0; padding: 5px 0; border-top: 1px solid var(--line); font-size: 12px; min-width: 0; }
+.kv dt:first-of-type, .kv dt:first-of-type + dd { border-top: 0; }
+.kv dt { color: var(--muted); white-space: nowrap; }
+.kv dd { padding-left: 14px; font-family: var(--mono); font-size: 11.5px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tone, var(--fg)); }
+.kv dd .pill { display: inline-block; padding: 0 6px; border-radius: 99px; background: color-mix(in srgb, var(--tone) 16%, transparent); font-family: inherit; }
+.kv-h { grid-column: 1 / -1; padding: 10px 0 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.kv-h:first-child { padding-top: 0; }
+.kv-2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; flex: 1; }
+.kv-s dd { text-align: left; padding-left: 0; }
+.kv-s { grid-template-columns: 1fr; }
+.kv-s dt { padding: 6px 0 0; border: 0; font-size: 10.5px; }
+.kv-s dd { padding: 0 0 6px; border: 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+.kv-s dt:first-of-type { padding-top: 0; }
+
+/* ---------- 8. table ---------- */
+.tb { width: 100%; border-collapse: collapse; font-size: 11.5px; font-variant-numeric: tabular-nums; table-layout: fixed; }
+.tb th { text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); padding: 0 6px 6px; white-space: nowrap; }
+.tb td { padding: 5px 6px; border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tone, var(--fg)); }
+.tb td.mono { font-family: var(--mono); font-size: 11px; }
+.tb td.dim { color: var(--muted); }
+.tb [data-align=right] { text-align: right; }
+.tb th:first-child, .tb td:first-child { padding-left: 0; }
+.tb th:last-child, .tb td:last-child { padding-right: 0; }
+.tb .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--tone); margin-right: 6px; vertical-align: 1px; }
+.tb tr[data-hl] td { background: color-mix(in srgb, var(--error) 8%, transparent); }
+.tb-wrap { flex: 1; min-height: 0; overflow: hidden; }
+
+/* ---------- 9. feed ---------- */
+.fd { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.fd-day { padding: 4px 0 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.fd-i { display: grid; grid-template-columns: 26px 1fr auto; column-gap: 9px; row-gap: 1px; padding: 7px 0; border-top: 1px solid var(--line); }
+.fd-day + .fd-i, .fd > .fd-i:first-child { border-top: 0; padding-top: 0; }
+.fd-i > .av { grid-row: 1 / span 2; }
+.av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 600; color: #1d1d1f; background: var(--c, #8be9fd); }
+.av.sq { border-radius: 7px; font-size: 13px; background: var(--well); }
+.fd-i .who { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fd-i .who span { font-weight: 400; color: var(--muted); }
+.fd-i .msg { grid-column: 2 / -1; font-size: 12px; line-height: 1.4; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fd-i .msg b { color: var(--fg); font-weight: 500; }
+.fd-i .when { font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.fd-i[data-unread] .who::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--info); vertical-align: 1.5px; }
+.fd-big { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.fd-big .q { font-size: 14px; line-height: 1.4; color: var(--fg); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.fd-big .by { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+.fd-big .by .av { width: 20px; height: 20px; font-size: 9px; }
+.fd-big .more { margin-left: auto; color: var(--info); }
+
+/* ---------- 10. checklist ---------- */
+.ck { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.ck-i { display: flex; align-items: flex-start; gap: 9px; padding: 4px 0; font-size: 12.5px; line-height: 1.35; }
+.ck-i .box { flex: none; width: 15px; height: 15px; margin-top: 1px; border-radius: 4.5px; box-shadow: 0 0 0 1.5px rgba(var(--ink), 0.28) inset; display: grid; place-items: center; font-size: 10px; color: #1b1530; }
+.ck-i[data-state=done] .box { background: var(--success); box-shadow: none; }
+.ck-i[data-state=done] .box::before { content: "✓"; font-weight: 700; }
+.ck-i[data-state=done] .t { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(var(--ink), 0.25); }
+.ck-i[data-state=doing] .box { box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.ck-i[data-state=doing] .box::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); }
+.ck-i[data-state=blocked] .box { box-shadow: 0 0 0 1.5px var(--error) inset; }
+.ck-i[data-state=blocked] .box::before { content: "!"; color: var(--error); font-weight: 700; }
+.ck-i .t { flex: 1; min-width: 0; }
+.ck-i .t small { display: block; font-size: 11px; color: var(--muted); }
+.ck-i[data-state=blocked] .t small { color: var(--error); }
+.ck-i .who { flex: none; font-size: 10.5px; color: var(--faint); }
+.ck-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.ck-h b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ck-h span { font-size: 11.5px; color: var(--muted); }
+.ck-bar { height: 4px; border-radius: 99px; background: var(--well); margin-bottom: 8px; overflow: hidden; display: flex; gap: 2px; }
+.ck-bar i { height: 100%; background: var(--success); }
+.ck-bar i + i { background: var(--accent); }
+.ck-sec { padding: 8px 0 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.ck-folded { margin-top: auto; padding-top: 6px; font-size: 11px; color: var(--faint); }
+.ck-s { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.ck-s .next { margin-top: 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.ck-s .nt { margin-top: 2px; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ck-cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; align-content: start; }
+
+/* ---------- Spec drawer + hint (harness chrome, not judged) ---------- */
+.spec {
+  position: fixed; top: 44px; right: 12px; bottom: 76px; width: 400px; z-index: 2147483640;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px;
+  border-radius: 14px; background: rgba(10, 10, 10, 0.86);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.7);
+  transform: translateX(calc(100% + 24px)); transition: transform 240ms var(--ease-out);
+}
+.spec[data-open] { transform: none; }
+.spec h2 { margin: 0; font-size: 14px; color: #fff; }
+.spec p { margin: 0; }
+.spec ul { margin: 0; padding-left: 16px; }
+.spec pre {
+  flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05); font: 11.5px/1.55 var(--mono); color: #e6e6e6; white-space: pre;
+}
+.spec pre .k { color: #8be9fd; }
+.spec pre .s { color: #f1fa8c; }
+.spec pre .c { color: #6272a4; }
+.hint {
+  position: fixed; left: 20px; bottom: 24px; z-index: 2147483646; max-width: 360px;
+  padding: 10px 14px; border-radius: 14px; background: rgba(10, 10, 10, 0.78);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  font-size: 12px; line-height: 1.45; color: rgba(255, 255, 255, 0.62); user-select: none; -webkit-user-select: none;
+}
+.hint b { color: #fff; font-weight: 600; }
+.hint kbd { font: 500 10.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: rgba(255, 255, 255, 0.12); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .spec { transition: none; } }
+
+/* ---------- Picker (verbatim spec) ---------- */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+.proto-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+.proto-picker-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+</style>
+</head>
+<body>
+<div class="desk"></div>
+<div class="menubar"><span></span><b>Ghostty</b><span>File</span><span>Edit</span><span>View</span><span class="spacer"></span><span>❓ 1&nbsp;&nbsp;👀 2</span><span>Mon 16 Nov 13:40</span></div>
+<div class="notch"></div>
+<div class="backdrop"></div>
+<main class="board" id="stage"></main>
+
+<aside class="spec" id="spec"></aside>
+<div class="hint" id="hint"></div>
+
+<nav class="proto-picker" aria-label="Prototype variants">
+  <span class="proto-picker-highlight" aria-hidden="true"></span>
+  <button class="proto-picker-item" data-active aria-current="true">Markdown</button>
+  <button class="proto-picker-item">Key-value</button>
+  <button class="proto-picker-item">Table</button>
+  <button class="proto-picker-item">Feed</button>
+  <button class="proto-picker-item">Checklist</button>
+  <span class="proto-picker-divider" aria-hidden="true"></span>
+  <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+</nav>
+
+<script>
+// The same six slots for every type: l, m, s, s, m, m on the 4×3 grid.
+const SLOTS = [
+  'grid-column: 1 / span 2; grid-row: 1 / span 2',
+  'grid-column: 3 / span 2; grid-row: 1',
+  'grid-column: 3; grid-row: 2',
+  'grid-column: 4; grid-row: 2',
+  'grid-column: 1 / span 2; grid-row: 3',
+  'grid-column: 3 / span 2; grid-row: 3',
+];
+
+const tile = (i, t, body) => `
+  <section class="tile" style="${SLOTS[i]}; --i:${i}">
+    <header class="tile-h"><span class="title">${t.title}</span><span class="kind">${t.kind}</span><span class="every">${t.every === 'live' ? 'live' : `every ${t.every}`}</span></header>
+    <div class="body">${body}</div>
+  </section>`;
+
+// ---------- 6. markdown ----------
+const markdown = {
+  l: d => `<div class="md">${d.html}</div>`,
+  m: d => `<div class="md ${d.cols ? 'md-cols' : ''}">${d.html}</div>`,
+  s: d => `<div class="md md-s">${d.html}</div>`,
+};
+
+// ---------- 7. key-value ----------
+const kvPairs = items => items.map(i => i.section
+  ? `<div class="kv-h">${i.section}</div>`
+  : `<dt>${i.key}</dt><dd data-tone="${i.tone || ''}">${i.tone && i.pill ? `<span class="pill">${i.value}</span>` : i.value}</dd>`).join('');
+const keyvalue = {
+  l: d => `<dl class="kv">${kvPairs(d.items)}</dl>`,
+  m: d => `<div class="kv-2"><dl class="kv">${kvPairs(d.items.slice(0, Math.ceil(d.items.length / 2)))}</dl><dl class="kv">${kvPairs(d.items.slice(Math.ceil(d.items.length / 2)))}</dl></div>`,
+  s: d => `<dl class="kv kv-s">${kvPairs(d.items)}</dl>`,
+};
+
+// ---------- 8. table ----------
+const table = {
+  render: d => `<div class="tb-wrap"><table class="tb">
+    <colgroup>${d.columns.map(c => `<col${c.width ? ` style="width:${c.width}"` : ''}>`).join('')}</colgroup>
+    <thead><tr>${d.columns.map(c => `<th data-align="${c.align || 'left'}">${c.title}</th>`).join('')}</tr></thead>
+    <tbody>${d.rows.map(r => `<tr ${r.hl ? 'data-hl' : ''}>${r.cells.map((cell, i) => {
+      const c = typeof cell === 'object' ? cell : { text: cell };
+      const col = d.columns[i];
+      return `<td data-align="${col.align || 'left'}" class="${col.mono ? 'mono' : ''} ${c.dim ? 'dim' : ''}" ${c.tone ? `data-tone="${c.tone}"` : ''}>${c.dot ? '<i class="dot"></i>' : ''}${c.text}</td>`;
+    }).join('')}</tr>`).join('')}</tbody></table></div>`,
+};
+table.l = table.m = table.s = table.render;
+
+// ---------- 9. feed ----------
+const feedItem = i => `<div class="fd-i" ${i.unread ? 'data-unread' : ''}>
+  ${i.icon ? `<span class="av sq">${i.icon}</span>` : `<span class="av" style="--c:${i.color}">${i.initials}</span>`}
+  <span class="who">${i.who} <span>${i.where || ''}</span></span><span class="when">${i.when}</span>
+  <span class="msg">${i.text}</span></div>`;
+const feed = {
+  l: d => `<div class="fd">${d.days.map(day => `<div class="fd-day">${day.title}</div>${day.items.map(feedItem).join('')}`).join('')}</div>`,
+  m: d => `<div class="fd">${d.items.map(feedItem).join('')}</div>`,
+  s: d => `<div class="fd-big"><div class="q">${d.text}</div>
+    <div class="by"><span class="av" style="--c:${d.color}">${d.initials}</span>${d.who} · ${d.when}<span class="more">${d.more}</span></div></div>`,
+};
+
+// ---------- 10. checklist ----------
+const ckItem = i => `<div class="ck-i" data-state="${i.state || 'todo'}"><span class="box"></span>
+  <span class="t">${i.title}${i.note ? `<small>${i.note}</small>` : ''}</span>${i.who ? `<span class="who">${i.who}</span>` : ''}</div>`;
+const progress = d => {
+  const all = d.items.filter(i => !i.section);
+  const done = all.filter(i => i.state === 'done').length;
+  const doing = all.filter(i => i.state === 'doing').length;
+  return { done, doing, total: all.length };
+};
+const checklist = {
+  l: d => {
+    const p = progress(d);
+    const visible = d.items.filter(i => i.section || i.state !== 'done' || !d.foldDone);
+    return `<div class="ck"><div class="ck-h"><b>${p.done}/${p.total}</b><span>${d.caption}</span></div>
+      <div class="ck-bar"><i style="width:${p.done / p.total * 100}%"></i><i style="width:${p.doing / p.total * 100}%"></i></div>
+      ${visible.map(i => i.section ? `<div class="ck-sec">${i.section}</div>` : ckItem(i)).join('')}
+      ${d.foldDone ? `<div class="ck-folded">${p.done} done, hidden</div>` : ''}</div>`;
+  },
+  m: d => `<div class="ck ${d.cols ? 'ck-cols' : ''}">${d.items.map(ckItem).join('')}</div>`,
+  s: d => {
+    const p = progress(d);
+    const next = d.items.find(i => i.state === 'doing') || d.items.find(i => !i.state || i.state === 'todo');
+    return `<div class="ck-s"><div class="ck-h"><b>${p.done}/${p.total}</b><span>${d.caption}</span></div>
+      <div class="ck-bar"><i style="width:${p.done / p.total * 100}%"></i><i style="width:${p.doing / p.total * 100}%"></i></div>
+      <div class="next">Next</div><div class="nt">${next.title}</div></div>`;
+  },
+};
+
+// ---------- Content, per type ----------
+const TYPES = [
+  {
+    name: 'Markdown', kind: 'markdown', axis: 'Prose: notes, runbooks and answers, with headings, lists and code.',
+    sizes: ['<b>s</b> the heading and the first lines', '<b>m</b> flows into two columns', '<b>l</b> the whole document, cut where it ends'],
+    json: `{
+  <span class="k">"markdown"</span>: <span class="s">"### On call this week\\n**Anton** until Fri…"</span>
+}
+<span class="c">// Or point at a file, read and rendered by Tjuvkik,
+// reloaded when it changes:</span>
+{ <span class="k">"type"</span>: <span class="s">"markdown"</span>, <span class="k">"file"</span>: <span class="s">"~/notes/today.md"</span> }
+
+<span class="c">// CommonMark subset: headings, bold/italic, lists,
+// task lists, inline code, code blocks, links,
+// blockquotes ("> " in the warning tone).</span>`,
+    tiles: [
+      { title: 'On call', every: '1h', s: 'l', d: { html: `
+        <h3>On call this week</h3>
+        <p><b>Anton Ödman</b> until Fri 17:00, then <b>Sara Lind</b>. Escalate to the DSP Spark channel after 15 minutes.</p>
+        <blockquote>workshop-hist is degraded since 11:20. Ticket CUCO-79012.</blockquote>
+        <h4>Restart a stuck export</h4>
+        <ol><li>Find the job: <code>kubectl get jobs -n logbook</code></li><li>Check its last log lines</li><li>Delete it; the cron job starts a new one within 5 minutes</li></ol>
+        <pre>kubectl delete job export-1794 -n logbook</pre>
+        <h4>Links</h4>
+        <ul><li><a>Grafana · logbook prod</a></li><li><a>Runbook in Confluence</a></li></ul>` } },
+      { title: 'Today', every: 'live', s: 'm', d: { cols: true, html: `
+        <h3>Monday</h3>
+        <ul><li><b>Ship</b> logbook export filters</li><li>Review queenbolt #582</li><li>Answer Sara about the 26E epic</li></ul>
+        <h4>Remember</h4>
+        <p>Demo at sprint review, 15:00. Bring the export numbers from Sentry.</p>` } },
+      { title: 'Snippet', every: '1d', s: 's', d: { html: `<h3>Stash with a name</h3><p><code>git stash push -m "wip export" -- src/</code> keeps only <b>src/</b>, so the rest stays in the working tree.</p>` } },
+      { title: 'Word of the day', every: '1d', s: 's', d: { html: `<h3>tjuvkika</h3><p><i>verb</i> · to take a quick, secret look. "Hon tjuvkikade på julklapparna."</p>` } },
+      { title: 'Release notes 5.2', every: '1h', s: 'm', d: { cols: true, html: `
+        <h4>New</h4><ul><li>Export bookings as CSV and Excel</li><li>Filter by dealer group</li></ul>
+        <h4>Fixed</h4><ul><li>Calendar week numbers in en-US</li><li>Slow search with many vehicles</li></ul>` } },
+      { title: 'Standup notes', every: '1h', s: 'm', d: { cols: true, html: `
+        <h4>Yesterday</h4><p>Export filters done, waiting for review. Paired with Sara on the date picker.</p>
+        <h4>Today</h4><p>Fix e2e on Safari, then start <code>CUCO-78846</code>.</p>
+        <h4>Blocked</h4><p>Need prod read access for Sentry.</p>` } },
+    ],
+  },
+  {
+    name: 'Key-value', kind: 'keyvalue', axis: 'Facts: labels on the left, exact values on the right, grouped.',
+    sizes: ['<b>s</b> stacked: label above value', '<b>m</b> two columns of pairs', '<b>l</b> one list with section headings'],
+    json: `{
+  <span class="k">"pairs"</span>: [
+    { <span class="k">"section"</span>: <span class="s">"Kubernetes"</span> },
+    { <span class="k">"key"</span>: <span class="s">"Context"</span>, <span class="k">"value"</span>: <span class="s">"aks-prod-weu"</span>,
+      <span class="k">"tone"</span>: <span class="s">"error"</span>, <span class="k">"pill"</span>: true },
+    { <span class="k">"key"</span>: <span class="s">"Namespace"</span>, <span class="k">"value"</span>: <span class="s">"logbook"</span> }
+  ]
+}
+<span class="c">// Values are monospaced and cut in the middle,
+// so the ends of IDs and paths stay visible.</span>`,
+    tiles: [
+      { title: 'Environment', every: '30s', s: 'l', d: { items: [
+        { section: 'Kubernetes' }, { key: 'Context', value: 'aks-prod-weu', tone: 'error', pill: true }, { key: 'Namespace', value: 'logbook' },
+        { section: 'Cloud' }, { key: 'AWS profile', value: 'dsp-dev' }, { key: 'Azure subscription', value: 'VGCS-DSP-NonProd' },
+        { section: 'Repo' }, { key: 'Branch', value: 'feat/export-filters' }, { key: 'Node', value: 'v22.11.0' }, { key: 'pnpm', value: '9.12.3' },
+        { key: 'Uncommitted', value: '3 files', tone: 'warning' },
+      ] } },
+      { title: 'Network', every: '1m', s: 'm', d: { items: [
+        { key: 'Wi-Fi', value: 'Volvo-Corp' }, { key: 'IP', value: '10.142.18.77' }, { key: 'VPN', value: 'connected', tone: 'success', pill: true },
+        { key: 'Public IP', value: '81.236.4.19' }, { key: 'DNS', value: '10.140.0.10' }, { key: 'Latency', value: '14 ms' },
+      ] } },
+      { title: 'This Mac', every: '1h', s: 's', d: { items: [{ key: 'macOS', value: '26.1 (25B78)' }, { key: 'Uptime', value: '6 days' }] } },
+      { title: 'Versions', every: '1h', s: 's', d: { items: [{ key: 'logbook prod', value: '5.2.1' }, { key: 'queenbolt', value: '14.8.0', tone: 'warning' }] } },
+      { title: 'Release 5.2.1', every: '15m', s: 'm', d: { items: [
+        { key: 'Commit', value: '8f3a2c1' }, { key: 'Built', value: 'Mon 11:02' }, { key: 'Deployed', value: 'prod, 2h ago' },
+        { key: 'Image', value: 'acr.io/logbook:5.2.1' }, { key: 'Pods', value: '6/6 ready', tone: 'success' }, { key: 'Rollback', value: '5.2.0' },
+      ] } },
+      { title: 'Shortcuts', every: '1d', s: 'm', d: { items: [
+        { key: 'Glance', value: 'hold fn' }, { key: 'Agents', value: '⌥A' }, { key: 'Jump to urgent', value: '⌥U' },
+        { key: 'New tab', value: '⌘T' }, { key: 'Split pane', value: '⌥D' }, { key: 'Picker', value: '⌥P' },
+      ] } },
+    ],
+  },
+  {
+    name: 'Table', kind: 'table', axis: 'Columns: the same fields for every row, aligned, colored per cell.',
+    sizes: ['<b>s</b> the first two columns', '<b>m</b> up to four columns', '<b>l</b> every column, highlighted rows'],
+    json: `{
+  <span class="k">"columns"</span>: [
+    { <span class="k">"title"</span>: <span class="s">"Pod"</span>, <span class="k">"mono"</span>: true },
+    { <span class="k">"title"</span>: <span class="s">"Status"</span> },
+    { <span class="k">"title"</span>: <span class="s">"Restarts"</span>, <span class="k">"align"</span>: <span class="s">"right"</span> }
+  ],
+  <span class="k">"rows"</span>: [
+    { <span class="k">"cells"</span>: [<span class="s">"export-1794"</span>, { <span class="k">"text"</span>: <span class="s">"CrashLoop"</span>, <span class="k">"tone"</span>: <span class="s">"error"</span>, <span class="k">"dot"</span>: true }, <span class="s">"12"</span>],
+      <span class="k">"highlight"</span>: true }
+  ]
+}
+<span class="c">// Columns past what fits are dropped from the right;
+// "priority" on a column keeps it longer.</span>`,
+    tiles: [
+      { title: 'Pods · logbook', every: '30s', s: 'l', d: {
+        columns: [{ title: 'Pod', mono: true, width: '38%' }, { title: 'Status', width: '24%' }, { title: 'Restarts', align: 'right' }, { title: 'CPU', align: 'right' }, { title: 'Age', align: 'right' }],
+        rows: [
+          { cells: ['api-7d9f4-x2kq', { text: 'Running', tone: 'success', dot: true }, '0', '120m', { text: '2d', dim: true }] },
+          { cells: ['api-7d9f4-p8vn', { text: 'Running', tone: 'success', dot: true }, '0', '96m', { text: '2d', dim: true }] },
+          { cells: ['export-1794-lq', { text: 'CrashLoop', tone: 'error', dot: true }, { text: '12', tone: 'error' }, '4m', { text: '41m', dim: true }], hl: true },
+          { cells: ['web-5c88b-r7t2', { text: 'Running', tone: 'success', dot: true }, '0', '31m', { text: '6h', dim: true }] },
+          { cells: ['web-5c88b-m4z9', { text: 'Pending', tone: 'warning', dot: true }, '0', { text: '—', dim: true }, { text: '2m', dim: true }] },
+          { cells: ['worker-6b2-h5c', { text: 'Running', tone: 'success', dot: true }, '1', '210m', { text: '1d', dim: true }] },
+          { cells: ['redis-0', { text: 'Running', tone: 'success', dot: true }, '0', '18m', { text: '12d', dim: true }] },
+          { cells: ['cron-sync-2871', { text: 'Completed', tone: 'muted', dot: true }, '0', { text: '—', dim: true }, { text: '9m', dim: true }] },
+        ] } },
+      { title: 'Top processes', every: '5s', s: 'm', d: {
+        columns: [{ title: 'Process', width: '44%' }, { title: 'CPU', align: 'right' }, { title: 'Memory', align: 'right' }, { title: 'PID', align: 'right', mono: true }],
+        rows: [
+          { cells: ['node (vite)', { text: '84%', tone: 'warning' }, '1.2 GB', { text: '48211', dim: true }] },
+          { cells: ['Brave Browser', '31%', '3.4 GB', { text: '1022', dim: true }] },
+          { cells: ['opencode', '12%', '640 MB', { text: '33871', dim: true }] },
+        ] } },
+      { title: 'Ports', every: '30s', s: 's', d: {
+        columns: [{ title: 'Port', mono: true, width: '38%' }, { title: 'Process' }],
+        rows: [{ cells: ['5173', 'vite'] }, { cells: ['3000', 'logbook-api'] }, { cells: ['6379', 'redis'] }, { cells: ['9229', { text: 'node inspect', dim: true }] }] } },
+      { title: 'Timezones', every: '1m', s: 's', d: {
+        columns: [{ title: 'City' }, { title: 'Time', align: 'right' }],
+        rows: [{ cells: ['Göteborg', '13:40'] }, { cells: ['Greensboro', { text: '07:40', dim: true }] }, { cells: ['Bangalore', '18:10'] }, { cells: ['Curitiba', { text: '09:40', dim: true }] }] } },
+      { title: 'Dependencies', every: '1d', s: 'm', d: {
+        columns: [{ title: 'Package', mono: true, width: '44%' }, { title: 'Current', align: 'right', mono: true }, { title: 'Latest', align: 'right', mono: true }, { title: '', align: 'right' }],
+        rows: [
+          { cells: ['react', '19.1.0', '19.2.1', { text: 'minor', tone: 'info' }] },
+          { cells: ['vite', '6.3.5', '8.0.2', { text: 'major', tone: 'warning' }] },
+          { cells: ['@tanstack/react-query', '5.80.0', '5.90.2', { text: 'minor', tone: 'info' }] },
+        ] } },
+      { title: 'Sprint board', every: '15m', s: 'm', d: {
+        columns: [{ title: 'Key', mono: true, width: '24%' }, { title: 'Summary', width: '46%' }, { title: 'Status' }, { title: 'Pts', align: 'right' }],
+        rows: [
+          { cells: ['78846', 'FE - Logbook: Export filters', { text: 'Review', tone: 'warning' }, '5'] },
+          { cells: ['78901', 'FE - Calendar: Week numbers', { text: 'Done', tone: 'success' }, '2'] },
+          { cells: ['79012', 'FE - Assets: Time to Critical', { text: 'In progress', tone: 'accent' }, '8'] },
+        ] } },
+    ],
+  },
+  {
+    name: 'Feed', kind: 'feed', axis: 'Messages: who said what and when, newest first, unread marked.',
+    sizes: ['<b>s</b> the newest message, large', '<b>m</b> the latest few, two lines each', '<b>l</b> grouped by day'],
+    json: `{
+  <span class="k">"items"</span>: [
+    {
+      <span class="k">"author"</span>: <span class="s">"Sara Lind"</span>,            <span class="c">// initials + color from the name</span>
+      <span class="k">"avatar"</span>: <span class="s">"https://…/sara.png"</span>,   <span class="c">// or "icon": "🔔"</span>
+      <span class="k">"where"</span>: <span class="s">"#dsp-spark"</span>,
+      <span class="k">"text"</span>: <span class="s">"Can you look at the export PR before 15?"</span>,
+      <span class="k">"time"</span>: <span class="s">"2026-11-16T13:12:00Z"</span>,  <span class="c">// shown relative</span>
+      <span class="k">"unread"</span>: true,
+      <span class="k">"url"</span>: <span class="s">"slack://…"</span>
+    }
+  ]
+}`,
+    tiles: [
+      { title: 'Mentions', every: '1m', s: 'l', d: { days: [
+        { title: 'Today', items: [
+          { who: 'Sara Lind', where: '#dsp-spark', initials: 'SL', color: '#ffb86c', when: '28m', unread: true, text: '@anton can you look at the <b>export PR</b> before sprint review? Kristian wants to demo it.' },
+          { who: 'GitHub', where: 'logbook #1284', icon: '👀', when: '1h', unread: true, text: '<b>Johan Berg</b> requested your review on <b>feat: export filters</b>' },
+          { who: 'Jira', where: 'CUCO-79012', icon: '🐞', when: '2h', text: 'Priority changed to <b>Major</b>: workshop-hist search times out' },
+        ] },
+        { title: 'Yesterday', items: [
+          { who: 'Kristian Ek', where: 'DM', initials: 'KE', color: '#8be9fd', when: 'Sun', text: 'Nice work on the calendar fix, customers noticed 🙌' },
+        ] },
+      ] } },
+      { title: 'Commits · main', every: '5m', s: 'm', d: { items: [
+        { who: 'Johan Berg', where: 'logbook', initials: 'JB', color: '#50fa7b', when: '12m', text: 'fix(export): keep the dealer filter when paging' },
+        { who: 'Anton Ödman', where: 'queenbolt', initials: 'AÖ', color: '#bd93f9', when: '1h', text: 'feat(table): add sticky headers to DataTable' },
+      ] } },
+      { title: 'Slack', every: '1m', s: 's', d: { who: 'Sara', initials: 'SL', color: '#ffb86c', when: '28m', more: '+3', text: 'Can you look at the export PR before sprint review? Kristian wants to demo it.' } },
+      { title: 'Status page', every: '5m', s: 's', d: { who: 'Azure', initials: 'Az', color: '#8be9fd', when: '1h', more: 'resolved', text: 'Degraded performance for App Service in West Europe is mitigated.' } },
+      { title: 'Notifications', every: '1m', s: 'm', d: { items: [
+        { who: 'CI', where: 'logbook #1284', icon: '❌', when: '4m', unread: true, text: '<b>e2e chrome</b> failed: booking-export.spec.ts, timeout after 30s' },
+        { who: 'Dependabot', where: 'calendar', icon: '🤖', when: '3h', text: 'Bump <b>vite</b> from 6.3.5 to 8.0.2' },
+      ] } },
+      { title: 'RSS · Swift', every: '1h', s: 'm', d: { items: [
+        { who: 'Swift.org', where: 'blog', icon: '🕊️', when: '2d', text: '<b>Swift 6.3 released</b>: typed throws in the standard library and faster builds' },
+        { who: 'Hacking with Swift', where: 'article', icon: '📘', when: '4d', text: '<b>Observation in AppKit</b>: tracking changes outside SwiftUI' },
+      ] } },
+    ],
+  },
+  {
+    name: 'Checklist', kind: 'checklist', axis: 'Progress through steps: what’s done, what’s next, what’s stuck.',
+    sizes: ['<b>s</b> the count, a bar and the next step', '<b>m</b> the items, two columns if needed', '<b>l</b> sections, notes, done items folded'],
+    json: `{
+  <span class="k">"items"</span>: [
+    { <span class="k">"section"</span>: <span class="s">"Before"</span> },
+    { <span class="k">"title"</span>: <span class="s">"Freeze main"</span>, <span class="k">"state"</span>: <span class="s">"done"</span> },
+    { <span class="k">"title"</span>: <span class="s">"Smoke test QA"</span>, <span class="k">"state"</span>: <span class="s">"doing"</span>, <span class="k">"who"</span>: <span class="s">"Sara"</span> },
+    { <span class="k">"title"</span>: <span class="s">"Sign-off"</span>, <span class="k">"state"</span>: <span class="s">"blocked"</span>,
+      <span class="k">"note"</span>: <span class="s">"Waiting for PO"</span> }
+  ],
+  <span class="k">"foldDone"</span>: true
+}
+<span class="c">// state: todo, doing, done or blocked. Read-only:
+// the glance shows; the script owns the list.
+// Fits todo.txt, Things, Reminders, GitHub task lists.</span>`,
+    tiles: [
+      { title: 'Release 5.3', every: '5m', s: 'l', d: { caption: 'steps · release Thu 14:00', foldDone: true, items: [
+        { section: 'Before' }, { title: 'Freeze main', state: 'done' }, { title: 'Bump version and changelog', state: 'done' },
+        { title: 'Smoke test on QA', state: 'doing', who: 'Sara', note: 'export and calendar left' },
+        { title: 'PO sign-off', state: 'blocked', note: 'Waiting for Kristian, out until Wed' },
+        { section: 'Release' }, { title: 'Deploy to prod in the window', who: 'Anton' }, { title: 'Watch Sentry for 30 minutes', who: 'Anton' },
+        { section: 'After' }, { title: 'Post release notes in #dsp' }, { title: 'Unfreeze main' },
+      ] } },
+      { title: 'Today', every: 'live', s: 'm', d: { cols: true, items: [
+        { title: 'Review queenbolt #582', state: 'done' }, { title: 'Fix e2e on Safari', state: 'doing' },
+        { title: 'Answer Sara about 26E' }, { title: 'Export filters demo' }, { title: 'Book dentist', state: 'done' }, { title: 'Expense report' },
+      ] } },
+      { title: 'Onboarding', every: '1h', s: 's', d: { caption: 'for Elin', items: [
+        { title: 'Laptop', state: 'done' }, { title: 'GitHub access', state: 'done' }, { title: 'Azure access', state: 'doing' }, { title: 'First PR' }, { title: 'Pair with Johan' },
+      ] } },
+      { title: 'Groceries', every: '1h', s: 's', d: { caption: 'from Reminders', items: [
+        { title: 'Oat milk', state: 'done' }, { title: 'Coffee beans' }, { title: 'Lingonberry jam' }, { title: 'Crispbread', state: 'done' },
+      ] } },
+      { title: 'PR checklist · #1284', every: '5m', s: 'm', d: { cols: true, items: [
+        { title: 'Tests added', state: 'done' }, { title: 'Translations extracted', state: 'done' }, { title: 'Screenshots in PR', state: 'done' },
+        { title: 'e2e green', state: 'blocked' }, { title: 'Docs updated' }, { title: 'Two approvals' },
+      ] } },
+      { title: 'Weekly', every: '1d', s: 'm', d: { items: [
+        { title: 'Update the 26E epic status', state: 'done' }, { title: 'Clean up FE Maintenance sprint', state: 'doing' }, { title: 'Write the agent-watcher post' },
+      ] } },
+    ],
+  },
+];
+
+const RENDER = { markdown, keyvalue, table, feed, checklist };
+const variants = TYPES.map(type => () => type.tiles.map((t, i) => tile(i, { ...t, kind: type.kind }, RENDER[type.kind][t.s](t.d))).join(''));
+
+// ---------- Spec drawer and hint ----------
+const spec = document.getElementById('spec');
+const hint = document.getElementById('hint');
+let specOpen = new URLSearchParams(location.search).get('json') === '1';
+function renderSpec(i) {
+  const t = TYPES[i];
+  spec.innerHTML = `<h2>"type": "${t.kind}"</h2><p>${t.axis}</p><ul>${t.sizes.map(s => `<li>${s}</li>`).join('')}</ul><pre>${t.json}</pre>`;
+  spec.toggleAttribute('data-open', specOpen);
+  hint.innerHTML = `<b>${t.name}</b> · ${t.axis}<br><kbd>J</kbd> ${specOpen ? 'hide' : 'show'} the JSON a script prints`;
+}
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.key.toLowerCase() !== 'j') return;
+  specOpen = !specOpen;
+  const url = new URL(location);
+  url.searchParams.set('json', specOpen ? '1' : '0');
+  history.replaceState(null, '', url);
+  renderSpec(current);
+});
+
+// ---------- Picker wiring (verbatim) ----------
+const stage = document.getElementById('stage');
+const picker = document.querySelector('.proto-picker');
+const highlight = picker.querySelector('.proto-picker-highlight');
+const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+const replay = picker.querySelector('.proto-picker-replay');
+let current = 0;
+
+function moveHighlight() {
+  const el = items[current];
+  highlight.style.width = el.offsetWidth + 'px';
+  highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+}
+
+function mount(i) {
+  stage.innerHTML = '';
+  // Clear first, render next frame, so entrance animations re-run.
+  requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+}
+
+function setActive(i) {
+  if (i < 0 || i >= variants.length) return;
+  current = i;
+  items.forEach((el, j) => {
+    el.toggleAttribute('data-active', j === i);
+    if (j === i) el.setAttribute('aria-current', 'true');
+    else el.removeAttribute('aria-current');
+  });
+  moveHighlight();
+  const url = new URL(location);
+  url.searchParams.set('v', i + 1);
+  history.replaceState(null, '', url);
+  mount(i);
+  renderSpec(i);
+}
+
+items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+replay?.addEventListener('click', () => mount(current));
+window.addEventListener('resize', moveHighlight);
+
+document.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const num = parseInt(e.key, 10);
+  if (num >= 1 && num <= variants.length) setActive(num - 1);
+  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  else if (e.key === 'r' || e.key === 'R') mount(current);
+});
+
+setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+// Enable the slide only after first paint, so load doesn't animate.
+requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+</script>
+</body>
+</html>
