@@ -84,7 +84,7 @@ struct FeedContentTests {
         #expect(relative("2026-11-16T13:55:00Z") == "5m")
         #expect(relative("2026-11-16T13:00:00Z") == "1h")
         #expect(relative("2026-11-16T00:30:00Z") == "13h")
-        #expect(relative("2026-11-15T20:00:00Z") == "yesterday")
+        #expect(relative("2026-11-15T20:00:00Z") == "Sun")
         #expect(relative("2026-11-14T10:00:00Z") == "Sat")
         #expect(relative("2026-11-10T10:00:00Z") == "Tue")
         #expect(relative("2026-11-09T10:00:00Z") == "9 Nov")
@@ -94,7 +94,7 @@ struct FeedContentTests {
     @Test func lateLastNightIsInHours() {
         let now = at("2026-11-16T02:00:00Z")
         #expect(FeedTime.relative(at("2026-11-15T23:00:00Z"), now: now, calendar: utc) == "3h")
-        #expect(FeedTime.relative(at("2026-11-15T19:00:00Z"), now: now, calendar: utc) == "yesterday")
+        #expect(FeedTime.relative(at("2026-11-15T19:00:00Z"), now: now, calendar: utc) == "Sun")
     }
 
     @Test func relativeTimesFollowTheCalendarsZone() {
