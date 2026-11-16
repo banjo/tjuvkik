@@ -62,6 +62,7 @@ Each row:
 | `group` | A heading over each run of rows with the same group. |
 | `note` | A line under the row in its tone, for what needs you. |
 | `url` | Opened when the row is picked in the menu. |
+| `command` | Run when the row is picked in the menu, in the panel's folder. Wins over `url`. |
 
 ## Menu bar
 
@@ -75,6 +76,8 @@ Shown when the panel is in `menuBar` in [config.jsonc](config.md#menu-bar).
 
 - Leave `menuBar` out to show the first `summary` chip, with the whole summary in the menu.
 - Set `"menuBar": null` to show nothing, like when nothing needs you.
+
+A row's `command` runs like the panel's, with your login shell's PATH. What it starts in the background keeps running, so it can open apps or focus windows. If it fails, the error shows on the tile.
 
 ## Tones
 

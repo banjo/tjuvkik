@@ -17,7 +17,9 @@ def row: {
   subtitle: "\(.session):\(.tab) · \(.agent)",
   trailing: (if .state == "working" then "working" else (.since | age) end),
   tone: (.state | tone),
-  note: .waiting
+  note: .waiting,
+  # Picked in the menu: focus the session's pane, opening Ghostty if needed.
+  command: "agent-watcher notify-click \([.key, .id // ""] | @sh)"
 };
 
 .sessions as $sessions
