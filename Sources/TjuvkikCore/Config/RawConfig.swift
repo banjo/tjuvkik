@@ -47,6 +47,8 @@ struct RawPanel: Decodable {
     var every: String?
     var timeout: String?
     var size: String?
+    var history: Int?
+    var file: String?
 }
 
 /// `themes/<name>.jsonc`

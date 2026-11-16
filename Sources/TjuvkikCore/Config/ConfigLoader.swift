@@ -127,8 +127,38 @@ public enum ConfigLoader {
             }
         }
 
+        var source: URL?
+        if let path = raw.file {
+            if content != .markdown {
+                files.error(file, "file", "only a markdown panel can read a file")
+            } else if path.trimmingCharacters(in: .whitespaces).isEmpty {
+                files.error(file, "file", "can't be empty")
+            } else {
+                let expanded = NSString(string: path).expandingTildeInPath
+                source = expanded.hasPrefix("/") ? URL(fileURLWithPath: expanded)
+                    : files.directory.appending(path: "panels/\(name)").appending(path: expanded).standardizedFileURL
+            }
+        }
         let command = raw.command?.trimmingCharacters(in: .whitespaces) ?? ""
-        if command.isEmpty, let kind { files.error(file, "command", "a \(kind.rawValue) panel needs a command") }
+        if source != nil, !command.isEmpty {
+            files.error(file, "command", "a panel reads either a file or a command's output, not both")
+        } else if command.isEmpty, raw.file == nil, let kind {
+            files.error(file, "command", content == .markdown ? "a markdown panel needs a command or a file" : "a \(kind.rawValue) panel needs a command")
+        }
+        if source != nil, mode == .stream {
+            files.error(file, "mode", "a file panel reloads when the file changes, so it can't stream")
+        }
+
+        var history: Int?
+        if let value = raw.history {
+            if content != .chart {
+                files.error(file, "history", "only a chart panel keeps a history")
+            } else if ChartHistory.range.contains(value) {
+                history = value
+            } else {
+                files.error(file, "history", "\(value) is out of range, expected \(ChartHistory.range.lowerBound) to \(ChartHistory.range.upperBound)")
+            }
+        }
 
         var panelSize = TileSize.s
         if let value = raw.size {
@@ -146,7 +176,8 @@ public enum ConfigLoader {
         return Tile(
             panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
-            directory: files.directory.appending(path: "panels/\(name)"), content: content
+            directory: files.directory.appending(path: "panels/\(name)"), content: content,
+            history: history, file: source
         )
     }
 

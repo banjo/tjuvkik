@@ -7,13 +7,31 @@ public enum ModuleContent: Equatable, Sendable {
     case text(String)
     /// Text where the newest lines are last and matter most, like a log: shown from the bottom.
     case tail(String)
+    case chart(ChartContent)
+    case meters(MetersContent)
+    case grid(GridContent)
+    case timeline(TimelineContent)
     case stats(StatsContent)
+    case markdown(MarkdownContent)
+    case keyvalue(KeyValueContent)
+    case table(TableContent)
+    case feed(FeedContent)
+    case checklist(ChecklistContent)
 
     /// The type it's drawn as, or nil for rows and plain text.
     public var type: ContentType? {
         switch self {
         case .rows, .text, .tail: nil
+        case .chart: .chart
+        case .meters: .meters
+        case .grid: .grid
+        case .timeline: .timeline
         case .stats: .stats
+        case .markdown: .markdown
+        case .keyvalue: .keyvalue
+        case .table: .table
+        case .feed: .feed
+        case .checklist: .checklist
         }
     }
 
@@ -22,7 +40,16 @@ public enum ModuleContent: Equatable, Sendable {
         switch self {
         case .rows(let rows): rows.menuBar
         case .text, .tail: nil
+        case .chart(let content): content.extras.menuBar
+        case .meters(let content): content.extras.menuBar
+        case .grid(let content): content.extras.menuBar
+        case .timeline(let content): content.extras.menuBar
         case .stats(let content): content.extras.menuBar
+        case .markdown(let content): content.extras.menuBar
+        case .keyvalue(let content): content.extras.menuBar
+        case .table(let content): content.extras.menuBar
+        case .feed(let content): content.extras.menuBar
+        case .checklist(let content): content.extras.menuBar
         }
     }
 }
@@ -150,7 +177,16 @@ public enum ScriptOutput {
     public static func content(_ data: Data, as type: ContentType? = nil) -> Result<ModuleContent, ScriptOutputError> {
         switch type ?? (try? decoder.decode(KeyProbe.self, from: data)).flatMap(ContentType.detect) {
         case nil: parse(data).map(ModuleContent.rows)
+        case .chart: decode(ChartContent.self, from: data).map(ModuleContent.chart)
+        case .meters: decode(MetersContent.self, from: data).map(ModuleContent.meters)
+        case .grid: decode(GridContent.self, from: data).map(ModuleContent.grid)
+        case .timeline: decode(TimelineContent.self, from: data).map(ModuleContent.timeline)
         case .stats: decode(StatsContent.self, from: data).map(ModuleContent.stats)
+        case .markdown: decode(MarkdownContent.self, from: data).map(ModuleContent.markdown)
+        case .keyvalue: decode(KeyValueContent.self, from: data).map(ModuleContent.keyvalue)
+        case .table: decode(TableContent.self, from: data).map(ModuleContent.table)
+        case .feed: decode(FeedContent.self, from: data).map(ModuleContent.feed)
+        case .checklist: decode(ChecklistContent.self, from: data).map(ModuleContent.checklist)
         }
     }
 

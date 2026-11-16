@@ -25,13 +25,15 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 
 | Key | Default | |
 |---|---|---|
-| `type` | required | `cli`, `script`, or a [content type](script-output.md) like `stats`. |
-| `command` | required | Runs with `/bin/sh -c` in the panel's folder. |
+| `type` | required | `cli`, `script`, or a [content type](script-output.md) like `chart` or `table`. |
+| `command` | required, unless `file` | Runs with `/bin/sh -c` in the panel's folder. |
 | `mode` | `"interval"` | `interval` or `stream`. |
 | `title` | folder name | Shown on the tile. |
 | `every` | `"60s"` | How often an interval panel runs. At least `5s`. |
 | `timeout` | `"10s"` | How long an interval run may take. |
 | `size` | `"s"` | `s`, `m`, `l` or `xl`. `config.jsonc` can override it. |
+| `history` | | For a [chart](types/chart.md) whose script prints only its value: how many values to keep as the series, 2 to 1000. |
+| `file` | | A [markdown](types/markdown.md) panel only: a file to show instead of a command's output, reloaded when it changes. `~`, absolute, or in the panel's folder. |
 | `requires` | `[]` | Commands that must be on PATH. If one is missing, the tile says so instead of running. |
 | `description`, `author`, `version` | | For sharing. Not shown. |
 

@@ -3,7 +3,17 @@ import Foundation
 /// How a script panel's output is drawn, besides plain rows. A script picks one with its
 /// top-level key (`{ "stats": [...] }`), or the panel sets it with `"type"` in panel.jsonc.
 public enum ContentType: String, CaseIterable, Sendable {
+    // Order matters: the first that matches wins, so feed comes before checklist (both use `items`).
+    case chart
+    case meters
+    case grid
+    case timeline
     case stats
+    case markdown
+    case keyvalue
+    case table
+    case feed
+    case checklist
 
     /// The type a script's output is, from its top-level keys. Nil means rows.
     static func detect(_ probe: KeyProbe) -> ContentType? {
@@ -12,7 +22,16 @@ public enum ContentType: String, CaseIterable, Sendable {
 
     private func matches(_ probe: KeyProbe) -> Bool {
         switch self {
+        case .chart: probe.keys.contains("chart")
+        case .meters: probe.keys.contains("meters")
+        case .grid: probe.keys.contains("grid")
+        case .timeline: probe.keys.contains("timeline")
         case .stats: probe.keys.contains("stats")
+        case .markdown: probe.keys.contains("markdown")
+        case .keyvalue: probe.keys.contains("pairs")
+        case .table: probe.keys.contains("columns")
+        case .feed: probe.keys.contains("items") && (probe.itemKeys.contains("author") || probe.itemKeys.contains("text"))
+        case .checklist: probe.keys.contains("items")
         }
     }
 }
