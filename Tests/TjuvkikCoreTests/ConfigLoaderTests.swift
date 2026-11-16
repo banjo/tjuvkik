@@ -50,7 +50,7 @@ struct ConfigLoaderTests {
 
     @Test func emptyConfigGetsDefaults() throws {
         let config = try load(["config.json": "{}"]).config
-        #expect(config.holdMilliseconds == 250)
+        #expect(config.trigger == .fn)
         #expect(config.launchAtLogin)
         #expect(config.tiles.isEmpty)
     }
@@ -190,5 +190,41 @@ struct ConfigLoaderTests {
     @Test func holdMsRange() {
         #expect(errors(["config.json": #"{ "trigger": { "holdMs": 10 } }"#])
             == ["config.json: trigger.holdMs: must be between 50 and 2000, got 10"])
+    }
+
+    private func trigger(_ json: String) throws -> Trigger {
+        try load(["config.json": #"{ "trigger": "# + json + " }"]).config.trigger
+    }
+
+    @Test func triggerKeysHoldByDefault() throws {
+        #expect(try trigger("{}") == .fn)
+        #expect(try trigger(#"{ "holdMs": 400 }"#) == Trigger(input: .key(.fn), mode: .hold, holdMilliseconds: 400))
+        #expect(try trigger(#"{ "key": "rightOption" }"#) == Trigger(input: .key(.rightOption), mode: .hold))
+        #expect(try trigger(#"{ "key": "rightCommand", "mode": "toggle" }"#) == Trigger(input: .key(.rightCommand), mode: .toggle))
+    }
+
+    @Test func triggerShortcutsToggleByDefault() throws {
+        let shortcut = try Shortcut.parse("⌃⌥Space").get()
+        #expect(try trigger(#"{ "shortcut": "ctrl+option+space" }"#) == Trigger(input: .shortcut(shortcut), mode: .toggle))
+        #expect(try trigger(#"{ "shortcut": "⌃⌥Space", "mode": "hold", "holdMs": 100 }"#)
+            == Trigger(input: .shortcut(shortcut), mode: .hold, holdMilliseconds: 100))
+    }
+
+    @Test func holdMsWithToggleWarns() throws {
+        let loaded = try load(["config.json": #"{ "trigger": { "shortcut": "F18", "holdMs": 100 } }"#])
+        #expect(loaded.warnings.map(\.description) == [#"config.json: trigger.holdMs: only applies with "mode": "hold""#])
+    }
+
+    @Test func triggerErrors() {
+        func error(_ json: String) -> [String] { errors(["config.json": #"{ "trigger": "# + json + " }"]) }
+        #expect(error(#"{ "key": "fn", "shortcut": "F18" }"#) == [#"config.json: trigger: set "key" or "shortcut", not both"#])
+        #expect(error(#"{ "key": "leftOption" }"#) == [
+            #"config.json: trigger.key: unknown key "leftOption", expected one of "fn", "rightOption", "rightCommand", "rightControl", "rightShift""#,
+        ])
+        #expect(error(#"{ "key": "capsLock" }"#) == [
+            #"config.json: trigger.key: caps lock can't be held, macOS locks it on press: map it to F18 and set "shortcut": "F18""#,
+        ])
+        #expect(error(#"{ "shortcut": "space" }"#) == [#"config.json: trigger.shortcut: needs ⌃, ⌥ or ⌘, so it doesn't take a key you type"#])
+        #expect(error(#"{ "mode": "press" }"#) == [#"config.json: trigger.mode: unknown mode "press", expected "hold" or "toggle""#])
     }
 }

@@ -9,7 +9,7 @@ public struct Config: Equatable, Sendable {
     public var layout: Layout
     public var themeName: String
     public var theme: Theme
-    public var holdMilliseconds: Int
+    public var trigger: Trigger
     public var launchAtLogin: Bool
     public var tiles: [Tile]
     /// The panels shown in the menu bar, in order.

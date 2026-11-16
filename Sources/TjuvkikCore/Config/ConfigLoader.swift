@@ -42,12 +42,7 @@ public enum ConfigLoader {
         let theme = resolver.resolve(themeName, from: file)
         files = resolver.files
 
-        var hold = 250
-        if let value = raw.trigger?.holdMs {
-            if (50...2000).contains(value) { hold = value } else {
-                files.error(file, "trigger.holdMs", "must be between 50 and 2000, got \(value)")
-            }
-        }
+        let trigger: Trigger = if let raw = raw.trigger { Self.trigger(raw, file: file, files: &files) } else { .fn }
 
         let refs = raw.panels ?? []
         var tiles = refs.enumerated().compactMap { index, ref in
@@ -75,7 +70,7 @@ public enum ConfigLoader {
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
             view: view, layout: layout, themeName: themeName, theme: theme,
-            holdMilliseconds: hold, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar
+            trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }
@@ -104,6 +99,43 @@ public enum ConfigLoader {
         let errors = resolver.files.issues.filter { $0.severity == .error }
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         return .success(theme)
+    }
+
+    /// `trigger`: a modifier key on its own, or a shortcut. Holding is the default for a key,
+    /// toggling for a shortcut.
+    private static func trigger(_ raw: RawTrigger, file: String, files: inout ConfigFiles) -> Trigger {
+        var trigger = Trigger.fn
+        if raw.key != nil && raw.shortcut != nil {
+            files.error(file, "trigger", "set \"key\" or \"shortcut\", not both")
+        } else if let value = raw.shortcut {
+            switch Shortcut.parse(value) {
+            case .success(let shortcut): trigger = Trigger(input: .shortcut(shortcut), mode: .toggle)
+            case .failure(let error): files.error(file, "trigger.shortcut", error.message)
+            }
+        } else if let value = raw.key {
+            if let key = Trigger.Key(rawValue: value) {
+                trigger.input = .key(key)
+            } else if value.lowercased() == "capslock" {
+                files.error(file, "trigger.key", "caps lock can't be held, macOS locks it on press: map it to F18 and set \"shortcut\": \"F18\"")
+            } else {
+                files.error(file, "trigger.key", "unknown key \"\(value)\", expected one of \(Trigger.Key.allCases.map { "\"\($0.rawValue)\"" }.joined(separator: ", "))")
+            }
+        }
+        if let value = raw.mode {
+            if let mode = Trigger.Mode(rawValue: value) { trigger.mode = mode } else {
+                files.error(file, "trigger.mode", "unknown mode \"\(value)\", expected \"hold\" or \"toggle\"")
+            }
+        }
+        if let value = raw.holdMs {
+            if !(50...2000).contains(value) {
+                files.error(file, "trigger.holdMs", "must be between 50 and 2000, got \(value)")
+            } else if trigger.mode == .toggle {
+                files.warning(file, "trigger.holdMs", "only applies with \"mode\": \"hold\"")
+            } else {
+                trigger.holdMilliseconds = value
+            }
+        }
+        return trigger
     }
 
     /// Resolves a `panels` entry to its panel. The size here wins over the panel's own.

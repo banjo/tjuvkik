@@ -37,13 +37,44 @@
     "trigger": {
       "type": "object",
       "additionalProperties": false,
+      "description": "What opens the glance: a modifier key on its own (fn by default), or a shortcut. Set \"key\" or \"shortcut\", not both.",
       "properties": {
+        "key": {
+          "type": "string",
+          "enum": [
+            "fn",
+            "rightOption",
+            "rightCommand",
+            "rightControl",
+            "rightShift"
+          ],
+          "default": "fn",
+          "description": "A modifier key, held or tapped on its own. Pressed with another key or modifier, it doesn't open the glance."
+        },
+        "shortcut": {
+          "type": "string",
+          "examples": [
+            "⌃⌥Space",
+            "ctrl+option+space",
+            "cmd+shift+g",
+            "F18"
+          ],
+          "description": "A shortcut, like \"⌃⌥Space\" or \"ctrl+option+space\". Needs ⌃, ⌥ or ⌘, except for F1–F20. Keys are named by their place on a US keyboard."
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "hold",
+            "toggle"
+          ],
+          "description": "hold: shows while held. toggle: a tap or press shows, the next one or Esc hides. Default: hold for a key, toggle for a shortcut."
+        },
         "holdMs": {
           "type": "integer",
           "minimum": 50,
           "maximum": 2000,
           "default": 250,
-          "description": "How long to hold fn before the glance shows."
+          "description": "How long to hold before the glance shows. Only with \"mode\": \"hold\"."
         }
       }
     },

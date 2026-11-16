@@ -39,6 +39,8 @@ struct SchemaTests {
         #expect(enumValues(config["layout"]) == Set(Config.Layout.allCases.map(\.rawValue)))
         #expect(Set(config["theme"]?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
         #expect(enumValues(properties(config["panels"]?["items"])["size"]) == Set(TileSize.allCases.map(\.rawValue)))
+        #expect(enumValues(properties(config["trigger"])["key"]) == Set(Trigger.Key.allCases.map(\.rawValue)))
+        #expect(enumValues(properties(config["trigger"])["mode"]) == Set(Trigger.Mode.allCases.map(\.rawValue)))
     }
 
     @Test func panelSchema() throws {
