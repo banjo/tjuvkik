@@ -52,7 +52,7 @@ private struct TileView: View {
                 Text(tile.title)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color(theme.secondaryText))
-                Text(tile.kind.name)
+                Text(tile.kind.rawValue)
                     .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .padding(.horizontal, 5)
@@ -62,7 +62,7 @@ private struct TileView: View {
                 if state?.error != nil && state?.content != nil {
                     Text("stale").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Color(theme.warning))
                 } else {
-                    Text(tile.kind == .agents ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(width: .narrow)))")
+                    Text(tile.mode == .stream ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(width: .narrow)))")
                         .font(.system(size: 10.5))
                         .foregroundStyle(Color(theme.tertiaryText))
                 }
@@ -102,10 +102,10 @@ private struct TileView: View {
             RowsView(content: rows, theme: theme)
         case .text(let text):
             TextOutputView(text: text, theme: theme)
+        case .tail(let text):
+            TextOutputView(text: text, tail: true, theme: theme)
         case nil:
-            if tile.kind == .agents {
-                Text("Agents arrive in the next phase").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
-            } else if state?.error == nil {
+            if state?.error == nil {
                 Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
             }
         }

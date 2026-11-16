@@ -1,7 +1,7 @@
 import SwiftUI
 import TjuvkikCore
 
-/// A script panel: hero number, progress bar, then as many rows as fit.
+/// A script panel: hero number, summary, progress bar, then as many rows as fit.
 struct RowsView: View {
     let content: RowsContent
     let theme: Theme
@@ -19,6 +19,9 @@ struct RowsView: View {
                 }
                 .padding(.bottom, 4)
             }
+            if let summary = content.summary, !summary.isEmpty {
+                SummaryView(chips: summary, theme: theme).padding(.bottom, 6)
+            }
             if let progress = content.progress {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
@@ -29,11 +32,68 @@ struct RowsView: View {
                 .frame(height: 4)
                 .padding(.bottom, 8)
             }
-            ForEach(Array(content.rows.enumerated()), id: \.offset) { _, row in
+            ForEach(Array(content.rows.enumerated()), id: \.offset) { index, row in
+                if let group = row.group, index == 0 || content.rows[index - 1].group != group {
+                    Text(group.uppercased())
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(Color(theme.tertiaryText))
+                        .lineLimit(1)
+                        .padding(.top, index == 0 ? 0 : 6)
+                }
                 RowView(row: row, theme: theme)
+                if let note = row.note {
+                    NoteView(text: note, tone: row.tone, theme: theme)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+private struct SummaryView: View {
+    let chips: [RowsContent.Chip]
+    let theme: Theme
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(Array(chips.enumerated()), id: \.offset) { _, chip in
+                HStack(spacing: 4) {
+                    if let icon = chip.icon { Text(icon).font(.system(size: 11.5)) }
+                    if let value = chip.value {
+                        Text(value)
+                            .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(theme.color(for: chip.tone, default: theme.text))
+                    }
+                    if let label = chip.label {
+                        Text(label).font(.system(size: 11.5)).foregroundStyle(Color(theme.secondaryText))
+                    }
+                }
+                .lineLimit(1)
+            }
+        }
+    }
+}
+
+/// What a row needs from you, under it: "Bash: rm -rf node_modules".
+private struct NoteView: View {
+    let text: String
+    let tone: Tone?
+    let theme: Theme
+
+    var body: some View {
+        let color = theme.color(for: tone, default: theme.secondaryText)
+        Text(text)
+            .font(.system(size: 11, design: .monospaced))
+            .foregroundStyle(color)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .padding(.leading, 26)
+            .padding(.bottom, 2)
     }
 }
 
@@ -67,14 +127,15 @@ private struct RowView: View {
     }
 }
 
-/// A cli panel: the command's output, cut to what fits.
+/// A cli panel: the command's output, cut to what fits. A tail shows the last lines.
 struct TextOutputView: View {
     let text: String
+    var tail = false
     let theme: Theme
 
     var body: some View {
         let lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        FittingStack {
+        FittingStack(fromBottom: tail) {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 Text(line.isEmpty ? " " : line)
                     .font(.system(size: 10.5, design: .monospaced))
