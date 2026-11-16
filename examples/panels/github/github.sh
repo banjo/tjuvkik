@@ -25,5 +25,10 @@ jq -n --argjson reviews "$reviews" --argjson mine "$mine" '
       rows: (
         [$reviews[] | row("👀"; "warning")]
         + [$mine[] | row(if .isDraft then "📝" else "🔀" end; "muted")]
-      )
+      ),
+      # In the menu bar only while reviews wait, and they open from the menu.
+      menuBar: (if $n > 0 then {
+        icon: "👀", text: "\($n)", tone: "warning",
+        menu: [$reviews[] | row("👀"; "normal")]
+      } else null end)
     }'
