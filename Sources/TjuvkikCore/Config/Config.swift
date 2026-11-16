@@ -48,6 +48,12 @@ public struct ConfigIssue: Equatable, Sendable, CustomStringConvertible {
     public var path: String
     public var message: String
 
+    public init(severity: Severity, path: String, message: String) {
+        self.severity = severity
+        self.path = path
+        self.message = message
+    }
+
     public var description: String { path.isEmpty ? message : "\(path): \(message)" }
 
     static func error(_ path: String, _ message: String) -> ConfigIssue { .init(severity: .error, path: path, message: message) }
