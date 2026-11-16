@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let trigger = FnTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
+    private var terminationSignal: (any DispatchSourceSignal)?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -17,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.menu = menu
         statusItem = item
 
+        quitOnTerminationSignal()
         store.onChange = { [weak self] config in self?.apply(config) }
         store.start()
         panels.start()
@@ -32,6 +34,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         panels.stopAll()
+    }
+
+    /// `pkill` and logout send SIGTERM, which would skip applicationWillTerminate and leave
+    /// stream panels' commands running.
+    private func quitOnTerminationSignal() {
+        signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler { NSApp.terminate(nil) }
+        source.resume()
+        terminationSignal = source
     }
 
     private func apply(_ config: Config) {
