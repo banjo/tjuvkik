@@ -19,6 +19,16 @@ struct ScriptOutputTests {
         #expect(content.rows[0].tone == .warning)
     }
 
+    @Test func groupsNotesAndSummary() throws {
+        let content = try parse("""
+        { "summary": [{ "icon": "❓", "value": "2", "label": "waiting", "tone": "warning" }],
+          "rows": [{ "title": "a", "group": "zellij · dotfiles", "note": "Bash: rm -rf node_modules" }] }
+        """).get()
+        #expect(content.summary == [.init(icon: "❓", value: "2", label: "waiting", tone: .warning)])
+        #expect(content.rows[0].group == "zellij · dotfiles")
+        #expect(content.rows[0].note == "Bash: rm -rf node_modules")
+    }
+
     @Test func onlyRowsAreRequired() throws {
         let content = try parse(#"{ "rows": [{ "title": "a" }] }"#).get()
         #expect(content.hero == nil)

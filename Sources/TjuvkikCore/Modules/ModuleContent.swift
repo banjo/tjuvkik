@@ -5,6 +5,8 @@ import Foundation
 public enum ModuleContent: Equatable, Sendable {
     case rows(RowsContent)
     case text(String)
+    /// Text where the newest lines are last and matter most, like a log: shown from the bottom.
+    case tail(String)
 }
 
 /// Colors by meaning; each theme maps them to a color.
@@ -25,23 +27,37 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         public var tone: Tone?
     }
 
+    /// A small count in the summary line, like "❓ 2 waiting".
+    public struct Chip: Equatable, Sendable, Decodable {
+        public var icon: String?
+        public var value: String?
+        public var label: String?
+        public var tone: Tone?
+    }
+
     public struct Row: Equatable, Sendable, Decodable {
         public var icon: String?
         public var title: String
         public var subtitle: String?
         public var trailing: String?
         public var tone: Tone?
+        /// A heading shown above the first row of each run of rows with the same group.
+        public var group: String?
+        /// A line under the row, in the row's tone, for what needs attention.
+        public var note: String?
         /// Not used yet; kept for opening rows from Spotlight.
         public var url: String?
     }
 
     public var hero: Hero?
+    public var summary: [Chip]?
     /// 0 to 1.
     public var progress: Double?
     public var rows: [Row]
 
-    public init(hero: Hero? = nil, progress: Double? = nil, rows: [Row]) {
+    public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row]) {
         self.hero = hero
+        self.summary = summary
         self.progress = progress
         self.rows = rows
     }
