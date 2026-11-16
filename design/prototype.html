@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tjuvkik — panel prototype</title>
+<style>
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --fg: #f8f8f2;
+  --muted: rgba(248, 248, 242, 0.58);
+  --faint: rgba(248, 248, 242, 0.36);
+  --line: rgba(255, 255, 255, 0.07);
+  --blocked: #ffb86c;
+  --error: #ff5555;
+  --done: #8be9fd;
+  --working: #bd93f9;
+  --green: #50fa7b;
+  --yellow: #f1fa8c;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: #111; color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#stage { position: fixed; inset: 0; }
+button { font: inherit; color: inherit; }
+
+/* ---------- Desktop (context, not part of the design) ---------- */
+.desk {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 12% 88%, #6b3fa0 0%, transparent 60%),
+    radial-gradient(1000px 700px at 88% 8%, #1f6f8b 0%, transparent 55%),
+    radial-gradient(900px 900px at 72% 96%, #b4466b 0%, transparent 55%),
+    #1b1530;
+}
+.menubar {
+  position: absolute; top: 0; left: 0; right: 0; height: 32px; z-index: 5;
+  display: flex; align-items: center; gap: 18px; padding: 0 16px;
+  font-size: 13px; color: #fff;
+  background: rgba(20, 16, 36, 0.35);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+}
+.menubar b { font-weight: 600; }
+.menubar .apple { font-size: 15px; }
+.menubar .spacer { flex: 1; }
+.tray { display: flex; align-items: center; gap: 14px; }
+.notch {
+  position: absolute; top: 0; left: 50%; width: 196px; height: 32px; margin-left: -98px; z-index: 6;
+  background: #000; border-radius: 0 0 12px 12px;
+}
+.mb-tk {
+  display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 7px;
+  border: 0; border-radius: 5px; background: transparent; font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+.mb-tk[data-on] { background: rgba(255, 255, 255, 0.2); }
+.batt { width: 24px; height: 12px; border: 1px solid rgba(255,255,255,.75); border-radius: 3px; padding: 1px; position: relative; }
+.batt::before { content: ""; display: block; height: 100%; width: 78%; background: #fff; border-radius: 1px; }
+.batt::after { content: ""; position: absolute; right: -3px; top: 3px; width: 2px; height: 4px; background: rgba(255,255,255,.75); border-radius: 0 1px 1px 0; }
+
+.term {
+  position: absolute; left: 50%; top: calc(50% + 10px); transform: translate(-50%, -50%);
+  width: min(1000px, calc(100vw - 120px)); height: min(620px, calc(100vh - 170px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #282a36; border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 0 0 0.5px #000, 0 30px 80px rgba(0,0,0,.5);
+  font-family: var(--mono); font-size: 12.5px;
+}
+.term-bar {
+  position: relative; height: 34px; flex: none; display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12.5px; color: rgba(248,248,242,.55);
+}
+.lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; }
+.lights i:nth-child(3) { background: #28c840; }
+.term-body { flex: 1; padding: 6px 20px 14px; line-height: 1.65; overflow: hidden; display: flex; flex-direction: column; }
+.tl { white-space: pre-wrap; }
+.tl.dim { color: #6272a4; }
+.tl.user { margin: 8px 0; padding: 6px 12px; border-left: 2px solid #bd93f9; background: rgba(189,147,249,.07); }
+.tl.ask { margin-top: 10px; padding: 8px 12px; border: 1px solid rgba(255,184,108,.5); border-radius: 4px; color: var(--blocked); }
+.tl.err { margin-top: 10px; color: var(--error); }
+.tl.work { margin-top: 10px; color: var(--working); }
+.tl code { color: #50fa7b; }
+.tl b { color: #fff; }
+.term-input { margin-top: auto; padding: 8px 12px; border: 1px solid #44475a; border-radius: 4px; color: #6272a4; }
+.zj { height: 24px; flex: none; display: flex; align-items: center; background: #21222c; font-size: 12px; color: #f8f8f2; }
+.zj span { padding: 0 10px; height: 100%; display: inline-flex; align-items: center; }
+.zj .zj-s { background: #bd93f9; color: #282a36; font-weight: 700; }
+.zj .zj-on { background: #44475a; }
+.zj .zj-sum { margin-left: auto; background: #ffb86c; color: #282a36; }
+
+/* ---------- Harness: fn key, trigger mode, hints (chrome, not judged) ---------- */
+.hint {
+  position: fixed; left: 20px; bottom: 20px; z-index: 2147483646;
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; max-width: 380px;
+  border-radius: 14px; background: rgba(10,10,10,.78);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset;
+  font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.66); user-select: none; -webkit-user-select: none;
+}
+.hint b { color: #fff; font-weight: 600; }
+.hint .opts { display: flex; align-items: center; gap: 10px; margin-top: 5px; color: rgba(255,255,255,.8); }
+.hint .seg { display: inline-flex; padding: 2px; border-radius: 7px; background: rgba(255,255,255,.08); }
+.hint .seg button { border: 0; background: transparent; padding: 2px 8px; border-radius: 5px; font-size: 11.5px; color: rgba(255,255,255,.6); cursor: pointer; }
+.hint .seg button[data-on] { background: rgba(255,255,255,.16); color: #fff; }
+.hint label { display: inline-flex; align-items: center; gap: 5px; }
+.hint .last { color: rgba(255,255,255,.45); margin-top: 3px; min-height: 17px; }
+.fnkey {
+  flex: none; width: 50px; height: 46px; padding: 5px 7px; border: 0; border-radius: 8px;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
+  background: linear-gradient(#3b3b40, #2c2c31); color: #ddd; font-size: 11px; cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 2px 0 #0d0d0f, 0 3px 8px rgba(0,0,0,.45);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+}
+.fnkey[data-down] { transform: translateY(2px); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 0 0 #0d0d0f, 0 1px 3px rgba(0,0,0,.4); }
+
+/* ---------- Themes: each one only sets these tokens ---------- */
+.tk {
+  --ink: 255, 255, 255;
+  --panel: rgba(30, 31, 41, 0.74);
+  --well: rgba(0, 0, 0, 0.28);
+  --fg: #f8f8f2; --muted: rgba(248, 248, 242, 0.58); --faint: rgba(248, 248, 242, 0.36); --line: rgba(255, 255, 255, 0.07);
+  --blocked: #ffb86c; --error: #ff6e6e; --done: #8be9fd; --working: #bd93f9; --green: #50fa7b; --yellow: #f1fa8c;
+}
+body[data-theme=light] .tk {
+  --ink: 0, 0, 0;
+  --panel: rgba(246, 246, 248, 0.74);
+  --well: rgba(0, 0, 0, 0.04);
+  --fg: #1d1d1f; --muted: rgba(0, 0, 0, 0.56); --faint: rgba(0, 0, 0, 0.38); --line: rgba(0, 0, 0, 0.08);
+  --blocked: #c45a00; --error: #d70015; --done: #0071a4; --working: #7d3fc2; --green: #1d8a3e; --yellow: #8a6d00;
+}
+body[data-theme=light] .bn-backdrop { background: rgba(240, 238, 250, 0.35); }
+body[data-theme=dracula] .tk {
+  --panel: #282a36;
+  --well: #21222c;
+  --line: #44475a;
+  --muted: #a4a8c4; --faint: #6272a4;
+  --error: #ff5555;
+}
+body[data-theme=dracula] .glass {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 0 0 1px #44475a inset, 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+body[data-theme=dracula] .tile, body[data-theme=dracula] .tk--spot { border-radius: 10px; }
+body[data-theme=dracula] .tile-h { color: var(--working); }
+
+/* ---------- Shared panel pieces ---------- */
+.tk { position: absolute; z-index: 10; font-size: 13px; color: var(--fg); user-select: none; -webkit-user-select: none; }
+.glass {
+  background: var(--panel);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8); backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow: 0 0 0 1px rgba(var(--ink),.09) inset, 0 0 0 0.5px rgba(0,0,0,.7), 0 24px 64px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.25);
+}
+.k {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 5px; background: rgba(var(--ink),.08); color: var(--muted);
+  font: 500 10.5px/1 var(--mono);
+}
+.kind {
+  flex: none; font-size: 9.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 5px; border-radius: 4px; background: rgba(var(--ink),.08); color: var(--muted);
+}
+.kind[data-kind=script] { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+.kind[data-kind=web] { background: color-mix(in srgb, var(--done) 15%, transparent); color: var(--done); }
+.kind[data-kind=cli] { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); }
+.sum { display: flex; gap: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px; cursor: default; }
+.row[data-sel] { background: rgba(var(--ink),.09); }
+.row .ic { width: 18px; flex: none; text-align: center; font-size: 14px; }
+.row .tx { flex: 1; min-width: 0; }
+.row .t { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .m { margin-top: 1px; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .r { flex: none; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.row[data-tone=idle] .t { color: var(--muted); }
+.row[data-tone=working] .r { color: var(--working); }
+.row[data-tone=error] .r { color: var(--error); }
+.row[data-tone=blocked] .r { color: var(--blocked); }
+.grp { padding: 10px 10px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+
+code { font: 11.5px var(--mono); padding: 1px 5px; border-radius: 5px; background: rgba(var(--ink),.08); }
+.pv-h { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.pv-ic { font-size: 22px; line-height: 1.1; }
+.pv-t { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.pv-m { margin-top: 3px; font-size: 12px; color: var(--muted); }
+.pv-call { margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; }
+.pv-call b { display: block; margin-top: 2px; color: var(--fg); font-weight: 500; }
+.pv-call[data-tone=blocked] { background: rgba(255,184,108,.1); box-shadow: 0 0 0 1px rgba(255,184,108,.22) inset; color: var(--blocked); }
+.pv-call[data-tone=error] { background: rgba(255,85,85,.1); box-shadow: 0 0 0 1px rgba(255,85,85,.25) inset; color: var(--error); }
+.pv-call[data-tone=working] { background: rgba(189,147,249,.1); box-shadow: 0 0 0 1px rgba(189,147,249,.22) inset; color: var(--working); }
+.pv-q { margin: 0 0 12px; padding: 2px 0 2px 12px; border-left: 2px solid rgba(189,147,249,.6); font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.pv-reply p { margin: 0 0 6px; font-size: 13px; line-height: 1.5; }
+.pv-list { margin: 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.pv-list li { padding: 5px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; }
+.pv-list li span:last-child { color: var(--fg); text-align: right; }
+.webframe { border-radius: 10px; overflow: hidden; background: var(--well); box-shadow: 0 0 0 1px var(--line) inset; }
+.webframe .wf-bar { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 11px; color: var(--faint); border-bottom: 1px solid var(--line); }
+.webframe svg { display: block; width: 100%; }
+.webframe .wf-body { padding: 8px 12px 10px; }
+.wf-stat { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+.wf-stat b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.cli {
+  margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--well); box-shadow: 0 0 0 1px var(--line) inset;
+  font: 11.5px/1.6 var(--mono); color: var(--muted); white-space: pre; overflow: hidden;
+}
+.cli .cmd { color: var(--faint); }
+.cli .ok { color: var(--green); }
+.cli .bad { color: var(--error); }
+.bar { height: 5px; border-radius: 3px; background: rgba(var(--ink),.08); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--green); transform-origin: left; }
+
+/* ---------- 1. Spotlight ---------- */
+.tk--spot {
+  z-index: 11; left: 50%; top: 13vh; width: min(900px, calc(100vw - 48px)); border-radius: 18px; overflow: hidden;
+  transform-origin: 50% 0;
+  opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-6px) scale(0.97);
+  transition: opacity 120ms ease-out, transform 140ms ease-out, visibility 0s linear 140ms;
+}
+.tk--spot[data-state=open] {
+  opacity: 1; visibility: visible; transform: translateX(-50%);
+  transition: opacity 180ms var(--ease-out), transform 240ms var(--ease-out), visibility 0s;
+}
+.sp-head { display: flex; align-items: center; gap: 2px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.sp-tab {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 500; cursor: default; white-space: nowrap;
+}
+.sp-tab[data-on] { background: rgba(var(--ink),.1); color: var(--fg); }
+.sp-count { padding: 1px 6px; border-radius: 99px; background: rgba(255,184,108,.16); color: var(--blocked); font-size: 11px; font-variant-numeric: tabular-nums; }
+.sp-head .sum { margin-left: auto; padding-right: 4px; }
+.sp-body { display: grid; grid-template-columns: 340px 1fr; height: min(410px, 54vh); }
+.sp-list { padding: 4px 6px 6px; overflow: hidden; border-right: 1px solid var(--line); }
+.sp-list .row .k { visibility: hidden; }
+.sp-list .row[data-sel] .k { visibility: visible; }
+.sp-prev { position: relative; padding: 18px 22px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
+.sp-foot { display: flex; align-items: center; gap: 16px; padding: 9px 14px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+.sp-foot > span { display: inline-flex; align-items: center; gap: 6px; }
+.sp-src { margin-left: auto; color: var(--faint); font-family: var(--mono); font-size: 11px; }
+
+/* ---------- Glance (hold fn): passive Bento, three placements ---------- */
+.bn { position: absolute; inset: 0; z-index: 9; visibility: hidden; pointer-events: none; transition: visibility 0s linear 160ms; }
+.bn[data-state=open] { visibility: visible; transition: visibility 0s; }
+.bn-backdrop {
+  position: absolute; inset: 0; background: rgba(12, 10, 24, 0.42);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+  opacity: 0; transition: opacity 140ms ease-out;
+}
+.bn[data-state=open] .bn-backdrop { opacity: 1; transition: opacity 200ms var(--ease-out); }
+.bn-grid {
+  position: absolute; display: grid; gap: 12px; grid-auto-flow: dense;
+  grid-template-columns: 1.25fr 1fr 1fr 1fr; grid-template-rows: repeat(3, 1fr);
+}
+.sz-xl { grid-column: span 2; grid-row: span 3; }
+.sz-m { grid-column: span 2; }
+.tile {
+  position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  border-radius: 18px; padding: 12px 12px 10px;
+  opacity: 0; transform: var(--from, scale(0.97) translateY(6px));
+  transition: opacity 120ms ease-out, transform 0s linear 160ms;
+}
+.bn[data-state=open] .tile {
+  opacity: 1; transform: none;
+  transition: opacity 200ms var(--ease-out) calc(var(--i) * 30ms), transform 260ms var(--ease-out) calc(var(--i) * 30ms);
+}
+.tile-h { display: flex; align-items: center; gap: 8px; padding: 0 4px 8px; font-size: 12px; font-weight: 600; color: var(--fg); }
+.tile-h .up { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--faint); }
+.tile-body { flex: 1; min-height: 0; overflow: hidden; }
+.hero { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px 10px; }
+.hero b { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.hero span { font-size: 12.5px; color: var(--muted); }
+.hero[data-tone=error] b { color: var(--error); }
+.hero[data-tone=blocked] b { color: var(--blocked); }
+.tile .row { padding: 6px 6px; }
+.tile .cli { flex: 1; }
+.tile .call { margin: -2px 6px 6px 34px; padding: 6px 9px; border-radius: 8px; font-size: 12px; line-height: 1.4; }
+.tile .call[data-tone=blocked] { background: rgba(255,184,108,.1); color: var(--blocked); }
+.tile .call[data-tone=error] { background: rgba(255,85,85,.1); color: var(--error); }
+.tile .call span { color: var(--fg); }
+.agent-sum { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 4px 10px; }
+.agent-sum span { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 12px; border-radius: 12px; background: rgba(var(--ink),.06); font-size: 12px; color: var(--muted); }
+.agent-sum b { font-size: 20px; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+.bn-foot {
+  position: absolute; display: flex; justify-content: center; gap: 14px; font-size: 11.5px; color: rgba(var(--ink),.62);
+  opacity: 0; transition: opacity 120ms ease-out;
+}
+.bn[data-state=open] .bn-foot { opacity: 1; transition: opacity 200ms var(--ease-out) 120ms; }
+.bn-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.bn-foot code { font-size: 11px; }
+
+/* 1. Fullscreen: the whole screen, desktop blurred behind */
+.bn--full .bn-grid { top: 48px; left: 40px; right: 40px; bottom: 84px; }
+.bn--full .bn-foot { left: 0; right: 0; bottom: 58px; }
+
+/* 2. Framed: the same frame Spotlight opens in, the desktop stays around it */
+.bn--framed .bn-grid { top: 13vh; left: 50%; width: min(1080px, calc(100vw - 48px)); height: min(580px, 66vh); transform: translateX(-50%); gap: 10px; }
+.bn--framed .tile { border-radius: 16px; }
+.bn--framed .hero b { font-size: 26px; }
+.bn--framed .bn-foot { left: 0; right: 0; top: calc(13vh + min(580px, 66vh) + 14px); }
+
+/* 3. Edges: tiles along both sides like widgets, the terminal in the middle stays visible */
+.bn--edges .edge { position: absolute; top: 44px; display: flex; flex-direction: column; gap: 10px; }
+.bn--edges .edge-l { left: 14px; width: 360px; }
+.bn--edges .edge-r { right: 14px; width: 320px; }
+.bn--edges .edge-l .tile { --from: translateX(-16px); }
+.bn--edges .edge-r .tile { --from: translateX(16px); }
+.bn--edges .tile { padding: 10px 10px 8px; }
+.bn--edges .hero { padding-bottom: 6px; }
+.bn--edges .hero b { font-size: 22px; }
+.bn--edges .tile .row { padding: 4px 6px; }
+.bn--edges .cli { font-size: 10.5px; padding: 8px 10px; }
+.bn--edges .bn-foot { right: 14px; width: 320px; bottom: 16px; justify-content: flex-start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tk--spot, .tk--spot[data-state=open] { transform: translateX(-50%); }
+  .tile, .bn[data-state=open] .tile { transform: none; }
+}
+
+/* ---------- Picker (verbatim spec) ---------- */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+.proto-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+.proto-picker-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div class="hint">
+  <button class="fnkey" id="fnkey" aria-label="fn key"><span>fn</span><span>🌐</span></button>
+  <div>
+    <div><b>Hold F</b> (or the fn key) to glance; let go to close. <b>Double-tap F</b> for Spotlight: <span class="k">1–9</span> open, <span class="k">↑↓</span> select, <span class="k">←→</span> module, <span class="k">esc</span> close.</div>
+    <div class="opts">
+      <span class="seg" id="theme"><button data-t="glass">Dark glass</button><button data-t="light">Light glass</button><button data-t="dracula">Dracula</button></span>
+      <label><input type="checkbox" id="pin" checked> Keep glance open (P)</label>
+    </div>
+    <div class="last" id="last"></div>
+  </div>
+</div>
+
+<nav class="proto-picker" aria-label="Prototype variants">
+  <span class="proto-picker-highlight" aria-hidden="true"></span>
+  <button class="proto-picker-item" data-active aria-current="true">Fullscreen</button>
+  <button class="proto-picker-item">Framed</button>
+  <button class="proto-picker-item">Edges</button>
+  <span class="proto-picker-divider" aria-hidden="true"></span>
+  <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+</nav>
+
+<script>
+// ---------- Data: what agent-watcher and the script, web and CLI modules would provide ----------
+const ICON = { blocked: '❓', error: '❌', done: '💬', working: '⏳', idle: '🤖' };
+const RANK = { blocked: 0, error: 1, done: 2, working: 3, idle: 4 };
+
+const S = {
+  agents: [
+    { id: 'a1', state: 'blocked', place: 'logbook', tab: 'ai', mux: 'zellij', agent: 'opencode', age: '2m',
+      title: 'Export bookings to CSV',
+      call: 'Waiting for permission', callText: 'Run <code>pnpm add papaparse</code> in packages/export',
+      prompt: 'Add a CSV export to the bookings table. It should respect the current filters.',
+      reply: ['I added an <code>ExportButton</code> next to the filters, and it reads the same query as the table.', 'Customer notes can contain commas and newlines, so I want **papaparse** for the quoting rather than joining strings myself.'] },
+    { id: 'a2', state: 'error', place: 'pr-bot-playground', tab: 'ai', mux: 'zellij', agent: 'opencode', age: '14m',
+      title: 'AI review fails on large diffs',
+      call: 'Failed', callText: 'Provider returned 529: overloaded',
+      prompt: 'Why does the review job get OOM-killed on large diffs?',
+      reply: ['The job loads every file of the diff into memory before chunking.', 'I was about to stream them instead when the provider call failed.'] },
+    { id: 'a3', state: 'done', place: 'dotfiles', tab: 'ai', mux: 'zellij', agent: 'opencode', age: '5m',
+      title: 'agent-watcher for zellij',
+      prompt: 'Commit and push. The zellij parts first, then the brew stuff.',
+      reply: ['Both are on master:', '<code>3068374 feat(agent-watcher): show agent state in both tmux and zellij</code>', '<code>41af238 chore(brew): add qlmarkdown and syntax-highlight casks</code>'] },
+    { id: 'a4', state: 'done', place: 'calendar', tab: 'ai', mux: 'tmux', agent: 'pi', age: '21m',
+      title: 'Mobile responsive week view',
+      prompt: 'Make the week view usable under 600px. Days should stack.',
+      reply: ['Below 600px the week now shows one day at a time, with swipe between days.', 'The booking popover opens as a bottom sheet instead.'] },
+    { id: 'a5', state: 'working', place: 'pros-assets', tab: 'ai', mux: 'tmux', agent: 'opencode', age: '3m',
+      title: 'Time to Critical tooltip',
+      call: 'Working', callText: 'Running <code>pnpm test src/assets/critical</code>',
+      prompt: 'Show the time to critical in the tooltip, rounded to whole days.',
+      reply: ['Reading <code>CriticalBadge.tsx</code> and its tests.'] },
+    { id: 'a6', state: 'idle', place: 'workshop-history', tab: 'ai', mux: 'zellij', agent: 'opencode', age: '2h',
+      title: 'Filter chips keep state on back',
+      prompt: 'Going back from a work order resets the filter chips.',
+      reply: ['The filters now live in the URL, so back restores them.'] },
+    { id: 'a7', state: 'idle', place: 'queenbolt', tab: 'ai', mux: 'tmux', agent: 'claude', age: '1d',
+      title: 'Merge duplicate messages',
+      prompt: 'Find messages.ts entries that say the same thing and merge them.',
+      reply: ['Merged 14 duplicates into shared messages. <code>pnpm extract-intl</code> shows no changes.'] },
+  ],
+  github: [
+    { icon: '👀', title: 'FE - Logbook: Export bookings', meta: 'vgcs/logbook #1284 · Anna L. asked you', right: '1h', tone: 'blocked',
+      detail: [['Checks', '✓ 14 passed'], ['Reviewers', 'You, Erik S.'], ['Changes', '+412 −38 · 9 files']] },
+    { icon: '✏️', title: 'fix: Time to Critical rounding', meta: 'vgcs/pros-assets #611 · changes requested', right: '1d', tone: 'error',
+      detail: [['Checks', '✗ lint failed'], ['Reviewers', 'Changes requested by Maja K.'], ['Changes', '+18 −6 · 2 files']] },
+    { icon: '✅', title: 'feat(agent-watcher): zellij adapter', meta: 'banjo/dotfiles #2 · approved', right: '3h', tone: 'idle',
+      detail: [['Checks', '✓ 3 passed'], ['Reviewers', 'Approved by Erik S.'], ['Changes', '+1 204 −610 · 31 files']] },
+    { icon: '🟣', title: 'chore: bump queenbolt to 4.2', meta: 'vgcs/calendar #530 · merged', right: '2d', tone: 'idle',
+      detail: [['Checks', '✓ 12 passed'], ['Merged by', 'You'], ['Changes', '+3 −3 · 2 files']] },
+  ],
+  jira: [
+    { icon: '🔵', title: 'CUCO-78846 Export bookings', meta: 'In Progress · 5 pts · Logbook', right: '5', tone: 'blocked',
+      detail: [['Status', 'In Progress'], ['Sprint', 'DSP SPARK - 26B2'], ['Epic', 'CUCO-77921 Logbook exports']] },
+    { icon: '🟡', title: 'CUCO-79012 Mobile responsive', meta: 'Code Review · 3 pts · Calendar', right: '3', tone: 'idle',
+      detail: [['Status', 'Code Review'], ['Sprint', 'DSP SPARK - 26B2'], ['Epic', 'CUCO-78010 Calendar on mobile']] },
+    { icon: '⚪', title: 'CUCO-78990 Time to Critical', meta: 'To Do · 2 pts · Assets', right: '2', tone: 'idle',
+      detail: [['Status', 'To Do'], ['Sprint', 'DSP SPARK - 26B2'], ['Epic', 'CUCO-78500 Asset health']] },
+    { icon: '🟢', title: 'CUCO-78811 Drop ui-components', meta: 'Done · 8 pts · Maintenance', right: '8', tone: 'idle',
+      detail: [['Status', 'Done'], ['Sprint', 'DSP SPARK - 26B2'], ['Epic', 'FE Maintenance']] },
+  ],
+  cal: [
+    { icon: '📞', title: 'DSP Spark standup', meta: 'Teams · in 12 min', right: '13:55', tone: 'blocked',
+      detail: [['When', '13:55 – 14:10'], ['Where', 'Teams'], ['With', 'Spark team (8)']] },
+    { icon: '🧭', title: 'Refinement CUCO', meta: 'Saturnus · 3rd floor', right: '15:00', tone: 'idle',
+      detail: [['When', '15:00 – 16:00'], ['Where', 'Saturnus'], ['With', 'DSP Green, DSP Spark']] },
+    { icon: '☕', title: '1:1 Erik', meta: 'Teams', right: '16:30', tone: 'idle',
+      detail: [['When', '16:30 – 17:00'], ['Where', 'Teams'], ['With', 'Erik S.']] },
+  ],
+  builds: [
+    { icon: '✅', title: 'logbook · main', meta: 'deploy to qa · 4m 12s', right: '8m', tone: 'idle' },
+    { icon: '❌', title: 'pros-assets · #611', meta: 'lint · 52s', right: '1d', tone: 'error' },
+    { icon: '✅', title: 'calendar · main', meta: 'build · 3m 40s', right: '1h', tone: 'idle' },
+  ],
+  durations: [262, 251, 270, 248, 255, 301, 244, 239, 260, 252, 247, 258, 266, 241, 236, 249, 252, 245, 250, 252],
+  pods: `NAME                              READY   STATUS             RESTARTS   AGE
+logbook-api-7d9f8b6c4-x2kqp       1/1     Running            0          2h
+logbook-web-5c6d47f9b-pp9zm       1/1     Running            0          2h
+logbook-worker-6b7c98d5f-r8wnt    0/1     CrashLoopBackOff   7          14m
+logbook-export-cron-28391840      0/1     Completed          0          41m`,
+  module: 0,
+  sel: { agents: 0, github: 0, jira: 0, cal: 0, builds: 0, pods: 0 },
+  glance: false,
+  spot: false,
+  holding: false,
+  pinned: true,
+  at: 'a3',
+};
+
+// Every module is one of four kinds: built in (native), a script printing rows as JSON,
+// an HTML page (web), or a command whose plain output is shown as is (cli).
+const MODULES = [
+  { id: 'agents', name: 'Agents', kind: 'native', cmd: 'agent-watcher', every: 'live', verb: 'Jump' },
+  { id: 'github', name: 'GitHub', kind: 'script', cmd: 'gh search prs --review-requested=@me --json …', every: '5m', verb: 'Open' },
+  { id: 'jira', name: 'Jira', kind: 'script', cmd: 'jira issue list -q "sprint in openSprints()" --plain', every: '5m', verb: 'Open' },
+  { id: 'cal', name: 'Calendar', kind: 'script', cmd: 'icalBuddy -n eventsToday', every: '1m', verb: 'Join' },
+  { id: 'builds', name: 'Builds', kind: 'web', cmd: 'modules/builds/index.html', every: '1m', verb: 'Open' },
+  { id: 'pods', name: 'Pods', kind: 'cli', cmd: 'kubectl get pods -n logbook-qa', every: '30s', verb: 'Logs' },
+];
+const modIndex = (id) => MODULES.findIndex((m) => m.id === id);
+
+const sorted = () => [...S.agents].sort((a, b) => RANK[a.state] - RANK[b.state]);
+const needsYou = (a) => a.state === 'blocked' || a.state === 'error' || a.state === 'done';
+const md = (s) => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const kindTag = (m) => `<span class="kind" data-kind="${m.kind}">${m.kind}</span>`;
+
+// Every module also reduces to rows; agents and CLI output are mapped onto the same shape.
+function rows(id) {
+  if (id === 'agents') {
+    return sorted().map((a) => ({
+      icon: ICON[a.state], title: a.title, meta: `${a.place} · ${a.tab} · ${a.agent}`,
+      right: a.state === 'working' ? 'working' : a.age, tone: a.state,
+      group: needsYou(a) ? 'Needs you' : a.state === 'working' ? 'Working' : 'Idle',
+    }));
+  }
+  if (id === 'pods') {
+    return S.pods.trim().split('\n').slice(1).map((line) => {
+      const [name, ready, status, restarts, age] = line.split(/\s+/);
+      const bad = status !== 'Running' && status !== 'Completed';
+      return { icon: bad ? '🔴' : status === 'Completed' ? '⚪' : '🟢', title: name.replace(/-[a-z0-9]+-[a-z0-9]+$|-\d+$/, ''), meta: `${status} · ${ready} · ${restarts} restarts`, right: age, tone: bad ? 'error' : 'idle' };
+    });
+  }
+  return S[id];
+}
+
+const COUNT = {
+  agents: () => S.agents.filter(needsYou).length,
+  github: () => 1,
+  jira: () => 0,
+  cal: () => 0,
+  builds: () => 1,
+  pods: () => 1,
+};
+
+function summary() {
+  return ['blocked', 'error', 'done', 'working']
+    .map((st) => [st, S.agents.filter((a) => a.state === st).length])
+    .filter(([, n]) => n)
+    .map(([st, n]) => `<span>${ICON[st]} ${n}</span>`).join('');
+}
+
+function rowHTML(r, m, i, opts = {}) {
+  const sel = S.module === modIndex(m) && S.sel[m] === i;
+  return `<div class="row" data-act="row" data-m="${m}" data-i="${i}" data-tone="${r.tone}" ${sel ? 'data-sel' : ''}>
+    <span class="ic">${r.icon}</span>
+    <span class="tx"><div class="t">${r.title}</div>${opts.meta === false ? '' : `<div class="m">${r.meta}</div>`}</span>
+    ${opts.key && i < 9 ? `<span class="k">${i + 1}</span>` : ''}
+    <span class="r">${r.right}</span>
+  </div>${opts.after ? opts.after(i, sel) : ''}`;
+}
+
+function listHTML(id, opts = {}) {
+  let group = null;
+  return rows(id).slice(0, opts.limit ?? 99).map((r, i) => {
+    const head = opts.groups !== false && r.group && r.group !== group ? `<div class="grp">${(group = r.group)}</div>` : '';
+    return head + rowHTML(r, id, i, opts);
+  }).join('');
+}
+
+function sparkline(height, w = 300) {
+  const v = S.durations, max = Math.max(...v), min = Math.min(...v);
+  const pts = v.map((x, i) => `${(i / (v.length - 1)) * w},${height - 4 - ((x - min) / (max - min)) * (height - 10)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${height}" preserveAspectRatio="none" style="height:${height}px;color:var(--done)">
+    <polyline points="0,${height} ${pts} ${w},${height}" fill="currentColor" fill-opacity=".14" stroke="none"/>
+    <polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+  </svg>`;
+}
+
+function webModule(height) {
+  return `<div class="webframe"><div class="wf-bar">${kindTag(MODULES[4])} builds/index.html</div>
+    ${sparkline(height)}
+    <div class="wf-body"><div class="wf-stat"><span>logbook main <b>4m 12s</b></span><span>p50 <b>4m 10s</b></span><span>failing <b>1</b></span></div></div>
+  </div>`;
+}
+
+function cliOutput(withCommand = true) {
+  const out = S.pods
+    .replace(/CrashLoopBackOff/g, '<span class="bad">CrashLoopBackOff</span>')
+    .replace(/Running/g, '<span class="ok">Running</span>');
+  return `<pre class="cli">${withCommand ? `<span class="cmd">$ ${MODULES[5].cmd}</span>\n` : ''}${out}</pre>`;
+}
+
+function detailHTML(id) {
+  const i = S.sel[id];
+  if (id === 'agents') {
+    const a = sorted()[i];
+    return `<div class="pv-h"><span class="pv-ic">${ICON[a.state]}</span><div>
+        <div class="pv-t">${a.title}</div>
+        <div class="pv-m">${a.place} · ${a.tab} · ${a.mux} · ${a.agent} · ${a.state === 'working' ? 'working ' : ''}${a.age}</div></div></div>
+      ${a.call ? `<div class="pv-call" data-tone="${a.state}">${a.call}<b>${a.callText}</b></div>` : ''}
+      <p class="pv-q">${a.prompt}</p>
+      <div class="pv-reply">${a.reply.map((l) => `<p>${md(l)}</p>`).join('')}</div>`;
+  }
+  if (id === 'builds') return webModule(120);
+  if (id === 'pods') return cliOutput();
+  const r = S[id][i];
+  return `<div class="pv-h"><span class="pv-ic">${r.icon}</span><div><div class="pv-t">${r.title}</div><div class="pv-m">${r.meta}</div></div></div>
+    <ul class="pv-list">${r.detail.map(([k, v]) => `<li><span>${k}</span><span>${v}</span></li>`).join('')}</ul>`;
+}
+
+const keyHints = (verb, nav = 'Module') =>
+  `<span><span class="k">↵</span> ${verb}</span><span><span class="k">↑↓</span> Select</span><span><span class="k">←→</span> ${nav}</span>`;
+
+// ---------- Spotlight (double-tap fn): one module at a time as tabs, list + preview ----------
+function renderSpot() {
+  const m = MODULES[S.module];
+  return `<div class="sp-head">
+      ${MODULES.map((mod, i) => `<button class="sp-tab" data-act="module" data-i="${i}" ${i === S.module ? 'data-on' : ''}>${mod.name}${COUNT[mod.id]() ? `<span class="sp-count">${COUNT[mod.id]()}</span>` : ''}</button>`).join('')}
+      <span class="sum">${summary()}</span>
+    </div>
+    <div class="sp-body">
+      <div class="sp-list">${listHTML(m.id, { key: true })}</div>
+      <div class="sp-prev">${detailHTML(m.id)}</div>
+    </div>
+    <div class="sp-foot">${keyHints(m.verb)}<span class="sp-src">${kindTag(m)} ${m.cmd}</span></div>`;
+}
+
+// ---------- Glance (hold fn): a passive Bento, laid out from the user's tiles config ----------
+// The layout is data, like ~/.config/tjuvkik/tiles.json: a module and a size per tile, in order.
+const TILES = [
+  { module: 'agents', size: 'xl' },
+  { module: 'github', size: 's' },
+  { module: 'jira', size: 's' },
+  { module: 'cal', size: 's' },
+  { module: 'builds', size: 's' },
+  { module: 'pods', size: 'm' },
+];
+
+const STATE_LABEL = { blocked: 'waiting', error: 'failed', done: 'done', working: 'working' };
+
+function passiveRows(id, limit = 99, meta = true) {
+  let group = null;
+  return rows(id).slice(0, limit).map((r, i) => {
+    const head = r.group && r.group !== group ? `<div class="grp">${(group = r.group)}</div>` : '';
+    let call = '';
+    if (id === 'agents') {
+      const a = sorted()[i];
+      if (a.call && (a.state === 'blocked' || a.state === 'error')) call = `<div class="call" data-tone="${a.state}">${a.call}: <span>${a.callText}</span></div>`;
+    }
+    return `${head}<div class="row" data-tone="${r.tone}"><span class="ic">${r.icon}</span>
+      <span class="tx"><div class="t">${r.title}</div>${meta ? `<div class="m">${r.meta}</div>` : ''}</span><span class="r">${r.right}</span></div>${call}`;
+  }).join('');
+}
+
+// What each module shows as a tile. Modules without one would fall back to their rows.
+const TILE_BODY = {
+  agents: (compact) => {
+    const counts = ['blocked', 'error', 'done', 'working'].map((st) => [st, S.agents.filter((a) => a.state === st).length]).filter(([, n]) => n);
+    return `<div class="agent-sum">${counts.map(([st, n]) => `<span>${ICON[st]} <b>${n}</b> ${STATE_LABEL[st]}</span>`).join('')}</div>${passiveRows('agents', 99, !compact)}`;
+  },
+  github: (compact) => `<div class="hero" data-tone="blocked"><b>1</b><span>review requested</span></div>${passiveRows('github', 3, false)}`,
+  jira: (compact) => `<div class="hero"><b>13<span style="font-size:.55em;color:var(--faint)">/21</span></b><span>pts · ends Fri</span></div>
+    <div class="bar" style="margin:0 4px 8px"><i style="transform:scaleX(.62)"></i></div>${passiveRows('jira', compact ? 2 : 3, false)}`,
+  cal: (compact) => `<div class="hero" data-tone="blocked"><b>12 min</b><span>DSP Spark standup</span></div>${passiveRows('cal', compact ? 2 : 3, false)}`,
+  builds: (compact) => `<div style="margin:0 4px 4px">${sparkline(compact ? 36 : 54)}</div>${passiveRows('builds', compact ? 2 : 3, false)}`,
+  pods: () => cliOutput(),
+};
+
+function tileHTML(t, i, compact = false) {
+  const m = MODULES[modIndex(t.module)];
+  return `<section class="tile glass sz-${t.size}" style="--i:${i}">
+    <header class="tile-h">${m.name} ${kindTag(m)}<span class="up">${m.every === 'live' ? 'live' : `every ${m.every}`}</span></header>
+    <div class="tile-body">${TILE_BODY[t.module](compact)}</div></section>`;
+}
+
+const glanceFoot = `<div class="bn-foot"><span>Double-tap fn for Spotlight</span><span>Layout from <code>tiles.json</code></span></div>`;
+
+function renderFull() {
+  return `<div class="bn-backdrop"></div><div class="bn-grid">${TILES.map((t, i) => tileHTML(t, i)).join('')}</div>${glanceFoot}`;
+}
+function renderFramed() {
+  return `<div class="bn-grid">${TILES.map((t, i) => tileHTML(t, i, true)).join('')}</div>${glanceFoot}`;
+}
+function renderEdges() {
+  const left = TILES.filter((t) => t.size === 'xl');
+  const right = TILES.filter((t) => t.size !== 'xl');
+  return `<div class="edge edge-l">${left.map((t, i) => tileHTML(t, i)).join('')}</div>
+    <div class="edge edge-r">${right.map((t, i) => tileHTML(t, i + 1, true)).join('')}</div>${glanceFoot}`;
+}
+
+const VARIANTS = [
+  { cls: 'bn bn--full', render: renderFull },
+  { cls: 'bn bn--framed', render: renderFramed },
+  { cls: 'bn bn--edges', render: renderEdges },
+];
+
+// ---------- Desktop ----------
+function desktopHTML() {
+  return `<div class="desk">
+    <div class="menubar"><span class="apple"></span><b>Ghostty</b><span>Shell</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span>
+      <span class="spacer"></span>
+      <span class="tray"><button class="mb-tk" id="mb-tk" data-act="spot"></button><span class="batt"></span><span>Mon 16 Nov&nbsp; 13:43</span></span>
+    </div>
+    <div class="notch"></div>
+    <div class="term">
+      <div class="term-bar"><span class="lights"><i></i><i></i><i></i></span><span id="term-title"></span></div>
+      <div class="term-body" id="term-body"></div>
+      <div class="zj" id="term-zj"></div>
+    </div>
+  </div>`;
+}
+
+function renderTerm() {
+  const a = S.agents.find((x) => x.id === S.at);
+  document.getElementById('term-title').textContent = `${a.place} — ${a.mux}`;
+  document.getElementById('term-body').innerHTML = `
+    <div class="tl dim">${a.agent} · ${a.title}</div>
+    <div class="tl user">${a.prompt}</div>
+    ${a.reply.map((l) => `<div class="tl">${md(l)}</div>`).join('')}
+    ${a.state === 'blocked' ? `<div class="tl ask">△ Permission required  ${a.callText}\n  [a] allow once   [A] always   [d] deny</div>` : ''}
+    ${a.state === 'error' ? `<div class="tl err">✗ ${a.callText}</div>` : ''}
+    ${a.state === 'working' ? `<div class="tl work">⠋ ${a.callText}</div>` : ''}
+    <div class="term-input">Ask anything…</div>`;
+  const needs = S.agents.filter(needsYou).length;
+  document.getElementById('term-zj').innerHTML = `<span class="zj-s">${a.place}</span><span>1 main</span><span>2 server</span><span class="zj-on">3 ${ICON[a.state]} ai</span><span>4 scratch</span>${needs ? `<span class="zj-sum">💬 (${needs})</span>` : ''}`;
+}
+
+function renderMenubar() {
+  const el = document.getElementById('mb-tk');
+  if (!el) return;
+  const top = sorted()[0];
+  const needs = S.agents.filter(needsYou).length;
+  el.innerHTML = needs ? `${ICON[top.state]} ${needs}` : '🤖';
+  el.toggleAttribute('data-on', S.glance || S.spot);
+}
+
+let glanceEl = null;
+let spotEl = null;
+let variant = 0;
+
+function renderAll() {
+  if (glanceEl) glanceEl.innerHTML = VARIANTS[variant].render();
+  if (spotEl) spotEl.innerHTML = renderSpot();
+  renderMenubar();
+  renderTerm();
+}
+
+function show(el, flag) {
+  if (!el) return;
+  S[flag] = true;
+  renderAll();
+  void el.offsetWidth;
+  el.dataset.state = 'open';
+}
+function hide(el, flag) {
+  if (!el) return;
+  S[flag] = false;
+  el.dataset.state = 'closed';
+  renderMenubar();
+}
+const showGlance = () => { if (!S.spot) show(glanceEl, 'glance'); };
+const hideGlance = () => hide(glanceEl, 'glance');
+function openSpot() {
+  hideGlance();
+  show(spotEl, 'spot');
+}
+function closeSpot() {
+  hide(spotEl, 'spot');
+  if (S.pinned) showGlance();
+}
+
+function afterMount(i) {
+  variant = i;
+  glanceEl = document.getElementById('glance');
+  spotEl = document.getElementById('spot');
+  S.glance = false;
+  S.spot = false;
+  renderAll();
+  if (S.pinned) requestAnimationFrame(showGlance);
+}
+
+// ---------- Actions (Spotlight) ----------
+const last = document.getElementById('last');
+function activate(id, i) {
+  const list = rows(id);
+  if (i < 0 || i >= list.length) return;
+  S.sel[id] = i;
+  if (id === 'agents') {
+    const a = sorted()[i];
+    S.at = a.id;
+    // Looking at it marks it seen, like agent-watcher does.
+    if (a.state === 'done' || a.state === 'error') a.state = 'idle';
+    S.sel.agents = sorted().indexOf(a);
+    last.textContent = `Jumped to ${a.place} · ${a.tab} (${a.mux})`;
+  } else {
+    const verbs = { github: 'Opened in Brave', jira: 'Opened in Jira', cal: 'Joined in Teams', builds: 'Opened build log', pods: 'kubectl logs -f' };
+    last.textContent = `${verbs[id]}: ${list[i].title}`;
+  }
+  closeSpot();
+  renderAll();
+}
+
+function move(delta) {
+  const id = MODULES[S.module].id;
+  const n = rows(id).length;
+  S.sel[id] = (S.sel[id] + delta + n) % n;
+  renderAll();
+}
+function setModule(i) {
+  S.module = (i + MODULES.length) % MODULES.length;
+  renderAll();
+}
+
+function spotKey(e) {
+  const id = MODULES[S.module].id;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9) activate(id, n - 1);
+  else if (e.key === 'ArrowDown') move(1);
+  else if (e.key === 'ArrowUp') move(-1);
+  else if (e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey)) setModule(S.module + 1);
+  else if (e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey)) setModule(S.module - 1);
+  else if (e.key === 'Enter') activate(id, S.sel[id]);
+  else if (e.key === 'Escape') closeSpot();
+}
+
+// ---------- Trigger: hold fn for the glance, double-tap fn for Spotlight (F here) ----------
+const fnkey = document.getElementById('fnkey');
+const pin = document.getElementById('pin');
+let holdTimer = null;
+let fDownAt = 0;
+let otherKey = false;
+let lastTap = 0;
+
+function fDown() {
+  if (S.holding) return;
+  S.holding = true;
+  fDownAt = performance.now();
+  otherKey = false;
+  fnkey.setAttribute('data-down', '');
+  if (S.spot || S.glance) return;
+  holdTimer = setTimeout(() => { if (S.holding) showGlance(); }, 250);
+}
+function fUp() {
+  if (!S.holding) return;
+  S.holding = false;
+  fnkey.removeAttribute('data-down');
+  clearTimeout(holdTimer);
+  if (S.glance && !S.pinned) hideGlance();
+  const now = performance.now();
+  if (now - fDownAt >= 250 || otherKey) return;
+  // A tap: the second one within 400ms toggles Spotlight.
+  if (now - lastTap > 400) { lastTap = now; return; }
+  lastTap = 0;
+  if (S.spot) closeSpot();
+  else openSpot();
+}
+function setPinned(on) {
+  S.pinned = on;
+  pin.checked = on;
+  if (on) showGlance();
+  else if (!S.holding) hideGlance();
+}
+
+fnkey.addEventListener('pointerdown', (e) => { e.preventDefault(); fnkey.setPointerCapture(e.pointerId); fDown(); });
+fnkey.addEventListener('pointerup', fUp);
+fnkey.addEventListener('pointercancel', fUp);
+pin.addEventListener('change', () => { setPinned(pin.checked); pin.blur(); });
+window.addEventListener('blur', fUp);
+
+const plain = (e) => !e.metaKey && !e.ctrlKey && !e.altKey;
+window.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if ((e.key === 'f' || e.key === 'F') && plain(e)) {
+    e.preventDefault(); e.stopPropagation();
+    if (!e.repeat) fDown();
+    return;
+  }
+  if (S.holding) otherKey = true;
+  // Spotlight owns the keyboard while it's open, like the real app's event tap. The glance never does.
+  if (S.spot) {
+    e.preventDefault(); e.stopPropagation();
+    spotKey(e);
+    return;
+  }
+  if ((e.key === 'p' || e.key === 'P') && plain(e)) setPinned(!S.pinned);
+}, true);
+window.addEventListener('keyup', (e) => { if (e.key === 'f' || e.key === 'F') fUp(); }, true);
+
+document.getElementById('stage').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'spot') S.spot ? closeSpot() : openSpot();
+  else if (act === 'module') setModule(+el.dataset.i);
+  else if (act === 'row') { S.module = modIndex(el.dataset.m); activate(el.dataset.m, +el.dataset.i); }
+});
+document.getElementById('stage').addEventListener('mouseover', (e) => {
+  const el = e.target.closest('#spot [data-act=row]');
+  if (!el || !S.spot) return;
+  const m = modIndex(el.dataset.m);
+  const i = +el.dataset.i;
+  if (S.module === m && S.sel[el.dataset.m] === i) return;
+  S.module = m;
+  S.sel[el.dataset.m] = i;
+  renderAll();
+});
+
+// ---------- Themes: sets of color tokens, chosen in settings ----------
+const THEMES = { glass: 'Dark glass', light: 'Light glass', dracula: 'Dracula' };
+function setTheme(t) {
+  document.body.dataset.theme = t;
+  document.querySelectorAll('#theme button').forEach((b) => b.toggleAttribute('data-on', b.dataset.t === t));
+}
+document.getElementById('theme').addEventListener('click', (e) => {
+  const t = e.target.closest('button')?.dataset.t;
+  if (t) setTheme(t);
+});
+setTheme('glass');
+
+// The working agent finishes after a while, so the menu bar and summary change on their own.
+setTimeout(() => {
+  const a = S.agents.find((x) => x.id === 'a5');
+  a.state = 'done'; a.age = 'now'; delete a.call;
+  a.reply = ['The tooltip shows “Critical in 12 days”, rounded down. Tests pass.'];
+  renderAll();
+}, 25000);
+
+// ---------- Picker (reference wiring) ----------
+const variants = VARIANTS.map(({ cls }) => () => desktopHTML() + `<div id="glance" class="tk ${cls}" data-state="closed"></div><div id="spot" class="tk tk--spot glass" data-state="closed"></div>`);
+const stage = document.getElementById('stage');
+const picker = document.querySelector('.proto-picker');
+const highlight = picker.querySelector('.proto-picker-highlight');
+const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+const replay = picker.querySelector('.proto-picker-replay');
+let current = 0;
+
+function moveHighlight() {
+  const el = items[current];
+  highlight.style.width = el.offsetWidth + 'px';
+  highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+}
+
+function mount(i) {
+  stage.innerHTML = '';
+  glanceEl = spotEl = null;
+  // Clear first, render next frame, so entrance animations re-run.
+  requestAnimationFrame(() => { stage.innerHTML = variants[i](); afterMount(i); });
+}
+
+function setActive(i) {
+  if (i < 0 || i >= variants.length) return;
+  current = i;
+  items.forEach((el, j) => {
+    el.toggleAttribute('data-active', j === i);
+    if (j === i) el.setAttribute('aria-current', 'true');
+    else el.removeAttribute('aria-current');
+  });
+  moveHighlight();
+  const url = new URL(location);
+  url.searchParams.set('v', i + 1);
+  history.replaceState(null, '', url);
+  mount(i);
+}
+
+items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+replay?.addEventListener('click', () => mount(current));
+window.addEventListener('resize', moveHighlight);
+
+document.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const num = parseInt(e.key, 10);
+  if (num >= 1 && num <= variants.length) setActive(num - 1);
+  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  else if (e.key === 'r' || e.key === 'R') mount(current);
+});
+
+setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+// Enable the slide only after first paint, so load doesn't animate.
+requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+</script>
+</body>
+</html>
