@@ -17,9 +17,18 @@ A `script` panel prints JSON to stdout. Every field:
       "trailing": "1h",
       "tone": "warning",
       "group": "Reviews",
-      "note": "Waiting for approval"
+      "note": "Waiting for approval",
+      "url": "https://github.com/acme/app/pull/1284"
     }
-  ]
+  ],
+  "menuBar": {
+    "icon": "👀",
+    "text": "2",
+    "tone": "warning",
+    "menu": [
+      { "icon": "👀", "title": "Export bookings", "subtitle": "logbook #1284", "trailing": "1h", "url": "https://github.com/acme/app/pull/1284" }
+    ]
+  }
 }
 ```
 
@@ -39,6 +48,7 @@ Only `rows`, each row's `title` and the hero's `value` are required. A `stream` 
 | `summary` | A line of small counts. Each has `icon`, `value`, `label` and `tone`, all optional. |
 | `progress` | A bar, from 0 to 1. |
 | `rows` | As many as fit, in order. |
+| `menuBar` | What the panel shows in the menu bar. See [Menu bar](#menu-bar). |
 
 Each row:
 
@@ -51,6 +61,20 @@ Each row:
 | `tone` | Colors the row. |
 | `group` | A heading over each run of rows with the same group. |
 | `note` | A line under the row in its tone, for what needs you. |
+| `url` | Opened when the row is picked in the menu. |
+
+## Menu bar
+
+Shown when the panel is in `menuBar` in [config.jsonc](config.md#menu-bar).
+
+| Field | |
+|---|---|
+| `icon`, `text` | Shown in the menu bar: `👀 2`. |
+| `tone` | Colors it. |
+| `menu` | Rows in the menu, under the panel's title. Same fields as `rows`; `subtitle` and `note` go on a second line. |
+
+- Leave `menuBar` out to show the first `summary` chip, with the whole summary in the menu.
+- Set `"menuBar": null` to show nothing, like when nothing needs you.
 
 ## Tones
 

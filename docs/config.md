@@ -28,7 +28,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. See [Themes](themes.md). |
 | `trigger.holdMs` | `250` | How long to hold fn before the glance opens, 50–2000. |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
-| `menuBar` | none | A panel from `panels` whose [summary](script-output.md) shows in the menu bar, like `"agents"`. |
+| `menuBar` | none | Panels from `panels` to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `panels` | `[]` | Which panels to show, in order. |
 
 ## Panels
@@ -56,7 +56,11 @@ Panels that don't fit are left out, and the menu says which.
 
 ## Menu bar
 
-With `"menuBar": "agents"`, the menu bar shows the first chip of the agents panel's `summary`, like `❓ 2`, and the menu lists all of them. Without a summary it shows the grid icon. A broken config shows a warning sign.
+```jsonc
+"menuBar": ["agents", "github"]
+```
+
+Each panel decides what it shows, with [`menuBar` in its output](script-output.md#menu-bar): an icon and text in the menu bar, like `❓ 2  👀 3`, and its own rows in the menu. When no panel shows anything, the menu bar shows the grid icon. A broken config shows a warning sign.
 
 ## Files
 
