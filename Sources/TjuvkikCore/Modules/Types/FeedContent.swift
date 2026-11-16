@@ -152,15 +152,15 @@ public enum FeedTime {
         Date(timeIntervalSince1970: value > 100_000_000_000 ? value / 1000 : value)
     }
 
-    /// "now", "5m", "2h", "yesterday", "Mon", "12 Nov", "12 Nov 2025". Times ahead of `now` read as now.
+    /// "now", "5m", "2h", "Sun", "12 Nov", "12 Nov 2025". Times ahead of `now` read as now. Yesterday
+    /// is its weekday, since at l it already sits under a "Yesterday" heading.
     public static func relative(_ date: Date, now: Date, calendar: Calendar) -> String {
         let seconds = now.timeIntervalSince(date)
         if seconds < 60 { return "now" }
         if seconds < 3600 { return "\(Int(seconds / 60))m" }
         let days = daysBetween(date, now, calendar: calendar)
-        // Late last night reads better as hours than as "yesterday".
+        // Late last night reads better as hours than as a weekday.
         if days == 0 || seconds < 6 * 3600 { return "\(Int(seconds / 3600))h" }
-        if days == 1 { return "yesterday" }
         if days < 7 { return String(weekday(date, calendar: calendar).prefix(3)) }
         return short(date, now: now, calendar: calendar)
     }

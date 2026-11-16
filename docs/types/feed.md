@@ -29,7 +29,7 @@ Each item:
 | `avatar` | An image URL, drawn round. The initials show while it loads, and if it can't. |
 | `icon` | An emoji drawn in a square instead, for bots and services: `🤖`, `❌`. |
 | `where` | Where it was said, after the author: `#dsp-spark`, `DM`, `logbook #1284`. |
-| `time` | When it was said. ISO 8601 (`2026-11-16T13:12:00Z`, or `2026-11-16T14:12` in your time zone) or a Unix timestamp. Shown relative: `now`, `5m`, `2h`, `yesterday`, `Mon`, `12 Nov`. Anything else is shown as is. |
+| `time` | When it was said. ISO 8601 (`2026-11-16T13:12:00Z`, or `2026-11-16T14:12` in your time zone) or a Unix timestamp. Shown relative: `now`, `5m`, `2h`, `Sun` within the week, `12 Nov`. Anything else is shown as is. |
 | `unread` | `true` puts a dot before the author. |
 | `url` | What the item opens. |
 
