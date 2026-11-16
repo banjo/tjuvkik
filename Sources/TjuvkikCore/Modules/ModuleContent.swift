@@ -47,9 +47,12 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         public var note: String?
         /// Opened when the row is picked in the menu.
         public var url: String?
+        /// Run when the row is picked in the menu, in the panel's folder. Wins over `url`.
+        public var command: String?
 
         public init(icon: String? = nil, title: String, subtitle: String? = nil, trailing: String? = nil, tone: Tone? = nil,
-                    group: String? = nil, note: String? = nil, url: String? = nil) {
+                    group: String? = nil, note: String? = nil, url: String? = nil, command: String? = nil) {
+            self.command = command
             self.icon = icon
             self.title = title
             self.subtitle = subtitle

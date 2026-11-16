@@ -42,6 +42,47 @@ public enum CommandRunner {
         }
     }
 
+    /// Runs a command you asked for, like a menu row's: what it starts in the background (a
+    /// delayed focus, an app) keeps running. Returns once the shell exits, with what it printed to
+    /// stderr by then. The shell is stopped after `timeout`.
+    public static func launch(_ command: String, in directory: URL? = nil, environment: [String: String], timeout: Double = 30) async -> CommandResult {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: launchBlocking(command, directory: directory, environment: environment, timeout: timeout))
+            }
+        }
+    }
+
+    private static func launchBlocking(_ command: String, directory: URL?, environment: [String: String], timeout: Double) -> CommandResult {
+        let process: SpawnedProcess
+        switch SpawnedProcess.start(command, directory: directory, environment: environment) {
+        case .success(let spawned): process = spawned
+        case .failure(let error): return CommandResult(status: -1, stdout: Data(), stderr: error.message, timedOut: false, truncated: false)
+        }
+        // Background children may hold the pipes open for a long time; read them apart.
+        let stderr = Collector(limit: 8 * 1024)
+        let readers = DispatchGroup()
+        for (fd, collector) in [(process.stdout, Collector(limit: 0)), (process.stderr, stderr)] {
+            readers.enter()
+            DispatchQueue.global(qos: .utility).async {
+                collector.drain(fd)
+                close(fd)
+                readers.leave()
+            }
+        }
+        let timedOut = Flag()
+        let pid = process.pid
+        let timer = DispatchWorkItem {
+            timedOut.set()
+            kill(pid, SIGTERM)
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timer)
+        let status = process.wait(keepingBackground: true)
+        timer.cancel()
+        _ = readers.wait(timeout: .now() + 0.3)
+        return CommandResult(status: status, stdout: Data(), stderr: String(decoding: stderr.data, as: UTF8.self), timedOut: timedOut.isSet, truncated: false)
+    }
+
     private static func runBlocking(_ command: String, directory: URL?, environment: [String: String], timeout: Double, outputLimit: Int) -> CommandResult {
         let process: SpawnedProcess
         switch SpawnedProcess.start(command, directory: directory, environment: environment) {
@@ -85,10 +126,14 @@ public enum CommandRunner {
 /// blocks on a full pipe.
 final class Collector: @unchecked Sendable {
     private let limit: Int
-    private(set) var data = Data()
-    private(set) var truncated = false
+    private let lock = NSLock()
+    private var collected = Data()
+    private var cut = false
 
     init(limit: Int) { self.limit = limit }
+
+    var data: Data { lock.withLock { collected } }
+    var truncated: Bool { lock.withLock { cut } }
 
     func drain(_ fd: Int32) {
         var buffer = [UInt8](repeating: 0, count: 16 * 1024)
@@ -96,9 +141,11 @@ final class Collector: @unchecked Sendable {
             let count = read(fd, &buffer, buffer.count)
             if count < 0 && errno == EINTR { continue }
             guard count > 0 else { return }
-            let room = limit - data.count
-            if room > 0 { data.append(contentsOf: buffer.prefix(min(count, room))) }
-            if count > room { truncated = true }
+            lock.withLock {
+                let room = limit - collected.count
+                if room > 0 { collected.append(contentsOf: buffer.prefix(min(count, room))) }
+                if count > room { cut = true }
+            }
         }
     }
 }

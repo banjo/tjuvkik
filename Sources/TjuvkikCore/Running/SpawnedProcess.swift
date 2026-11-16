@@ -63,11 +63,12 @@ struct SpawnedProcess: Sendable {
     }
 
     /// Waits for the shell to exit, then kills what it left running in the background, which
-    /// would keep the pipes open. Returns the exit status (128 + signal when killed).
-    func wait() -> Int32 {
+    /// would keep the pipes open, unless `keepingBackground`. Returns the exit status (128 +
+    /// signal when killed).
+    func wait(keepingBackground: Bool = false) -> Int32 {
         var status: Int32 = 0
         while waitpid(pid, &status, 0) == -1 && errno == EINTR {}
-        signal(SIGKILL)
+        if !keepingBackground { signal(SIGKILL) }
         return (status & 0x7f) == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
     }
 
