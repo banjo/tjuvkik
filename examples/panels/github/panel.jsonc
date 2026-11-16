@@ -1,0 +1,10 @@
+// Pull requests waiting for your review, then your own open ones. Needs `gh` (logged in) and `jq`.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "type": "script",
+  "title": "GitHub",
+  "command": "./github.sh",
+  "every": "5m",
+  "timeout": "20s",
+  "size": "s",
+}
