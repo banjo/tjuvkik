@@ -176,13 +176,17 @@ Done when changing `theme` or `panels` in the file updates the panel within a se
 
 Done when the GitHub script tile and a `kubectl`/`git status` CLI tile render and refresh, and a failing command shows its error.
 
-## Phase 4: Agents
+## Phase 4: Agents (done)
 
-1. In dotfiles, add `agent-watcher list --json`: every agent session of both multiplexers, most urgent first, with state, icon, place, title, `since`, pane key and session ID. Add the waiting text (permission or question) from the session's preview when it has one. This keeps the unread and urgency rules in `agents.awk`.
-2. `AgentsModule`: runs it every second while the glance is shown and every 5 seconds otherwise. Renders the prototype's agents tile: state counts, grouped rows, the waiting or error text under ❓ and ❌ rows.
-3. Menu bar icon: the most urgent icon and the count that need you (`❓ 3`), 🤖 when none, hidden or dimmed when agent-watcher isn't installed.
+Agents aren't built in: agent-watcher is a script in dotfiles, and there's no shared protocol for agent state, so the app shouldn't know about it. Instead:
 
-Done when an agent in tmux or zellij shows up, changes state and clears in the glance and the menu bar within a couple of seconds.
+1. agent-watcher got `list --json`, every session with state, icon, place, title, `since`, key, ID and what a blocked session waits for, and `--watch`, which prints a new line on each change.
+2. Panels got `"mode": "stream"`: the command keeps running, and each line is a new JSON document (script) or output line (cli). Restarted with backoff when it exits.
+3. Rows got `group`, `note` (the waiting text under ❓ rows) and a `summary` line of chips.
+4. `examples/panels/agents/` streams agent-watcher through `agents.jq`.
+5. Panels got metadata (`description`, `author`, `version`) and `requires`, checked on PATH.
+
+Still open: the menu bar icon showing the most urgent agent. Without a built-in agents module, it could show a panel's `summary`, picked in `config.jsonc` (`"menuBar": "agents"`).
 
 ## Phase 5: Polish and ship
 
@@ -191,6 +195,15 @@ Done when an agent in tmux or zellij shows up, changes state and clears in the g
 3. Multiple displays, Spaces, full-screen apps, light/dark wallpaper, Reduce Motion and Reduce Transparency (solid panel).
 4. README: install, certificate, permissions, config reference, writing a script module.
 5. Use it daily for a week; collect issues for v1.1 (likely Spotlight).
+
+## Later: sharing panels
+
+A panel is a self-contained folder, so sharing one is copying a folder. Steps, when it's worth it:
+
+1. "Add Panel from URL…" in the menu, or `tjuvkik add github:<owner>/<repo>/<path>`, which downloads a panel folder.
+2. A registry: a repo with an `index.json` of panels (name, description, author, requires, path), browsable from the menu.
+
+The metadata in `panel.jsonc` (description, author, version, requires) is there for this.
 
 ## Settled
 
