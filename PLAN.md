@@ -137,7 +137,7 @@ Done when the app builds, installs and starts from `~/Applications` with a menu 
    - Any key down or other modifier while fn is held: cancel, and hide if shown.
    - The tap is disabled by timeout or user input: re-enable it.
 2. Permission: check with `CGPreflightListenEventAccess`, ask with `CGRequestListenEventAccess`. Without it, the menu shows "Allow Input Monitoring…", which opens System Settings.
-3. `GlancePanel`: borderless non-activating `NSPanel`, clear background, ignores the mouse, level above normal windows, joins all Spaces and full-screen apps. Placed on the screen with the mouse: centered, 13% from the top of the visible frame, `min(1080, width − 48)` × `min(580, 66% of height)`.
+3. `GlancePanel`: borderless non-activating `NSPanel`, clear background, ignores the mouse, level above normal windows, joins all Spaces and full-screen apps. Placed on the screen of the focused window (the frontmost app's topmost normal window from `CGWindowListCopyWindowInfo`, matched to the `NSScreen` it overlaps most; needs no permission), falling back to the screen with the mouse. Centered, 13% from the top of the visible frame, `min(1080, width − 48)` × `min(580, 66% of height)`.
 4. Show: tiles fade and scale in from 0.97, staggered 30ms, 200–260ms ease-out. Hide: 120ms fade. Only a fade when Reduce Motion is on.
 5. README: set "Press 🌐 key to" to "Do nothing" in System Settings → Keyboard.
 
@@ -187,7 +187,5 @@ Done when an agent in tmux or zellij shows up, changes state and clears in the g
 - App icon: later. v1 uses an SF Symbol in the menu bar.
 - Jira: no tile in v1; a script module can be written later.
 - Work Mac (MDM): check that Input Monitoring can be granted to a self-signed app at the start of Phase 1.
-
-## Unresolved questions
-
-1. Which display shows the glance: the one with the mouse (default in v1), or the one with the focused window?
+- Display: the glance opens on the screen of the focused window.
+- macOS reference: the `macos-patterns` skill (installed in dotfiles) for panels, window levels, screen geometry and launch at login.
