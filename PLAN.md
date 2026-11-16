@@ -9,7 +9,7 @@ In v1:
 - Hold fn: show the Framed Bento glance. Release: hide it. fn together with another key (fn+arrows, fn+F-keys) cancels.
 - Passive: no keyboard capture, no clicks (the panel ignores the mouse).
 - Modules: **agents** (native, from agent-watcher), **script** (a command printing rows as JSON), **cli** (a command's plain text output).
-- Config in `~/.config/tjuvkik/` (JSON with comments): `config.json`, a folder per panel, a file per theme. Reloaded when saved, syncable with dotfiles, exportable as a zip.
+- Config in `~/.config/tjuvkik/` (JSON with comments): `config.jsonc`, a folder per panel, a file per theme. Reloaded when saved, syncable with dotfiles, exportable as a zip.
 - Themes: Dark glass, Light glass, Dracula, plus custom themes in the config.
 - Menu bar icon with the most urgent agent icon and count; menu with Open config, Reload, Launch at login, Quit.
 - Launch at login.
@@ -171,7 +171,7 @@ Done when changing `theme` or `panels` in the file updates the panel within a se
 3. `ScriptModule` (decodes the JSON above) and `CLIModule` (text, ANSI stripped, as many lines as fit).
 4. Tile placement on the grid (dense packing is done in Phase 2, `BentoPacking`).
 5. `TileView`: header (title, kind tag, interval or "live", stale marker), then the content renderer: hero, progress bar, rows (icon, title, subtitle, trailing, tone), or monospace text. Rows that don't fit are cut, not scrolled.
-6. Example panel `examples/panels/github/` (`panel.json` + `github.sh` using `gh`: review requests and your open PRs).
+6. Example panel `examples/panels/github/` (`panel.jsonc` + `github.sh` using `gh`: review requests and your open PRs).
 7. Tests: script output decoding, runner timeout and output cap, layout packing.
 
 Done when the GitHub script tile and a `kubectl`/`git status` CLI tile render and refresh, and a failing command shows its error.

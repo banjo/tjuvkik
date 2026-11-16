@@ -49,7 +49,7 @@ The defaults are written on first run, and every file is reloaded within a secon
 { "extends": "dracula", "accent": "#ff79c6" }
 ```
 
-Panels fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3; a size in `config.json` wins over the panel's own.
+Panels fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3; a size in `config.jsonc` wins over the panel's own.
 
 The menu bar menu can also export the folder as a zip and import one. Importing checks the zip first and backs up your current config to `~/Library/Application Support/Tjuvkik/Backups/`.
 
