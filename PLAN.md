@@ -42,15 +42,15 @@ Later, not in v1, but the code leaves room for them:
 Everything lives in one folder, `$XDG_CONFIG_HOME/tjuvkik/` (default `~/.config/tjuvkik/`), so it can be kept in dotfiles and stowed:
 
 ```
-config.json               theme, fn, and which panels go where, in order, at what size
-panels/<name>/panel.json  what a panel is: type, title, command, interval, default size
-panels/<name>/*.sh        its scripts; commands run in the panel's folder
-themes/<name>.json        custom themes
-schemas/                  written by the app, for editor completion through "$schema"
+config.jsonc               theme, fn, and which panels go where, in order, at what size
+panels/<name>/panel.jsonc  what a panel is: type, title, command, interval, default size
+panels/<name>/*.sh         its scripts; commands run in the panel's folder
+themes/<name>.jsonc        custom themes
+schemas/                   written by the app, for editor completion through "$schema"
 ```
 
 ```jsonc
-// config.json
+// config.jsonc
 {
   "$schema": "./schemas/config.schema.json",
   "view": "bento",          // "spotlight" later
@@ -65,14 +65,16 @@ schemas/                  written by the app, for editor completion through "$sc
   ]
 }
 
-// panels/pods/panel.json
+// panels/pods/panel.jsonc
 { "type": "cli", "title": "Pods", "command": "kubectl get pods -n logbook-qa", "every": "30s", "size": "m" }
 
-// themes/mine.json
+// themes/mine.jsonc
 { "extends": "dracula", "accent": "#ff79c6" }
 ```
 
+- Files end in `.jsonc` (editors accept comments in it); `.json` is read too, and `.jsonc` wins if both exist.
 - The default files are written on first run; existing files are never overwritten.
+- `schema/*.schema.json` are hand-written; `SchemaTests` fail if they drift from the loader's keys and values.
 - Sizes on the 4×3 grid: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3. Panels that don't fit are left out with a warning.
 - `every`: `30s`, `5m`, `1h`. Minimum 5s.
 - Reload: the app compares the files' modification dates once a second, following symlinks, so it works whether stow links the folder or single files.

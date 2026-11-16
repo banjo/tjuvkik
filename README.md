@@ -25,15 +25,15 @@ Hold fn for a moment to glance; let go to close. fn together with another key (f
 Everything is in `~/.config/tjuvkik/`, so you can keep it in your dotfiles:
 
 ```
-config.json               theme, fn, and which panels go where
-panels/<name>/panel.json  what a panel shows; its command runs in that folder
-themes/<name>.json        your own themes
+config.jsonc               theme, fn, and which panels go where
+panels/<name>/panel.jsonc  what a panel shows; its command runs in that folder
+themes/<name>.jsonc        your own themes
 ```
 
-The defaults are written on first run, and every file is reloaded within a second of saving. Comments and trailing commas are fine, and the `$schema` keys give completion in editors that read them. If an edit breaks something, Tjuvkik keeps the last good config and lists the errors in the menu bar menu.
+The defaults are written on first run, and every file is reloaded within a second of saving. Comments and trailing commas are fine. Files end in `.jsonc` so editors accept the comments; `.json` works too. The `$schema` keys give completion in editors that read them. If an edit breaks something, Tjuvkik keeps the last good config and lists the errors in the menu bar menu.
 
 ```jsonc
-// config.json
+// config.jsonc
 {
   "theme": "mine",
   "panels": [
@@ -42,10 +42,10 @@ The defaults are written on first run, and every file is reloaded within a secon
   ],
 }
 
-// panels/pods/panel.json
+// panels/pods/panel.jsonc
 { "type": "cli", "title": "Pods", "command": "kubectl get pods", "every": "30s" }
 
-// themes/mine.json
+// themes/mine.jsonc
 { "extends": "dracula", "accent": "#ff79c6" }
 ```
 
