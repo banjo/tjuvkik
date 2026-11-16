@@ -1,0 +1,14 @@
+// Coding agents in tmux and zellij, most urgent first, from agent-watcher
+// (github.com/banjo/dotfiles, .config/agent-watcher). Updates as soon as an agent changes.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "description": "Coding agents in tmux and zellij, from agent-watcher",
+  "author": "banjo",
+  "version": "1.0.0",
+  "requires": ["agent-watcher", "jq"],
+  "type": "script",
+  "mode": "stream",
+  "title": "Agents",
+  "command": "agent-watcher list --json --watch | jq -c --unbuffered -f agents.jq",
+  "size": "xl",
+}
