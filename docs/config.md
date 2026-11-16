@@ -10,6 +10,7 @@
   "theme": "dark-glass",
   "trigger": { "holdMs": 250 },
   "launchAtLogin": true,
+  "menuBar": null,
   "panels": [
     { "panel": "disk" },
   ],
@@ -26,7 +27,8 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `layout` | `"framed"` | Only `framed` for now. |
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. See [Themes](themes.md). |
 | `trigger.holdMs` | `250` | How long to hold fn before the glance opens, 50–2000. |
-| `launchAtLogin` | `true` | Not used yet. |
+| `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
+| `menuBar` | none | A panel from `panels` whose [summary](script-output.md) shows in the menu bar, like `"agents"`. |
 | `panels` | `[]` | Which panels to show, in order. |
 
 ## Panels
@@ -51,6 +53,10 @@ Panels fill a 4×3 grid in order:
 | `xl` | 2 × 3 |
 
 Panels that don't fit are left out, and the menu says which.
+
+## Menu bar
+
+With `"menuBar": "agents"`, the menu bar shows the first chip of the agents panel's `summary`, like `❓ 2`, and the menu lists all of them. Without a summary it shows the grid icon. A broken config shows a warning sign.
 
 ## Files
 

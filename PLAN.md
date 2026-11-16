@@ -186,14 +186,12 @@ Agents aren't built in: agent-watcher is a script in dotfiles, and there's no sh
 4. `examples/panels/agents/` streams agent-watcher through `agents.jq`.
 5. Panels got metadata (`description`, `author`, `version`) and `requires`, checked on PATH.
 
-Still open: the menu bar icon showing the most urgent agent. Without a built-in agents module, it could show a panel's `summary`, picked in `config.jsonc` (`"menuBar": "agents"`).
-
 ## Phase 5: Polish and ship
 
-1. Launch at login with `SMAppService.mainApp`, toggled from the menu and `launchAtLogin`.
-2. Menu: summary line, Open config (default editor), Reload config, config errors, Launch at login, Quit.
-3. Multiple displays, Spaces, full-screen apps, light/dark wallpaper, Reduce Motion and Reduce Transparency (solid panel).
-4. README: install, certificate, permissions, config reference, writing a script module.
+1. Done: launch at login with `SMAppService.mainApp`, following `launchAtLogin`. The config decides, so there's no menu toggle that the file would overrule.
+2. Done: `"menuBar": "<panel>"` shows that panel's first summary chip in the menu bar, and the whole summary at the top of the menu.
+3. Done: the glance opens on the focused window's screen, over every Space and full-screen app; Reduce Motion skips the scale, Reduce Transparency draws tiles solid.
+4. Done: docs/ with a page per config file.
 5. Use it daily for a week; collect issues for v1.1 (likely Spotlight).
 
 ## Later: sharing panels
