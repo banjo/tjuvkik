@@ -45,6 +45,8 @@ public enum DefaultConfig {
       // How long to hold fn before the glance shows.
       "trigger": { "holdMs": 250 },
       "launchAtLogin": true,
+      // A panel whose summary shows in the menu bar, like "agents". Leave it out for just the icon.
+      // "menuBar": "agents",
 
       // Panels fill a 4×3 grid in order. Each one is a folder in panels/.
       // Sizes: s 1×1, m 2×1, l 2×2, xl 2×3. Leave it out to use the panel's own size.

@@ -12,6 +12,8 @@ public struct Config: Equatable, Sendable {
     public var holdMilliseconds: Int
     public var launchAtLogin: Bool
     public var tiles: [Tile]
+    /// The panel whose summary shows in the menu bar.
+    public var menuBar: String?
 }
 
 /// A panel placed on the board.

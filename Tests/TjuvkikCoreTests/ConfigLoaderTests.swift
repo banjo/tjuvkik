@@ -165,6 +165,16 @@ struct ConfigLoaderTests {
         ])
     }
 
+    @Test func menuBarPanel() throws {
+        let panel = #"{ "type": "cli", "command": "ls" }"#
+        let config = try load([
+            "config.json": #"{ "menuBar": "x", "panels": [{ "panel": "x" }] }"#, "panels/x/panel.json": panel,
+        ]).config
+        #expect(config.menuBar == "x")
+        #expect(errors(["config.json": #"{ "menuBar": "y", "panels": [{ "panel": "x" }] }"#, "panels/x/panel.json": panel])
+            == [#"config.json: menuBar: "y" isn't in panels"#])
+    }
+
     @Test func holdMsRange() {
         #expect(errors(["config.json": #"{ "trigger": { "holdMs": 10 } }"#])
             == ["config.json: trigger.holdMs: must be between 50 and 2000, got 10"])

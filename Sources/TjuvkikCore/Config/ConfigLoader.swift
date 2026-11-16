@@ -61,11 +61,19 @@ public enum ConfigLoader {
             }
         }
 
+        if let name = raw.menuBar {
+            if !refs.contains(where: { $0.panel == name }) {
+                files.error(file, "menuBar", "\"\(name)\" isn't in panels")
+            } else if let tile = tiles.first(where: { $0.panel == name }), tile.slot == nil {
+                files.warning(file, "menuBar", "\"\(name)\" doesn't fit on the grid, so it doesn't run")
+            }
+        }
+
         let errors = files.issues.filter { $0.severity == .error }
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
             view: view, layout: layout, themeName: themeName, theme: theme,
-            holdMilliseconds: hold, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles
+            holdMilliseconds: hold, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: raw.menuBar
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }

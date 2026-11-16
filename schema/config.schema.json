@@ -49,7 +49,18 @@
     },
     "launchAtLogin": {
       "type": "boolean",
-      "default": true
+      "default": true,
+      "description": "Start Tjuvkik when you log in."
+    },
+    "menuBar": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A panel in panels whose summary shows in the menu bar, like \"agents\". Its first summary chip is shown.",
+      "examples": [
+        "agents"
+      ]
     },
     "panels": {
       "type": "array",

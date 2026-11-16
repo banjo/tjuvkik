@@ -10,6 +10,7 @@ struct RawConfig: Decodable {
     var theme: String?
     var trigger: RawTrigger?
     var launchAtLogin: Bool?
+    var menuBar: String?
     var panels: [RawPanelRef]?
 }
 
