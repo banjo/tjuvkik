@@ -55,15 +55,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateIcon()
     }
 
-    /// The `menuBar` panel's summary, when it has one.
-    private var menuBarSummary: [RowsContent.Chip] {
-        guard let name = store.config.menuBar, case .rows(let rows)? = panels.states[name]?.content else { return [] }
-        return rows.summary ?? []
+    private var menuBarPanels: MenuBarPanels {
+        MenuBarPanels(config: store.config, panels: panels)
     }
 
     private func observeMenuBarPanel() {
         withObservationTracking {
-            _ = menuBarSummary
+            _ = menuBarPanels.title
         } onChange: {
             Task { @MainActor in
                 self.updateIcon()
@@ -84,18 +82,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// The grid, or a warning sign while the config is broken. With a `menuBar` panel, its first
-    /// summary chip replaces the grid: "❓ 2".
+    /// The grid, or a warning sign while the config is broken. What the `menuBar` panels show
+    /// replaces the grid: "❓ 2  ⇡ 3".
     private func updateIcon() {
         guard let button = statusItem?.button else { return }
-        let chip = menuBarSummary.first
-        let title = chip.map { [$0.icon, $0.value].compactMap { $0 }.joined(separator: " ") } ?? ""
-        let symbol: String? = !store.errors.isEmpty ? "exclamationmark.triangle" : (title.isEmpty ? "square.grid.2x2" : nil)
+        let title = menuBarPanels.title
+        let symbol: String? = !store.errors.isEmpty ? "exclamationmark.triangle" : (title.length == 0 ? "square.grid.2x2" : nil)
         let icon = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: "Tjuvkik") }
         icon?.isTemplate = true
         button.image = icon
         button.imagePosition = .imageLeading
-        button.title = title
+        button.attributedTitle = title.length > 0 && icon != nil
+            ? NSAttributedString(string: " ").appending(title)
+            : title
     }
 
     private func startTrigger() {
@@ -113,12 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        let summary = menuBarSummary
-        if !summary.isEmpty {
-            let text = summary.map { [$0.icon, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
-            menu.addItem(disabled: text)
-            menu.addItem(.separator())
-        }
+        menuBarPanels.addItems(to: menu, target: self, open: #selector(openLink(_:)))
         if trigger.isRunning {
             menu.addItem(disabled: "Hold fn to glance")
         } else {
@@ -158,6 +152,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openInputMonitoring() {
         InputMonitoring.openSettings()
+    }
+
+    @objc private func openLink(_ item: NSMenuItem) {
+        guard let link = item.representedObject as? URL else { return }
+        NSWorkspace.shared.open(link)
     }
 
     @objc private func openLoginItems() {
