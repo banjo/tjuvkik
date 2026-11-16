@@ -10,7 +10,7 @@ public enum DefaultConfig {
     /// Used until the directory has been read.
     public static let fallback = Config(
         view: .bento, layout: .framed, themeName: "dark-glass", theme: .darkGlass,
-        holdMilliseconds: 250, launchAtLogin: true,
+        trigger: .fn, launchAtLogin: true,
         tiles: []
     )
 
@@ -42,8 +42,8 @@ public enum DefaultConfig {
       // "dark-glass", "light-glass", "dracula", or a file in themes/ without its extension.
       "theme": "dark-glass",
 
-      // How long to hold fn before the glance shows.
-      "trigger": { "holdMs": 250 },
+      // Hold fn for 250 ms to glance. Or "key": "rightOption", or "shortcut": "⌃⌥Space".
+      "trigger": { "key": "fn", "holdMs": 250 },
       "launchAtLogin": true,
       // Panels shown in the menu bar, like "agents" or ["agents", "github"]. Each panel decides what
       // it shows there; by default its first summary count.

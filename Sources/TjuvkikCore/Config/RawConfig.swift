@@ -25,6 +25,9 @@ struct OneOrMany: Decodable {
 }
 
 struct RawTrigger: Decodable {
+    var key: String?
+    var shortcut: String?
+    var mode: String?
     var holdMs: Int?
 }
 

@@ -6,7 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let store = ConfigStore()
     private let panels = PanelStore()
-    private let trigger = FnTrigger()
+    private let trigger = GlanceTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
     private var terminationSignal: (any DispatchSourceSignal)?
@@ -20,6 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = item
 
         quitOnTerminationSignal()
+        trigger.onShow = { [glance] in glance.show() }
+        trigger.onHide = { [glance] in glance.hide() }
         store.onChange = { [weak self] config in self?.apply(config) }
         store.start()
         panels.start()
@@ -27,10 +29,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         glance.onShow = { [panels] in panels.refreshDue() }
         updateIcon()
         observeMenuBarPanel()
-
-        trigger.onShow = { [glance] in glance.show() }
-        trigger.onHide = { [glance] in glance.hide() }
-        startTrigger()
         observeErrors()
     }
 
@@ -49,7 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func apply(_ config: Config) {
-        trigger.holdDuration = .milliseconds(config.holdMilliseconds)
+        trigger.configure(config.trigger)
+        startTrigger()
         panels.update(config.tiles)
         launchAtLoginError = LaunchAtLogin.apply(config.launchAtLogin)
         updateIcon()
@@ -97,8 +96,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             : title
     }
 
+    /// Starts watching the trigger. A key needs Input Monitoring: ask, and start once it's granted.
     private func startTrigger() {
-        if trigger.start() { return }
+        if trigger.start() {
+            permissionPoll?.invalidate()
+            permissionPoll = nil
+            return
+        }
+        guard permissionPoll == nil else { return }
         InputMonitoring.request()
         // Granting happens in System Settings; start as soon as it's done.
         permissionPoll = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
@@ -113,11 +118,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         menuBarPanels.addItems(to: menu, target: self, perform: #selector(performRow(_:)))
-        if trigger.isRunning {
-            menu.addItem(disabled: "Hold fn to glance")
-        } else {
-            menu.addItem(disabled: "Tjuvkik needs Input Monitoring to see the fn key")
+        if let error = trigger.shortcutError {
+            menu.addItem(disabled: "\(error). Pick another \"shortcut\" in config.jsonc", symbol: "exclamationmark.triangle")
+        } else if trigger.needsInputMonitoring, case .key(let key) = trigger.trigger.input {
+            menu.addItem(disabled: "Tjuvkik needs Input Monitoring to see \(key == .fn ? "the fn key" : key.name)")
             menu.addItem(action: "Allow Input Monitoring…", target: self, #selector(openInputMonitoring))
+        } else {
+            menu.addItem(disabled: "\(trigger.trigger.instruction) to glance")
         }
 
         if !store.errors.isEmpty {
