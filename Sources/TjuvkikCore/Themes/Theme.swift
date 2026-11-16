@@ -30,7 +30,7 @@ public struct RGBA: Equatable, Sendable {
 
 /// The tokens every theme sets. Views only read these, so a theme is just a set of values.
 public struct Theme: Equatable, Sendable {
-    public enum Appearance: String, Sendable { case dark, light }
+    public enum Appearance: String, CaseIterable, Sendable { case dark, light }
 
     public var appearance: Appearance
     /// Blur what's behind the tiles. Without it, `panel` is drawn solid.

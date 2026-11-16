@@ -2,8 +2,8 @@ import Foundation
 
 /// The validated config, read from the config directory by `ConfigLoader`.
 public struct Config: Equatable, Sendable {
-    public enum View: String, Sendable { case bento, spotlight }
-    public enum Layout: String, Sendable { case framed, fullscreen, edges }
+    public enum View: String, CaseIterable, Sendable { case bento, spotlight }
+    public enum Layout: String, CaseIterable, Sendable { case framed, fullscreen, edges }
 
     public var view: View
     public var layout: Layout
