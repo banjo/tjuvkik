@@ -17,7 +17,9 @@ final class ConfigStore {
     @ObservationIgnored private var fingerprint = ""
     @ObservationIgnored private var poll: Timer?
 
-    var configFile: URL { directory.appending(path: "config.json") }
+    var configFile: URL {
+        directory.appending(path: ConfigFiles.locate(ConfigFiles.config, in: directory) ?? "config.jsonc")
+    }
 
     init() {
         let base = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"].map { URL(fileURLWithPath: $0) }

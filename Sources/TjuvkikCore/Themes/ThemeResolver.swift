@@ -1,12 +1,13 @@
 import Foundation
 
-/// Resolves a theme name to tokens. Custom themes live in `themes/<name>.json`, extend a built-in
+/// Resolves a theme name to tokens. Custom themes live in `themes/<name>.jsonc`, extend a built-in
 /// or another custom theme (dark glass when unset), and override only the tokens they set.
 struct ThemeResolver {
     var files: ConfigFiles
 
-    mutating func resolve(_ name: String) -> Theme? {
-        resolve(name, seen: [], file: ConfigFiles.config, path: "theme")
+    /// `file` is the config file that names the theme.
+    mutating func resolve(_ name: String, from file: String) -> Theme? {
+        resolve(name, seen: [], file: file, path: "theme")
     }
 
     private mutating func resolve(_ name: String, seen: [String], file: String, path: String) -> Theme? {
@@ -15,17 +16,17 @@ struct ThemeResolver {
             return nil
         }
         if let theme = Theme.builtIn[name] {
-            if files.exists(ConfigFiles.theme(name)) {
-                files.warning(ConfigFiles.theme(name), "", "\"\(name)\" is a built-in theme; rename the file to use it")
+            if let file = ConfigFiles.locate(ConfigFiles.theme(name), in: files.directory) {
+                files.warning(file, "", "\"\(name)\" is a built-in theme; rename the file to use it")
             }
             return theme
         }
-        let themeFile = ConfigFiles.theme(name)
-        guard !name.contains("/"), files.exists(themeFile) else {
+        guard !name.contains("/"), files.exists(ConfigFiles.theme(name)) else {
             let known = (Theme.builtIn.keys.sorted() + files.themeNames()).map { "\"\($0)\"" }.joined(separator: ", ")
             files.error(file, path, "unknown theme \"\(name)\", expected one of \(known)")
             return nil
         }
+        let themeFile = files.locate(ConfigFiles.theme(name))
         guard let raw = files.read(RawTheme.self, from: themeFile),
               var theme = resolve(raw.extends ?? "dark-glass", seen: seen + [name], file: themeFile, path: "extends")
         else { return nil }

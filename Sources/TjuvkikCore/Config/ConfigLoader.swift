@@ -2,18 +2,21 @@ import Foundation
 
 /// Loads the config directory:
 ///
-///     config.json              theme, trigger, and which panels go where
-///     panels/<name>/panel.json what a panel is; its commands run in its folder
-///     themes/<name>.json       custom themes
+///     config.jsonc               theme, trigger, and which panels go where
+///     panels/<name>/panel.jsonc  what a panel is; its commands run in its folder
+///     themes/<name>.jsonc        custom themes
+///
+/// Each file can also end in `.json`.
 ///
 /// Errors fail the load; warnings (like a value from a later version) fall back to the default.
 public enum ConfigLoader {
     public static let minimumInterval: Double = 5
     public static let builtInPanels = ["agents"]
+    public static let panelTypes = ["script", "cli"]
 
     public static func load(from directory: URL) -> Result<LoadedConfig, ConfigErrors> {
         var files = ConfigFiles(directory: directory)
-        let file = ConfigFiles.config
+        let file = files.locate(ConfigFiles.config)
         guard let raw = files.read(RawConfig.self, from: file) else { return .failure(ConfigErrors(issues: files.issues)) }
 
         var view = Config.View.bento
@@ -38,7 +41,7 @@ public enum ConfigLoader {
 
         let themeName = raw.theme ?? "dark-glass"
         var resolver = ThemeResolver(files: files)
-        let theme = resolver.resolve(themeName)
+        let theme = resolver.resolve(themeName, from: file)
         files = resolver.files
 
         var hold = 250
@@ -50,7 +53,7 @@ public enum ConfigLoader {
 
         let refs = raw.panels ?? [RawPanelRef(panel: "agents", size: "xl")]
         var tiles = refs.enumerated().compactMap { index, ref in
-            tile(ref, path: "panels[\(index)]", files: &files)
+            tile(ref, path: "panels[\(index)]", config: file, files: &files)
         }
         let slots = BentoPacking.pack(tiles.map(\.size))
         for index in tiles.indices {
@@ -70,8 +73,7 @@ public enum ConfigLoader {
     }
 
     /// Resolves a `panels` entry to its panel. The size here wins over the panel's own.
-    private static func tile(_ ref: RawPanelRef, path: String, files: inout ConfigFiles) -> Tile? {
-        let config = ConfigFiles.config
+    private static func tile(_ ref: RawPanelRef, path: String, config: String, files: inout ConfigFiles) -> Tile? {
         guard let name = ref.panel, !name.isEmpty else {
             files.error(config, path, "missing \"panel\"")
             return nil
@@ -92,16 +94,16 @@ public enum ConfigLoader {
             files.error(config, "\(path).panel", "\"\(name)\" isn't a panel name")
             return nil
         }
-        let file = ConfigFiles.panel(name)
-        guard files.exists(file) else {
-            files.error(config, "\(path).panel", "no panel \"\(name)\": create \(file), or use a built-in (\(builtInPanels.joined(separator: ", ")))")
+        guard files.exists(ConfigFiles.panel(name)) else {
+            files.error(config, "\(path).panel", "no panel \"\(name)\": create \(ConfigFiles.panel(name)).jsonc, or use a built-in (\(builtInPanels.joined(separator: ", ")))")
             return nil
         }
+        let file = files.locate(ConfigFiles.panel(name))
         guard let raw = files.read(RawPanel.self, from: file) else { return nil }
 
         let kind: Tile.Kind?
         switch raw.type {
-        case "script", "cli":
+        case let type? where panelTypes.contains(type):
             if let command = raw.command?.trimmingCharacters(in: .whitespaces), !command.isEmpty {
                 kind = raw.type == "script" ? .script(command: command) : .cli(command: command)
             } else {

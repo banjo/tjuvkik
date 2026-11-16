@@ -20,7 +20,30 @@ struct ConfigLoaderTests {
         let fixture = ConfigFixture(["config.json": #"{ "theme": "dracula" }"#])
         try DefaultConfig.write(to: fixture.directory)
         #expect(try fixture.load().get().config.theme == .dracula)
-        #expect(FileManager.default.fileExists(atPath: fixture.directory.appending(path: "panels/disk/panel.json").path))
+        #expect(FileManager.default.fileExists(atPath: fixture.directory.appending(path: "panels/disk/panel.jsonc").path))
+    }
+
+    @Test func defaultsDontDuplicateAJSONFile() throws {
+        let fixture = ConfigFixture(["config.json": "{}"])
+        try DefaultConfig.write(to: fixture.directory)
+        #expect(!FileManager.default.fileExists(atPath: fixture.directory.appending(path: "config.jsonc").path))
+    }
+
+    @Test func jsoncAndJSONBothWork() throws {
+        let config = try load([
+            "config.jsonc": #"{ "theme": "mine", "panels": [{ "panel": "a" }, { "panel": "b" }] }"#,
+            "panels/a/panel.jsonc": #"{ "type": "cli", "command": "ls" }"#,
+            "panels/b/panel.json": #"{ "type": "cli", "command": "pwd" }"#,
+            "themes/mine.json": #"{ "extends": "dracula" }"#,
+        ]).config
+        #expect(config.tiles.map(\.kind) == [.cli(command: "ls"), .cli(command: "pwd")])
+        #expect(config.theme == .dracula)
+    }
+
+    @Test func jsoncWinsOverJSONWithAWarning() throws {
+        let loaded = try load(["config.jsonc": #"{ "theme": "dracula" }"#, "config.json": #"{ "theme": "light-glass" }"#])
+        #expect(loaded.config.theme == .dracula)
+        #expect(loaded.warnings.map(\.description) == ["config.json: ignored, because config.jsonc exists"])
     }
 
     @Test func emptyConfigGetsDefaults() throws {
@@ -32,7 +55,7 @@ struct ConfigLoaderTests {
     }
 
     @Test func missingConfigIsAnError() {
-        #expect(errors([:]) == ["config.json: can't read the file"])
+        #expect(errors([:]) == ["config.jsonc: can't read the file"])
     }
 
     @Test func commentsAndTrailingCommas() throws {
@@ -76,7 +99,7 @@ struct ConfigLoaderTests {
 
     @Test func unknownPanel() {
         #expect(errors(["config.json": #"{ "panels": [{ "panel": "weather" }] }"#])
-            == [#"config.json: panels[0].panel: no panel "weather": create panels/weather/panel.json, or use a built-in (agents)"#])
+            == [#"config.json: panels[0].panel: no panel "weather": create panels/weather/panel.jsonc, or use a built-in (agents)"#])
     }
 
     @Test func panelNamesStayInPanels() {

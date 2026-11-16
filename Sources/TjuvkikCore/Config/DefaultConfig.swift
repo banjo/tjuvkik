@@ -3,8 +3,8 @@ import Foundation
 /// The files written to an empty config directory on first run.
 public enum DefaultConfig {
     public static let files: [(path: String, text: String)] = [
-        (ConfigFiles.config, config),
-        (ConfigFiles.panel("disk"), disk),
+        ("\(ConfigFiles.config).jsonc", config),
+        ("\(ConfigFiles.panel("disk")).jsonc", disk),
     ]
 
     /// Used until the directory has been read.
@@ -15,13 +15,13 @@ public enum DefaultConfig {
                      slot: GridSlot(column: 0, row: 0, columns: 2, rows: 3))]
     )
 
-    /// Writes the default files that don't exist yet.
+    /// Writes the default files that don't exist yet, in either extension.
     public static func write(to directory: URL) throws {
         let manager = FileManager.default
         try manager.createDirectory(at: directory.appending(path: "themes"), withIntermediateDirectories: true)
         for (path, text) in files {
             let url = directory.appending(path: path)
-            guard !manager.fileExists(atPath: url.path) else { continue }
+            guard ConfigFiles.locate(String(path.dropLast(".jsonc".count)), in: directory) == nil else { continue }
             try manager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try text.write(to: url, atomically: true, encoding: .utf8)
         }
@@ -29,9 +29,9 @@ public enum DefaultConfig {
 
     static let config = """
     // Tjuvkik: hold fn to glance. Everything in this folder is reloaded when you save it:
-    //   config.json               this file: theme, fn, and which panels go where
-    //   panels/<name>/panel.json  what a panel shows; its command runs in that folder
-    //   themes/<name>.json        your own themes
+    //   config.jsonc               this file: theme, fn, and which panels go where
+    //   panels/<name>/panel.jsonc  what a panel shows; its command runs in that folder
+    //   themes/<name>.jsonc        your own themes
     // Comments and trailing commas are fine. Errors show in the menu bar menu.
     {
       "$schema": "./schemas/config.schema.json",
@@ -40,7 +40,7 @@ public enum DefaultConfig {
       "view": "bento",
       // "framed" for now. "fullscreen" and "edges" come later.
       "layout": "framed",
-      // "dark-glass", "light-glass", "dracula", or a file in themes/ without ".json".
+      // "dark-glass", "light-glass", "dracula", or a file in themes/ without its extension.
       "theme": "dark-glass",
 
       // How long to hold fn before the glance shows.

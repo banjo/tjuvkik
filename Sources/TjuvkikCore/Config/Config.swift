@@ -45,7 +45,7 @@ public struct Tile: Equatable, Sendable {
     public var slot: GridSlot?
 }
 
-/// A problem in the config, with the file and where in it (`panels/pods/panel.json`, `every`).
+/// A problem in the config, with the file and where in it (`panels/pods/panel.jsonc`, `every`).
 public struct ConfigIssue: Equatable, Sendable, CustomStringConvertible {
     public enum Severity: Sendable { case error, warning }
 

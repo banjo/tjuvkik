@@ -3,7 +3,7 @@ import Foundation
 // The files as written: everything optional, enums as strings, so validation can report each
 // problem with its file and path instead of failing on the first one.
 
-/// `config.json`
+/// `config.jsonc`
 struct RawConfig: Decodable {
     var view: String?
     var layout: String?
@@ -17,13 +17,13 @@ struct RawTrigger: Decodable {
     var holdMs: Int?
 }
 
-/// An entry in `config.json`'s `panels`: which panel, and optionally its size here.
+/// An entry in `config.jsonc`'s `panels`: which panel, and optionally its size here.
 struct RawPanelRef: Decodable {
     var panel: String?
     var size: String?
 }
 
-/// `panels/<name>/panel.json`
+/// `panels/<name>/panel.jsonc`
 struct RawPanel: Decodable {
     var type: String?
     var title: String?
@@ -33,7 +33,7 @@ struct RawPanel: Decodable {
     var size: String?
 }
 
-/// `themes/<name>.json`
+/// `themes/<name>.jsonc`
 struct RawTheme: Decodable {
     var extends: String?
     var appearance: String?

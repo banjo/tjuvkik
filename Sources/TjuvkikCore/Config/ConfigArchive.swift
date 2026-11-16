@@ -51,11 +51,11 @@ public enum ConfigArchive {
     /// The zip's root, or its only folder when the zip was made by compressing the folder itself.
     private static func configRoot(in directory: URL) -> URL? {
         let manager = FileManager.default
-        if manager.fileExists(atPath: directory.appending(path: ConfigFiles.config).path) { return directory }
+        if ConfigFiles.locate(ConfigFiles.config, in: directory) != nil { return directory }
         let items = ((try? manager.contentsOfDirectory(atPath: directory.path)) ?? []).filter { $0 != "__MACOSX" }
         guard items.count == 1 else { return nil }
         let nested = directory.appending(path: items[0])
-        return manager.fileExists(atPath: nested.appending(path: ConfigFiles.config).path) ? nested : nil
+        return ConfigFiles.locate(ConfigFiles.config, in: nested) != nil ? nested : nil
     }
 
     private static func run(_ tool: String, _ arguments: [String], in directory: URL) throws(Failure) {

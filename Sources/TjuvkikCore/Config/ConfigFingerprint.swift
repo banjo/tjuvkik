@@ -6,11 +6,14 @@ import Foundation
 public enum ConfigFingerprint {
     public static func of(_ directory: URL) -> String {
         let manager = FileManager.default
-        var files = [ConfigFiles.config]
         let themes = directory.appending(path: "themes")
-        files += ((try? manager.contentsOfDirectory(atPath: themes.path)) ?? []).filter { $0.hasSuffix(".json") }.map { "themes/\($0)" }
         let panels = directory.appending(path: "panels")
-        files += ((try? manager.contentsOfDirectory(atPath: panels.path)) ?? []).map { ConfigFiles.panel($0) }
+        let names = [ConfigFiles.config]
+            + ((try? manager.contentsOfDirectory(atPath: themes.path)) ?? []).map { "themes/\($0)" }
+            + ((try? manager.contentsOfDirectory(atPath: panels.path)) ?? []).map { ConfigFiles.panel($0) }
+        let files = names.flatMap { name in
+            ConfigFiles.extensions.contains { name.hasSuffix(".\($0)") } ? [name] : ConfigFiles.extensions.map { "\(name).\($0)" }
+        }
 
         return files.sorted().map { file in
             let url = directory.appending(path: file).resolvingSymlinksInPath()

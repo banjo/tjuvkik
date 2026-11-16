@@ -54,7 +54,7 @@ enum ConfigTransfer {
     private static func detail(_ error: any Error) -> String {
         switch error as? ConfigArchive.Failure {
         case .command(let output): output
-        case .noConfig: "The zip has no config.json."
+        case .noConfig: "The zip has no config.jsonc."
         case .invalid(let issues): "Nothing was changed. The config in the zip has errors:\n\n" + issues.prefix(8).map(\.description).joined(separator: "\n")
         case nil: error.localizedDescription
         }
