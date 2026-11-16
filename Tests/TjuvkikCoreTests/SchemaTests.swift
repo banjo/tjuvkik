@@ -39,13 +39,13 @@ struct SchemaTests {
         #expect(enumValues(config["layout"]) == Set(Config.Layout.allCases.map(\.rawValue)))
         #expect(Set(config["theme"]?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
         #expect(enumValues(properties(config["panels"]?["items"])["size"]) == Set(TileSize.allCases.map(\.rawValue)))
-        #expect(Set(properties(config["panels"]?["items"])["panel"]?["examples"] as? [String] ?? []) == Set(ConfigLoader.builtInPanels))
     }
 
     @Test func panelSchema() throws {
         let panel = properties(try schema("panel"))
         #expect(Set(panel.keys) == keys(RawPanel()).union(["$schema"]))
-        #expect(enumValues(panel["type"]) == Set(ConfigLoader.panelTypes))
+        #expect(enumValues(panel["type"]) == Set(Tile.Kind.allCases.map(\.rawValue)))
+        #expect(enumValues(panel["mode"]) == Set(Tile.Mode.allCases.map(\.rawValue)))
         #expect(enumValues(panel["size"]) == Set(TileSize.allCases.map(\.rawValue)))
     }
 

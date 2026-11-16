@@ -16,31 +16,36 @@ public struct Config: Equatable, Sendable {
 
 /// A panel placed on the board.
 public struct Tile: Equatable, Sendable {
-    public enum Kind: Equatable, Sendable {
-        case agents
-        case script(command: String)
-        case cli(command: String)
-
-        public var name: String {
-            switch self {
-            case .agents: "native"
-            case .script: "script"
-            case .cli: "cli"
-            }
-        }
+    public enum Kind: String, Equatable, Sendable, CaseIterable {
+        /// Prints rows as JSON.
+        case script
+        /// Output shown as is.
+        case cli
     }
 
-    /// The panel's name: its folder in `panels/`, or a built-in like `agents`.
+    public enum Mode: String, Equatable, Sendable, CaseIterable {
+        /// Runs every `every` seconds, and must finish within `timeout`.
+        case interval
+        /// Keeps running: each line a script prints is a new JSON document, and a cli panel shows
+        /// the latest lines. Restarted if it exits.
+        case stream
+    }
+
+    /// The panel's name: its folder in `panels/`.
     public var panel: String
     public var kind: Kind
+    public var mode: Mode
+    public var command: String
     public var title: String
     public var size: TileSize
-    /// Seconds between refreshes.
+    /// Seconds between refreshes, for interval panels.
     public var every: Double
-    /// Seconds a command may run.
+    /// Seconds a run may take, for interval panels.
     public var timeout: Double
-    /// Where commands run: the panel's folder. Nil for built-ins.
-    public var directory: URL?
+    /// Tools that must be on PATH, like `gh`.
+    public var requires: [String]
+    /// Where the command runs: the panel's folder.
+    public var directory: URL
     /// Where the tile sits on the grid; nil when it didn't fit.
     public var slot: GridSlot?
 }

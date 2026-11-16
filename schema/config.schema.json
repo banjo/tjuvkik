@@ -63,10 +63,7 @@
         "properties": {
           "panel": {
             "type": "string",
-            "description": "\"agents\" (built in), or a folder in panels/.",
-            "examples": [
-              "agents"
-            ]
+            "description": "A folder in panels/."
           },
           "size": {
             "enum": [

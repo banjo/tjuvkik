@@ -26,7 +26,12 @@ struct RawPanelRef: Decodable {
 /// `panels/<name>/panel.jsonc`
 struct RawPanel: Decodable {
     var type: String?
+    var mode: String?
     var title: String?
+    var description: String?
+    var author: String?
+    var version: String?
+    var requires: [String]?
     var command: String?
     var every: String?
     var timeout: String?

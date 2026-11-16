@@ -11,8 +11,6 @@ import Foundation
 /// Errors fail the load; warnings (like a value from a later version) fall back to the default.
 public enum ConfigLoader {
     public static let minimumInterval: Double = 5
-    public static let builtInPanels = ["agents"]
-    public static let panelTypes = ["script", "cli"]
 
     public static func load(from directory: URL) -> Result<LoadedConfig, ConfigErrors> {
         var files = ConfigFiles(directory: directory)
@@ -51,7 +49,7 @@ public enum ConfigLoader {
             }
         }
 
-        let refs = raw.panels ?? [RawPanelRef(panel: "agents", size: "xl")]
+        let refs = raw.panels ?? []
         var tiles = refs.enumerated().compactMap { index, ref in
             tile(ref, path: "panels[\(index)]", config: file, files: &files)
         }
@@ -85,38 +83,36 @@ public enum ConfigLoader {
             if refSize == nil { files.error(config, "\(path).size", sizeMessage(value)) }
         }
 
-        if name == "agents" {
-            guard files.issues.count == start else { return nil }
-            return Tile(panel: name, kind: .agents, title: "Agents", size: refSize ?? .xl, every: 1, timeout: 0)
-        }
-
         guard !name.contains("/"), !name.hasPrefix(".") else {
             files.error(config, "\(path).panel", "\"\(name)\" isn't a panel name")
             return nil
         }
         guard files.exists(ConfigFiles.panel(name)) else {
-            files.error(config, "\(path).panel", "no panel \"\(name)\": create \(ConfigFiles.panel(name)).jsonc, or use a built-in (\(builtInPanels.joined(separator: ", ")))")
+            files.error(config, "\(path).panel", "no panel \"\(name)\": create \(ConfigFiles.panel(name)).jsonc")
             return nil
         }
         let file = files.locate(ConfigFiles.panel(name))
         guard let raw = files.read(RawPanel.self, from: file) else { return nil }
 
-        let kind: Tile.Kind?
+        let kinds = Tile.Kind.allCases.map { "\"\($0.rawValue)\"" }.joined(separator: " or ")
+        var kind: Tile.Kind?
         switch raw.type {
-        case let type? where panelTypes.contains(type):
-            if let command = raw.command?.trimmingCharacters(in: .whitespaces), !command.isEmpty {
-                kind = raw.type == "script" ? .script(command: command) : .cli(command: command)
-            } else {
-                files.error(file, "command", "a \(raw.type!) panel needs a command")
-                kind = nil
-            }
         case let type?:
-            files.error(file, "type", "unknown type \"\(type)\", expected \"script\" or \"cli\"")
-            kind = nil
+            kind = Tile.Kind(rawValue: type)
+            if kind == nil { files.error(file, "type", "unknown type \"\(type)\", expected \(kinds)") }
         case nil:
-            files.error(file, "type", "missing \"type\", expected \"script\" or \"cli\"")
-            kind = nil
+            files.error(file, "type", "missing \"type\", expected \(kinds)")
         }
+
+        var mode = Tile.Mode.interval
+        if let value = raw.mode {
+            if let parsed = Tile.Mode(rawValue: value) { mode = parsed } else {
+                files.error(file, "mode", "unknown mode \"\(value)\", expected \"interval\" or \"stream\"")
+            }
+        }
+
+        let command = raw.command?.trimmingCharacters(in: .whitespaces) ?? ""
+        if command.isEmpty, let kind { files.error(file, "command", "a \(kind.rawValue) panel needs a command") }
 
         var panelSize = TileSize.s
         if let value = raw.size {
@@ -125,10 +121,16 @@ public enum ConfigLoader {
         let every = interval(raw.every, default: 60, minimum: minimumInterval, file: file, path: "every", files: &files)
         let timeout = interval(raw.timeout, default: 10, minimum: 0.1, file: file, path: "timeout", files: &files)
 
+        let requires = raw.requires ?? []
+        for (index, tool) in requires.enumerated() where tool.isEmpty || tool.contains("/") {
+            files.error(file, "requires[\(index)]", "\"\(tool)\" isn't a command name")
+        }
+
         guard files.issues.count == start, let kind, let every, let timeout else { return nil }
         return Tile(
-            panel: name, kind: kind, title: raw.title ?? name, size: refSize ?? panelSize,
-            every: every, timeout: timeout, directory: files.directory.appending(path: "panels/\(name)")
+            panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
+            size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
+            directory: files.directory.appending(path: "panels/\(name)")
         )
     }
 

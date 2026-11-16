@@ -11,12 +11,47 @@
     "$schema": {
       "type": "string"
     },
+    "description": {
+      "type": "string",
+      "description": "What the panel shows, in one sentence."
+    },
+    "author": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "examples": [
+        "1.0.0"
+      ]
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^/]+$"
+      },
+      "description": "Commands that must be on PATH, like \"gh\". The tile says which are missing instead of failing.",
+      "examples": [
+        [
+          "gh",
+          "jq"
+        ]
+      ]
+    },
     "type": {
       "enum": [
         "script",
         "cli"
       ],
       "description": "script prints rows as JSON; cli shows the output as is."
+    },
+    "mode": {
+      "enum": [
+        "interval",
+        "stream"
+      ],
+      "default": "interval",
+      "description": "interval runs the command every `every`. stream keeps it running: each line a script prints is a new JSON document, and a cli panel shows the latest lines. Restarted if it exits."
     },
     "title": {
       "type": "string",
@@ -35,7 +70,7 @@
         "1h"
       ],
       "default": "60s",
-      "description": "How often to refresh. At least 5s."
+      "description": "How often to refresh an interval panel. At least 5s."
     },
     "timeout": {
       "type": "string",
@@ -46,7 +81,7 @@
         "1h"
       ],
       "default": "10s",
-      "description": "How long the command may run."
+      "description": "How long an interval panel's command may run."
     },
     "size": {
       "enum": [

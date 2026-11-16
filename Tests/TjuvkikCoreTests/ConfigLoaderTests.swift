@@ -9,11 +9,13 @@ struct ConfigLoaderTests {
         let loaded = try fixture.load().get()
         #expect(loaded.warnings.isEmpty)
         #expect(loaded.config.theme == .darkGlass)
-        #expect(loaded.config.tiles.map(\.panel) == ["agents", "disk"])
-        #expect(loaded.config.tiles[1].kind == .cli(command: "df -h /"))
-        #expect(loaded.config.tiles[1].size == .m)
-        #expect(loaded.config.tiles[1].every == 300)
-        #expect(loaded.config.tiles[1].directory?.lastPathComponent == "disk")
+        #expect(loaded.config.tiles.map(\.panel) == ["disk"])
+        #expect(loaded.config.tiles[0].kind == .cli)
+        #expect(loaded.config.tiles[0].command == "df -h /")
+        #expect(loaded.config.tiles[0].mode == .interval)
+        #expect(loaded.config.tiles[0].size == .m)
+        #expect(loaded.config.tiles[0].every == 300)
+        #expect(loaded.config.tiles[0].directory.lastPathComponent == "disk")
     }
 
     @Test func writingDefaultsKeepsExistingFiles() throws {
@@ -36,7 +38,7 @@ struct ConfigLoaderTests {
             "panels/b/panel.json": #"{ "type": "cli", "command": "pwd" }"#,
             "themes/mine.json": #"{ "extends": "dracula" }"#,
         ]).config
-        #expect(config.tiles.map(\.kind) == [.cli(command: "ls"), .cli(command: "pwd")])
+        #expect(config.tiles.map(\.command) == ["ls", "pwd"])
         #expect(config.theme == .dracula)
     }
 
@@ -50,8 +52,7 @@ struct ConfigLoaderTests {
         let config = try load(["config.json": "{}"]).config
         #expect(config.holdMilliseconds == 250)
         #expect(config.launchAtLogin)
-        #expect(config.tiles.map(\.kind) == [.agents])
-        #expect(config.tiles[0].size == .xl)
+        #expect(config.tiles.isEmpty)
     }
 
     @Test func missingConfigIsAnError() {
@@ -63,9 +64,9 @@ struct ConfigLoaderTests {
         {
           // a comment
           "theme": "dracula", /* another */
-          "panels": [{ "panel": "agents", "size": "l", },],
+          "panels": [{ "panel": "x", "size": "l", },],
         }
-        """]).config
+        """, "panels/x/panel.json": #"{ "type": "cli", "command": "ls", }"#]).config
         #expect(config.theme == .dracula)
         #expect(config.tiles[0].size == .l)
     }
@@ -84,7 +85,7 @@ struct ConfigLoaderTests {
     }
 
     @Test func wrongTypeHasAPath() {
-        #expect(errors(["config.json": #"{ "panels": [{ "panel": "agents", "size": 3 }] }"#])
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "x", "size": 3 }] }"#])
             == ["config.json: panels[0].size: expected a string"])
     }
 
@@ -99,7 +100,7 @@ struct ConfigLoaderTests {
 
     @Test func unknownPanel() {
         #expect(errors(["config.json": #"{ "panels": [{ "panel": "weather" }] }"#])
-            == [#"config.json: panels[0].panel: no panel "weather": create panels/weather/panel.jsonc, or use a built-in (agents)"#])
+            == [#"config.json: panels[0].panel: no panel "weather": create panels/weather/panel.jsonc"#])
     }
 
     @Test func panelNamesStayInPanels() {
@@ -130,13 +131,38 @@ struct ConfigLoaderTests {
     }
 
     @Test func panelsThatDontFitAreWarnedAndLeftOut() throws {
-        let loaded = try load(["config.json": #"{ "panels": [{ "panel": "agents" }, { "panel": "agents" }, { "panel": "agents", "size": "s" }] }"#])
+        let loaded = try load([
+            "config.json": #"{ "panels": [{ "panel": "x", "size": "xl" }, { "panel": "x", "size": "xl" }, { "panel": "x" }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls" }"#,
+        ])
         #expect(loaded.config.tiles.map(\.slot) == [
             GridSlot(column: 0, row: 0, columns: 2, rows: 3),
             GridSlot(column: 2, row: 0, columns: 2, rows: 3),
             nil,
         ])
         #expect(loaded.warnings.map(\.path) == ["panels[2]"])
+    }
+
+    @Test func streamModeAndMetadata() throws {
+        let tile = try load([
+            "config.json": #"{ "panels": [{ "panel": "agents" }] }"#,
+            "panels/agents/panel.jsonc": #"""
+            { "type": "script", "mode": "stream", "command": "agent-watcher list --json --watch",
+              "description": "Coding agents", "author": "banjo", "version": "1.0.0", "requires": ["agent-watcher", "jq"] }
+            """#,
+        ]).config.tiles[0]
+        #expect(tile.mode == .stream)
+        #expect(tile.requires == ["agent-watcher", "jq"])
+    }
+
+    @Test func badModeAndRequires() {
+        #expect(errors([
+            "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls", "mode": "push", "requires": ["/bin/ls"] }"#,
+        ]) == [
+            #"panels/x/panel.json: mode: unknown mode "push", expected "interval" or "stream""#,
+            #"panels/x/panel.json: requires[0]: "/bin/ls" isn't a command name"#,
+        ])
     }
 
     @Test func holdMsRange() {

@@ -11,8 +11,7 @@ public enum DefaultConfig {
     public static let fallback = Config(
         view: .bento, layout: .framed, themeName: "dark-glass", theme: .darkGlass,
         holdMilliseconds: 250, launchAtLogin: true,
-        tiles: [Tile(panel: "agents", kind: .agents, title: "Agents", size: .xl, every: 1, timeout: 0,
-                     slot: GridSlot(column: 0, row: 0, columns: 2, rows: 3))]
+        tiles: []
     )
 
     /// Writes the default files that don't exist yet, in either extension.
@@ -47,10 +46,9 @@ public enum DefaultConfig {
       "trigger": { "holdMs": 250 },
       "launchAtLogin": true,
 
-      // Panels fill a 4×3 grid in order. "agents" is built in; others are folders in panels/.
+      // Panels fill a 4×3 grid in order. Each one is a folder in panels/.
       // Sizes: s 1×1, m 2×1, l 2×2, xl 2×3. Leave it out to use the panel's own size.
       "panels": [
-        { "panel": "agents", "size": "xl" },
         { "panel": "disk" },
       ],
     }
@@ -61,6 +59,7 @@ public enum DefaultConfig {
     // A cli panel shows a command's output as is. A script panel prints rows as JSON.
     {
       "$schema": "../../schemas/panel.schema.json",
+      "description": "Free space on the startup disk",
       "type": "cli",
       "title": "Disk",
       "command": "df -h /",
