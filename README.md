@@ -20,6 +20,23 @@ Then, once:
 
 Hold fn for a moment to glance; let go to close. fn together with another key (fn+arrows, fn+F-keys) doesn't open it.
 
+## Config
+
+`~/.config/tjuvkik/config.json` is written on first run and reloaded when you save it. It allows comments and trailing commas, and `config.schema.json` next to it gives completion in editors that read `$schema`. If an edit breaks it, Tjuvkik keeps the last good config and lists the errors in the menu bar menu.
+
+```jsonc
+{
+  "theme": "dracula", // "dark-glass", "light-glass", "dracula", or your own
+  "themes": { "mine": { "extends": "dracula", "accent": "#ff79c6" } },
+  "tiles": [
+    { "module": "agents", "size": "xl" },
+    { "type": "cli", "title": "Disk", "size": "m", "every": "5m", "command": "df -h /" },
+  ],
+}
+```
+
+Tiles fill a 4×3 grid in order. Sizes: `s` 1×1, `m` 2×1, `l` 2×2, `xl` 2×3.
+
 ## Development
 
 ```sh

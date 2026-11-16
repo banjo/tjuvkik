@@ -39,11 +39,11 @@ Later, not in v1, but the code leaves room for them:
 
 ## Config
 
-`$XDG_CONFIG_HOME/tjuvkik/config.json`, defaulting to `~/.config/tjuvkik/config.json`. It is written with defaults on first run. A JSON Schema in the repo (`schema/config.schema.json`) gives editor completion through `$schema`.
+`$XDG_CONFIG_HOME/tjuvkik/config.json`, defaulting to `~/.config/tjuvkik/config.json`. It is written with defaults on first run. The app keeps `config.schema.json` (from `schema/` in the repo) next to it, so `"$schema": "./config.schema.json"` gives editor completion; the repo is private, so a GitHub URL wouldn't resolve.
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/banjo/tjuvkik/main/schema/config.schema.json",
+  "$schema": "./config.schema.json",
   "view": "bento",          // "spotlight" later
   "layout": "framed",       // "fullscreen", "edges" later
   "theme": "dark-glass",    // "light-glass", "dracula", or a key in "themes"
@@ -85,7 +85,7 @@ The command prints one JSON object to stdout:
 }
 ```
 
-- Everything is optional except `rows`. `tone` is `normal`, `muted`, `warning`, `error`, `success` or `accent`, and each theme maps it to a color.
+- Everything is optional except `rows`. `tone` is `normal`, `muted`, `warning`, `error`, `success`, `info` or `accent`, and each theme maps it to a color.
 - `url` is ignored in v1, but kept for clicks in Spotlight later.
 
 ### Running commands
@@ -119,7 +119,7 @@ design/prototype.html
 
 A module produces `ModuleContent`: `.rows(RowsContent)`, `.text(String)`, and later `.web(URL)`. Tiles render content by its type, so a new module type only needs to produce one of these. Spotlight will render the same content as list + preview.
 
-## Phase 0: Setup
+## Phase 0: Setup (done)
 
 1. Create the private repo `banjo/tjuvkik`, push `design/` and this plan.
 2. Swift package with the `TjuvkikCore` and `Tjuvkik` targets. Check that `swift test` works with only Command Line Tools installed; if Swift Testing doesn't, use XCTest or install Xcode.
@@ -128,7 +128,7 @@ A module produces `ModuleContent`: `.rows(RowsContent)`, `.text(String)`, and la
 
 Done when the app builds, installs and starts from `~/Applications` with a menu bar icon.
 
-## Phase 1: fn trigger and panel
+## Phase 1: fn trigger and panel (done)
 
 1. `FnTrigger`: listen-only event tap on `flagsChanged` and `keyDown`.
    - fn goes down with no other modifiers: start a `holdMs` timer.
@@ -143,7 +143,7 @@ Done when the app builds, installs and starts from `~/Applications` with a menu 
 
 Done when holding fn shows a placeholder panel over any app and Space, letting go hides it, fn+arrow doesn't show it, and the terminal keeps focus.
 
-## Phase 2: Config and themes
+## Phase 2: Config and themes (done)
 
 1. `Config` with `Codable`, read with `allowsJSON5`. Defaults written on first run.
 2. Validation with readable errors (unknown theme, bad size or duration, tiles that don't fit). Keep the last good config.
@@ -158,7 +158,7 @@ Done when changing `theme` or `tiles` in the file updates the panel within a sec
 1. `Module` protocol, `ModuleContent`, and a `Scheduler` that refreshes each tile on its interval, and on open when stale.
 2. `CommandRunner`: login-shell PATH, timeout, output cap, exit status, stderr tail.
 3. `ScriptModule` (decodes the JSON above) and `CLIModule` (text, ANSI stripped, as many lines as fit).
-4. `BentoLayout`: dense packing of `s`/`m`/`l`/`xl` into 4×3.
+4. Tile placement on the grid (dense packing is done in Phase 2, `BentoPacking`).
 5. `TileView`: header (title, kind tag, interval or "live", stale marker), then the content renderer: hero, progress bar, rows (icon, title, subtitle, trailing, tone), or monospace text. Rows that don't fit are cut, not scrolled.
 6. Example `examples/modules/github.sh` using `gh` (review requests and your open PRs).
 7. Tests: script output decoding, runner timeout and output cap, layout packing.
