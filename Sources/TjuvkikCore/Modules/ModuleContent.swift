@@ -7,6 +7,24 @@ public enum ModuleContent: Equatable, Sendable {
     case text(String)
     /// Text where the newest lines are last and matter most, like a log: shown from the bottom.
     case tail(String)
+    case stats(StatsContent)
+
+    /// The type it's drawn as, or nil for rows and plain text.
+    public var type: ContentType? {
+        switch self {
+        case .rows, .text, .tail: nil
+        case .stats: .stats
+        }
+    }
+
+    /// What the menu bar shows for this panel, or nil for nothing.
+    public var menuBar: RowsContent.MenuBar? {
+        switch self {
+        case .rows(let rows): rows.menuBar
+        case .text, .tail: nil
+        case .stats(let content): content.extras.menuBar
+        }
+    }
 }
 
 /// Colors by meaning; each theme maps them to a color.
@@ -108,55 +126,69 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         self.menuBarSetting = menuBar
     }
 
-    private enum CodingKeys: String, CodingKey { case hero, summary, progress, rows, menuBar }
+    private enum CodingKeys: String, CodingKey { case hero, progress, rows }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         hero = try container.decodeIfPresent(Hero.self, forKey: .hero)
-        summary = try container.decodeIfPresent([Chip].self, forKey: .summary)
         progress = try container.decodeIfPresent(Double.self, forKey: .progress)
         rows = try container.decode([Row].self, forKey: .rows)
-        if !container.contains(.menuBar) {
-            menuBarSetting = .automatic
-        } else if try container.decodeNil(forKey: .menuBar) {
-            menuBarSetting = .hidden
-        } else {
-            menuBarSetting = .custom(try container.decode(MenuBar.self, forKey: .menuBar))
-        }
+        let extras = try PanelExtras(from: decoder)
+        summary = extras.summary
+        menuBarSetting = extras.menuBarSetting
     }
 
     /// What the menu bar shows for this panel, or nil for nothing.
     public var menuBar: MenuBar? {
-        switch menuBarSetting {
-        case .hidden: return nil
-        case .custom(let menuBar): return menuBar
-        case .automatic:
-            guard let summary, let first = summary.first else { return nil }
-            let line = summary.map { [$0.icon, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
-            return MenuBar(icon: first.icon, text: first.value, tone: first.tone, menu: [Row(title: line)])
-        }
+        PanelExtras(summary: summary, menuBar: menuBarSetting).menuBar
     }
 }
 
 public enum ScriptOutput {
-    /// Reads the JSON a script prints. The message says what's wrong, for the tile to show.
+    /// Reads the JSON a script prints, as `type` or, without one, as the type its top-level key
+    /// names, else rows. The message says what's wrong, for the tile to show.
+    public static func content(_ data: Data, as type: ContentType? = nil) -> Result<ModuleContent, ScriptOutputError> {
+        switch type ?? (try? decoder.decode(KeyProbe.self, from: data)).flatMap(ContentType.detect) {
+        case nil: parse(data).map(ModuleContent.rows)
+        case .stats: decode(StatsContent.self, from: data).map(ModuleContent.stats)
+        }
+    }
+
+    /// Reads the JSON a script prints as rows.
     public static func parse(_ data: Data) -> Result<RowsContent, ScriptOutputError> {
+        decode(RowsContent.self, from: data).map { content in
+            var content = content
+            content.progress = content.progress.map { min(max($0, 0), 1) }
+            return content
+        }
+    }
+
+    private static var decoder: JSONDecoder {
         let decoder = JSONDecoder()
         decoder.allowsJSON5 = true
+        return decoder
+    }
+
+    private static func decode<T: Decodable>(_ type: T.Type, from data: Data) -> Result<T, ScriptOutputError> {
         do {
-            var content = try decoder.decode(RowsContent.self, from: data)
-            content.progress = content.progress.map { min(max($0, 0), 1) }
-            return .success(content)
+            return .success(try decoder.decode(T.self, from: data))
         } catch let DecodingError.keyNotFound(key, context) {
-            let at = context.codingPath.map { $0.intValue.map { "[\($0)]" } ?? ".\($0.stringValue)" }.joined()
-            return .failure(ScriptOutputError(message: "missing \"\(key.stringValue)\"\(at.isEmpty ? "" : " in \(at.dropFirst(at.hasPrefix(".") ? 1 : 0))")"))
+            let at = path(context.codingPath)
+            return .failure(ScriptOutputError(message: "missing \"\(key.stringValue)\"\(at.isEmpty ? "" : " in \(at)")"))
         } catch let DecodingError.typeMismatch(_, context) {
-            let at = context.codingPath.map { $0.intValue.map { "[\($0)]" } ?? ".\($0.stringValue)" }.joined()
-            return .failure(ScriptOutputError(message: "wrong type at \(at.dropFirst(at.hasPrefix(".") ? 1 : 0))"))
+            return .failure(ScriptOutputError(message: "wrong type at \(path(context.codingPath))"))
+        } catch let DecodingError.valueNotFound(_, context) {
+            return .failure(ScriptOutputError(message: "wrong type at \(path(context.codingPath))"))
         } catch {
             let text = String(decoding: data.prefix(80), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             return .failure(ScriptOutputError(message: text.isEmpty ? "printed nothing" : "didn't print JSON: \(text)"))
         }
+    }
+
+    /// `rows[0].title`
+    private static func path(_ codingPath: [any CodingKey]) -> String {
+        let at = codingPath.map { $0.intValue.map { "[\($0)]" } ?? ".\($0.stringValue)" }.joined()
+        return String(at.dropFirst(at.hasPrefix(".") ? 1 : 0))
     }
 }
 

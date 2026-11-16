@@ -50,6 +50,12 @@ public struct Tile: Equatable, Sendable {
     public var directory: URL
     /// Where the tile sits on the grid; nil when it didn't fit.
     public var slot: GridSlot?
+    /// How a script panel's output is drawn, when panel.jsonc's `type` names one. Otherwise the
+    /// output's top-level key decides.
+    public var content: ContentType?
+
+    /// What the tile's header calls it: "script", "cli", or the content type.
+    public var typeName: String { content?.rawValue ?? kind.rawValue }
 }
 
 /// A problem in the config, with the file and where in it (`panels/pods/panel.jsonc`, `every`).

@@ -65,6 +65,67 @@ struct ScriptOutputTests {
     }
 }
 
+struct ContentTypeTests {
+    private func content(_ text: String, as type: ContentType? = nil) -> Result<ModuleContent, ScriptOutputError> {
+        ScriptOutput.content(Data(text.utf8), as: type)
+    }
+
+    @Test func rowsByDefault() throws {
+        let content = try content(#"{ "rows": [{ "title": "a" }] }"#).get()
+        #expect(content == .rows(RowsContent(rows: [.init(title: "a")])))
+        #expect(content.type == nil)
+    }
+
+    @Test func theTopLevelKeyPicksTheType() throws {
+        #expect(try content(#"{ "stats": [{ "value": "1" }] }"#).get().type == .stats)
+    }
+
+    @Test func probeReadsTopLevelAndItemKeys() throws {
+        let probe = try JSONDecoder().decode(KeyProbe.self, from: Data(#"{ "items": [{ "a": 1 }, { "b": 2 }, "x"], "c": null }"#.utf8))
+        #expect(probe.keys == ["items", "c"])
+        #expect(probe.itemKeys == ["a", "b"])
+    }
+
+    @Test func thePanelsTypeWins() {
+        #expect(content(#"{ "rows": [] }"#, as: .stats).failureMessage == #"missing "stats""#)
+    }
+
+    @Test func summaryAndMenuBarWorkWithEveryType() throws {
+        let content = try content(#"{ "stats": [{ "value": "1" }], "summary": [{ "icon": "❓", "value": "2" }] }"#).get()
+        #expect(content.menuBar?.title == "❓ 2")
+        let hidden = try self.content(#"{ "stats": [{ "value": "1" }], "summary": [{ "value": "2" }], "menuBar": null }"#).get()
+        #expect(hidden.menuBar == nil)
+    }
+}
+
+struct StatsContentTests {
+    private func stats(_ text: String) throws -> StatsContent {
+        guard case .stats(let stats) = try ScriptOutput.content(Data(text.utf8), as: .stats).get() else {
+            throw ScriptOutputError(message: "not stats")
+        }
+        return stats
+    }
+
+    @Test func everyField() throws {
+        let content = try stats(#"{ "stats": [{ "label": "Crash-free sessions", "value": "99.71", "unit": "%", "delta": "▼ 0.12", "tone": "error", "vs": "vs last week" }] }"#)
+        #expect(content.stats == [.init(label: "Crash-free sessions", value: "99.71", unit: "%", delta: "▼ 0.12", tone: .error, vs: "vs last week")])
+    }
+
+    @Test func numbersReadAsText() throws {
+        let content = try stats(#"{ "stats": [{ "value": 12, "delta": 0.5 }, { "value": 2.25 }] }"#)
+        #expect(content.stats.map(\.value) == ["12", "2.25"])
+        #expect(content.stats[0].delta == "0.5")
+    }
+
+    @Test func oneStatWithoutAnArray() throws {
+        #expect(try stats(#"{ "stats": { "value": "3" } }"#).stats == [.init(value: "3")])
+    }
+
+    @Test func valueIsRequired() {
+        #expect(ScriptOutput.content(Data(#"{ "stats": [{ "label": "x" }] }"#.utf8)).failureMessage == #"missing "value" in stats[0]"#)
+    }
+}
+
 struct TerminalTextTests {
     @Test func stripsColorsAndCursorMoves() {
         #expect(TerminalText.clean("\u{1B}[1;32mRunning\u{1B}[0m  2/2\r\n") == "Running  2/2\n")
@@ -73,7 +134,7 @@ struct TerminalTextTests {
     }
 }
 
-private extension Result where Failure == ScriptOutputError {
+extension Result where Failure == ScriptOutputError {
     var failureMessage: String? {
         if case .failure(let error) = self { return error.message }
         return nil

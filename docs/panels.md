@@ -25,7 +25,7 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 
 | Key | Default | |
 |---|---|---|
-| `type` | required | `cli` or `script`. |
+| `type` | required | `cli`, `script`, or a [content type](script-output.md) like `stats`. |
 | `command` | required | Runs with `/bin/sh -c` in the panel's folder. |
 | `mode` | `"interval"` | `interval` or `stream`. |
 | `title` | folder name | Shown on the tile. |
@@ -40,7 +40,8 @@ Durations take `ms`, `s`, `m` or `h`: `"500ms"`, `"30s"`, `"5m"`, `"1h"`.
 ## Types
 
 - **`cli`** shows the output as is, colors removed, as many lines as fit.
-- **`script`** prints JSON that the tile shows as rows. See [Script output](script-output.md).
+- **`script`** prints JSON that the tile shows as rows, or as the type its top-level key names. See [Script output](script-output.md).
+- **A content type**, like `stats`, is a script panel whose output is always read as that type.
 
 ## Modes
 

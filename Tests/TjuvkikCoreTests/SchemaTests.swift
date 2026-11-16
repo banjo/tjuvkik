@@ -44,7 +44,7 @@ struct SchemaTests {
     @Test func panelSchema() throws {
         let panel = properties(try schema("panel"))
         #expect(Set(panel.keys) == keys(RawPanel()).union(["$schema"]))
-        #expect(enumValues(panel["type"]) == Set(Tile.Kind.allCases.map(\.rawValue)))
+        #expect(enumValues(panel["type"]) == Set(Tile.Kind.allCases.map(\.rawValue) + ContentType.allCases.map(\.rawValue)))
         #expect(enumValues(panel["mode"]) == Set(Tile.Mode.allCases.map(\.rawValue)))
         #expect(enumValues(panel["size"]) == Set(TileSize.allCases.map(\.rawValue)))
     }

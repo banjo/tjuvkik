@@ -104,14 +104,20 @@ public enum ConfigLoader {
         let file = files.locate(ConfigFiles.panel(name))
         guard let raw = files.read(RawPanel.self, from: file) else { return nil }
 
-        let kinds = Tile.Kind.allCases.map { "\"\($0.rawValue)\"" }.joined(separator: " or ")
+        let kinds = (Tile.Kind.allCases.map(\.rawValue) + ContentType.allCases.map(\.rawValue)).map { "\"\($0)\"" }.joined(separator: ", ")
         var kind: Tile.Kind?
+        var content: ContentType?
         switch raw.type {
         case let type?:
-            kind = Tile.Kind(rawValue: type)
-            if kind == nil { files.error(file, "type", "unknown type \"\(type)\", expected \(kinds)") }
+            if let parsed = ContentType(rawValue: type) {
+                kind = .script
+                content = parsed
+            } else {
+                kind = Tile.Kind(rawValue: type)
+                if kind == nil { files.error(file, "type", "unknown type \"\(type)\", expected one of \(kinds)") }
+            }
         case nil:
-            files.error(file, "type", "missing \"type\", expected \(kinds)")
+            files.error(file, "type", "missing \"type\", expected one of \(kinds)")
         }
 
         var mode = Tile.Mode.interval
@@ -140,7 +146,7 @@ public enum ConfigLoader {
         return Tile(
             panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
-            directory: files.directory.appending(path: "panels/\(name)")
+            directory: files.directory.appending(path: "panels/\(name)"), content: content
         )
     }
 

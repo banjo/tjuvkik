@@ -52,7 +52,7 @@ private struct TileView: View {
                 Text(tile.title)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color(theme.secondaryText))
-                Text(tile.kind.rawValue)
+                Text(state?.content?.type?.rawValue ?? tile.typeName)
                     .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .padding(.horizontal, 5)
@@ -105,6 +105,8 @@ private struct TileView: View {
             TextOutputView(text: text, theme: theme)
         case .tail(let text):
             TextOutputView(text: text, tail: true, theme: theme)
+        case .stats(let stats):
+            StatsView(content: stats, size: tile.size, theme: theme)
         case nil:
             if state?.error == nil {
                 Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
