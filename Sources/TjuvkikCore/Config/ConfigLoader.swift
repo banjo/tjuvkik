@@ -143,7 +143,7 @@ public enum ConfigLoader {
             return nil
         }
         guard seconds >= minimum else {
-            files.error(file, path, "must be at least \(minimum.formatted())s, got \"\(text)\"")
+            files.error(file, path, "must be at least \(minimum.secondsText)s, got \"\(text)\"")
             return nil
         }
         return seconds

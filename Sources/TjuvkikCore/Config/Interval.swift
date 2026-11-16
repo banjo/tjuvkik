@@ -13,3 +13,10 @@ public enum Interval {
         return value * unit.seconds
     }
 }
+
+extension Double {
+    /// Seconds as written in the config: `5`, `0.3`. Not localized.
+    var secondsText: String {
+        self == rounded() ? String(Int(self)) : String(self)
+    }
+}
