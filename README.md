@@ -110,4 +110,6 @@ swift build
 swift test
 ```
 
+The app icon is drawn in `Resources/AppIcon.svg`. After changing it, run `scripts/make-icon.sh` (needs `brew install librsvg`) to write `Resources/AppIcon.icns`.
+
 See [PLAN.md](PLAN.md) for the v1 plan and [design/prototype.html](design/prototype.html) for the design.

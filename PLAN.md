@@ -208,7 +208,7 @@ The metadata in `panel.jsonc` (description, author, version, requires) is there 
 ## Settled
 
 - Bundle ID: `se.banjo.tjuvkik`.
-- App icon: later. v1 uses an SF Symbol in the menu bar.
+- App icon: the Bento board on the wallpaper, `Resources/AppIcon.svg`. The menu bar uses an SF Symbol.
 - Jira: no tile in v1; a script module can be written later.
 - Work Mac (MDM): check that Input Monitoring can be granted to a self-signed app at the start of Phase 1.
 - Display: the glance opens on the screen of the focused window.
