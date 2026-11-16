@@ -84,7 +84,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(action: "Open Config", target: self, #selector(openConfig), key: ",")
+        menu.addItem(action: "Show Config Folder", target: self, #selector(showConfigFolder))
         menu.addItem(action: "Reload Config", target: self, #selector(reloadConfig), key: "r")
+        menu.addItem(.separator())
+        menu.addItem(action: "Export Config…", target: self, #selector(exportConfig))
+        menu.addItem(action: "Import Config…", target: self, #selector(importConfig))
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Tjuvkik", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     }
@@ -94,7 +98,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func openConfig() {
-        NSWorkspace.shared.open(store.fileURL)
+        NSWorkspace.shared.open(store.configFile)
+    }
+
+    @objc private func showConfigFolder() {
+        NSWorkspace.shared.activateFileViewerSelecting([store.configFile])
+    }
+
+    @objc private func exportConfig() {
+        ConfigTransfer.export(store)
+    }
+
+    @objc private func importConfig() {
+        ConfigTransfer.import(store)
     }
 
     @objc private func reloadConfig() {
