@@ -8,39 +8,36 @@ struct GlanceView: View {
     let store: ConfigStore
     let panels: PanelStore
 
-    private let gap: CGFloat = 10
-
     var body: some View {
         let config = store.config
         GeometryReader { geometry in
-            let cell = CGSize(
-                width: (geometry.size.width - gap * CGFloat(BentoPacking.columns - 1)) / CGFloat(BentoPacking.columns),
-                height: (geometry.size.height - gap * CGFloat(BentoPacking.rows - 1)) / CGFloat(BentoPacking.rows)
-            )
+            let cell = BentoGeometry.cell(in: geometry.size)
+            let gap = BentoGeometry.gap
             ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
                 if let slot = tile.slot {
-                    let width = cell.width * CGFloat(slot.columns) + gap * CGFloat(slot.columns - 1)
-                    let height = cell.height * CGFloat(slot.rows) + gap * CGFloat(slot.rows - 1)
+                    let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell)
                     TileView(tile: tile, state: panels.states[tile.panel], theme: config.theme, index: index, isVisible: model.isVisible)
-                        .frame(width: width, height: height)
+                        .frame(width: size.width, height: size.height)
                         .position(
-                            x: (cell.width + gap) * CGFloat(slot.column) + width / 2,
-                            y: (cell.height + gap) * CGFloat(slot.row) + height / 2
+                            x: BentoGeometry.inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,
+                            y: BentoGeometry.inset + (cell.height + gap) * CGFloat(slot.row) + size.height / 2
                         )
                 }
             }
         }
-        .padding(10)
         .environment(\.colorScheme, config.theme.appearance.colorScheme)
     }
 }
 
-private struct TileView: View {
+/// One panel: its header, its content and its last error. `solid` draws the background without
+/// the blur, for rendering outside the glance.
+struct TileView: View {
     let tile: Tile
     let state: PanelStore.State?
     let theme: Theme
     let index: Int
     let isVisible: Bool
+    var solid = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -87,14 +84,14 @@ private struct TileView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .background {
-            if theme.blur && !reduceTransparency {
+            if theme.blur && !reduceTransparency && !solid {
                 ZStack {
                     VisualEffect(cornerRadius: radius, appearance: theme.appearance)
                     RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Color(theme.panel))
                 }
             } else {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Color(reduceTransparency ? theme.panel.opaque : theme.panel))
+                    .fill(Color(reduceTransparency || solid ? theme.panel.opaque : theme.panel))
             }
         }
         .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color(theme.line)))

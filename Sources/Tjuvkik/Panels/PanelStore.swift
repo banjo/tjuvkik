@@ -222,22 +222,15 @@ final class PanelStore {
     // MARK: Shared
 
     private func show(_ output: String, in key: String, tile: Tile) {
-        switch tile.kind {
-        case .script:
-            switch ScriptOutput.content(Data(output.utf8), as: tile.content) {
-            case .success(let content):
-                let kept = ChartHistory.apply(to: content, kept: states[key]?.history ?? [], limit: tile.history)
-                states[key]?.content = kept.content
-                states[key]?.history = kept.kept
-                states[key]?.error = nil
-                states[key]?.updated = Date()
-            case .failure(let error):
-                states[key]?.error = error.message
-            }
-        case .cli:
-            states[key]?.content = .text(TerminalText.clean(output))
+        switch PanelOutput.content(Data(output.utf8), for: tile) {
+        case .success(let content):
+            let kept = ChartHistory.apply(to: content, kept: states[key]?.history ?? [], limit: tile.history)
+            states[key]?.content = kept.content
+            states[key]?.history = kept.kept
             states[key]?.error = nil
             states[key]?.updated = Date()
+        case .failure(let error):
+            states[key]?.error = error.message
         }
     }
 
@@ -249,5 +242,13 @@ final class PanelStore {
 
     private static func signature(_ tile: Tile) -> String {
         "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)|\(tile.file?.path ?? "")"
+    }
+}
+
+extension PanelStore.State {
+    /// What a tile shows, without a run behind it: for `tjuvkik preview`.
+    init(content: ModuleContent?, error: String?) {
+        self.content = content
+        self.error = error
     }
 }
