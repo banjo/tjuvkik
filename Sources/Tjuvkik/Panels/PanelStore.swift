@@ -175,6 +175,20 @@ final class PanelStore {
         states[key] = state
     }
 
+    // MARK: Actions
+
+    /// Runs a row's command, like the menu's. A failure shows on the panel's tile until it next
+    /// updates.
+    func runAction(_ command: String, panel: String) {
+        guard let environment, let tile = tiles.first(where: { $0.panel == panel }) else { return }
+        Task {
+            let result = await CommandRunner.launch(command, in: tile.directory, environment: Self.environment(environment, tile))
+            if !result.succeeded {
+                states[panel]?.error = "\(command): \(result.failureSummary(timeout: 30))"
+            }
+        }
+    }
+
     // MARK: Shared
 
     private func show(_ output: String, in key: String, kind: Tile.Kind) {

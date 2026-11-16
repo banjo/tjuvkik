@@ -5,8 +5,15 @@ import TjuvkikCore
 @MainActor
 struct MenuBarPanels {
     struct Entry {
+        var panel: String
         var title: String
         var menuBar: RowsContent.MenuBar
+    }
+
+    /// What picking a menu row does.
+    enum Action {
+        case open(URL)
+        case run(command: String, panel: String)
     }
 
     let entries: [Entry]
@@ -17,7 +24,7 @@ struct MenuBarPanels {
                   case .rows(let rows)? = panels.states[name]?.content,
                   let menuBar = rows.menuBar
             else { return nil }
-            return Entry(title: tile.title, menuBar: menuBar)
+            return Entry(panel: name, title: tile.title, menuBar: menuBar)
         }
     }
 
@@ -34,18 +41,19 @@ struct MenuBarPanels {
     }
 
     /// A section per panel with rows in its `menu`.
-    func addItems(to menu: NSMenu, target: AnyObject, open: Selector) {
+    /// `perform` gets the item; its `representedObject` is an `Action`.
+    func addItems(to menu: NSMenu, target: AnyObject, perform: Selector) {
         let sections = entries.filter { !($0.menuBar.menu ?? []).isEmpty }
         for entry in sections {
             menu.addItem(.sectionHeader(title: entry.title))
             for row in entry.menuBar.menu ?? [] {
-                menu.addItem(Self.item(for: row, target: target, open: open))
+                menu.addItem(Self.item(for: row, panel: entry.panel, target: target, perform: perform))
             }
         }
         if !sections.isEmpty { menu.addItem(.separator()) }
     }
 
-    private static func item(for row: RowsContent.Row, target: AnyObject, open: Selector) -> NSMenuItem {
+    private static func item(for row: RowsContent.Row, panel: String, target: AnyObject, perform: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         let title = NSMutableAttributedString(
             string: [row.icon, row.title].compactMap { $0 }.joined(separator: "  "),
@@ -58,11 +66,16 @@ struct MenuBarPanels {
         }
         item.attributedTitle = title
         item.subtitle = [row.subtitle, row.note].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
-        // Rows without a link still read clearly: enabled, but with nothing to do.
-        if let link = row.url.flatMap(URL.init(string:)) {
-            item.action = open
+        let action: Action? = if let command = row.command, !command.isEmpty {
+            .run(command: command, panel: panel)
+        } else {
+            row.url.flatMap(URL.init(string:)).map(Action.open)
+        }
+        // Rows with nothing to do still read clearly: enabled, but inert.
+        if let action {
+            item.action = perform
             item.target = target
-            item.representedObject = link
+            item.representedObject = action
         } else {
             item.action = #selector(NSMenuItem.ignore)
             item.target = item

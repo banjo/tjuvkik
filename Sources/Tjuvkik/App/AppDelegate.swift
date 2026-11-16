@@ -112,7 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        menuBarPanels.addItems(to: menu, target: self, open: #selector(openLink(_:)))
+        menuBarPanels.addItems(to: menu, target: self, perform: #selector(performRow(_:)))
         if trigger.isRunning {
             menu.addItem(disabled: "Hold fn to glance")
         } else {
@@ -154,9 +154,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         InputMonitoring.openSettings()
     }
 
-    @objc private func openLink(_ item: NSMenuItem) {
-        guard let link = item.representedObject as? URL else { return }
-        NSWorkspace.shared.open(link)
+    @objc private func performRow(_ item: NSMenuItem) {
+        switch item.representedObject as? MenuBarPanels.Action {
+        case .open(let link): NSWorkspace.shared.open(link)
+        case .run(let command, let panel): panels.runAction(command, panel: panel)
+        case nil: break
+        }
     }
 
     @objc private func openLoginItems() {
