@@ -67,7 +67,7 @@ private struct TileView: View {
                 if state?.error != nil && state?.content != nil {
                     Text("stale").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Color(theme.warning))
                 } else {
-                    Text(tile.mode == .stream ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(width: .narrow)))")
+                    Text(tile.mode == .stream ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(allowed: [.days, .hours, .minutes, .seconds], width: .narrow)))")
                         .font(.system(size: 10.5))
                         .foregroundStyle(Color(theme.tertiaryText))
                 }
