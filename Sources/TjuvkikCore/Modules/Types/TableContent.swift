@@ -195,16 +195,25 @@ public enum TableLayout {
     }
 
     /// Each shown column's width out of `available`. Columns with a share get it; the rest split
-    /// what's left evenly. Shares that leave the others less than `minimum` each are scaled down,
-    /// and shares alone that don't add up to the whole are scaled up.
-    public static func widths(shares: [Double?], available: Double, minimum: Double = 0.1) -> [Double] {
+    /// what's left: each gets the width it `needs`, and what's over is split evenly. When what's
+    /// left is less than they need, they shrink in proportion. Without `needed`, they split it
+    /// evenly. Shares that leave the others less than `minimum` each are scaled down, and shares
+    /// alone that don't add up to the whole are scaled up.
+    public static func widths(shares: [Double?], available: Double, needed: [Double] = [], minimum: Double = 0.1) -> [Double] {
         guard !shares.isEmpty, available > 0 else { return shares.map { _ in 0 } }
         let free = shares.filter { $0 == nil }.count
         var total = shares.reduce(0) { $0 + ($1 ?? 0) }
         let room = free == 0 ? 1 : max(1 - minimum * Double(free), 0)
         let scale = total > 0 && (free == 0 || total > room) ? room / total : 1
         total *= scale
-        let rest = free == 0 ? 0 : max(1 - total, 0) / Double(free)
-        return shares.map { (($0.map { $0 * scale }) ?? rest) * available }
+        let left = free == 0 ? 0 : max(1 - total, 0) * available
+        let need = shares.indices.map { shares[$0] == nil && $0 < needed.count ? max(needed[$0], 0) : 0 }
+        let needs = need.reduce(0, +)
+        return shares.indices.map { index in
+            if let share = shares[index] { return share * scale * available }
+            if needs <= 0 { return left / Double(free) }
+            if needs >= left { return need[index] / needs * left }
+            return need[index] + (left - needs) / Double(free)
+        }
     }
 }

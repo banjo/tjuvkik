@@ -135,4 +135,21 @@ struct TableLayoutTests {
     @Test func sharesLeaveRoomForTheRest() {
         #expect(widths([0.9, 0.6, nil]) == [54, 36, 10])
     }
+
+    private func widths(_ shares: [Double?], needed: [Double], _ available: Double = 100) -> [Double] {
+        TableLayout.widths(shares: shares, available: available, needed: needed).map { ($0 * 1_000).rounded() / 1_000 }
+    }
+
+    @Test func theRestGetWhatTheyNeedThenSplitWhatsOver() {
+        // 60 left; the free columns need 30 and 10, and split the 20 over.
+        #expect(widths([0.4, nil, nil], needed: [99, 30, 10]) == [40, 40, 20])
+    }
+
+    @Test func theRestShrinkInProportionWhenTheyDontFit() {
+        #expect(widths([0.4, nil, nil], needed: [0, 90, 30]) == [40, 45, 15])
+    }
+
+    @Test func noNeedsSplitsEvenly() {
+        #expect(widths([0.4, nil, nil], needed: [0, 0, 0]) == [40, 30, 30])
+    }
 }
