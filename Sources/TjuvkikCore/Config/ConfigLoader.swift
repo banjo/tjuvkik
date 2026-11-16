@@ -80,6 +80,32 @@ public enum ConfigLoader {
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }
 
+    /// One panel by its folder name, whether or not `config.jsonc` shows it. Its size is the
+    /// panel's own, and it has no slot.
+    public static func panel(_ name: String, in directory: URL) -> Result<Tile, ConfigErrors> {
+        var files = ConfigFiles(directory: directory)
+        let tile = tile(RawPanelRef(panel: name), path: "", config: "", files: &files)
+        let errors = files.issues.filter { $0.severity == .error }
+        guard errors.isEmpty, let tile else { return .failure(ConfigErrors(issues: errors)) }
+        return .success(tile)
+    }
+
+    /// The folders in `panels/` that have a `panel.jsonc` or `panel.json`, sorted.
+    public static func panelNames(in directory: URL) -> [String] {
+        let panels = directory.appending(path: "panels")
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: panels.path)) ?? []
+        return names.filter { !$0.hasPrefix(".") && ConfigFiles.locate(ConfigFiles.panel($0), in: directory) != nil }.sorted()
+    }
+
+    /// A built-in theme or one in `themes/`, resolved as `config.jsonc`'s `theme` would be.
+    public static func theme(_ name: String, in directory: URL) -> Result<Theme, ConfigErrors> {
+        var resolver = ThemeResolver(files: ConfigFiles(directory: directory))
+        let theme = resolver.resolve(name, from: "")
+        let errors = resolver.files.issues.filter { $0.severity == .error }
+        guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
+        return .success(theme)
+    }
+
     /// Resolves a `panels` entry to its panel. The size here wins over the panel's own.
     private static func tile(_ ref: RawPanelRef, path: String, config: String, files: inout ConfigFiles) -> Tile? {
         guard let name = ref.panel, !name.isEmpty else {
@@ -87,18 +113,19 @@ public enum ConfigLoader {
             return nil
         }
         let start = files.issues.count
+        func at(_ key: String) -> String { path.isEmpty ? "" : "\(path).\(key)" }
         var refSize: TileSize?
         if let value = ref.size {
             refSize = TileSize(rawValue: value)
-            if refSize == nil { files.error(config, "\(path).size", sizeMessage(value)) }
+            if refSize == nil { files.error(config, at("size"), sizeMessage(value)) }
         }
 
         guard !name.contains("/"), !name.hasPrefix(".") else {
-            files.error(config, "\(path).panel", "\"\(name)\" isn't a panel name")
+            files.error(config, at("panel"), "\"\(name)\" isn't a panel name")
             return nil
         }
         guard files.exists(ConfigFiles.panel(name)) else {
-            files.error(config, "\(path).panel", "no panel \"\(name)\": create \(ConfigFiles.panel(name)).jsonc")
+            files.error(config, at("panel"), "no panel \"\(name)\": create \(ConfigFiles.panel(name)).jsonc")
             return nil
         }
         let file = files.locate(ConfigFiles.panel(name))
