@@ -227,4 +227,81 @@ struct ConfigLoaderTests {
         #expect(error(#"{ "shortcut": "space" }"#) == [#"config.json: trigger.shortcut: needs ⌃, ⌥ or ⌘, so it doesn't take a key you type"#])
         #expect(error(#"{ "mode": "press" }"#) == [#"config.json: trigger.mode: unknown mode "press", expected "hold" or "toggle""#])
     }
+
+    // MARK: Background
+
+    /// A panel with `panel.json`'s extra keys, in a config that shows it.
+    private func background(_ panel: String = "", _ ref: String = "") throws -> Tile.Background {
+        var json = #"{ "type": "cli", "command": "ls""#
+        if !panel.isEmpty { json += ", " + panel }
+        json += " }"
+        var entry = #"{ "panel": "x""#
+        if !ref.isEmpty { entry += ", " + ref }
+        entry += " }"
+        let config = try load([
+            "config.json": "{ \"panels\": [\(entry)] }",
+            "panels/x/panel.json": json,
+        ]).config
+        return config.tiles[0].background
+    }
+
+    @Test func backgroundDefaultsToSame() throws {
+        #expect(try background() == .same)
+        #expect(try background(#""background": true"#) == .same)
+        #expect(try background(#""background": false"#) == .off)
+        #expect(try background(#""background": "5m""#) == .every(300))
+    }
+
+    @Test func panelEntryWinsOverThePanel() throws {
+        #expect(try background(#""background": "5m""#, #""background": false"#) == .off)
+        #expect(try background(#""background": false"#, #""background": "30s""#) == .every(30))
+    }
+
+    @Test func backgroundErrors() {
+        func error(_ value: String) -> [String] {
+            errors([
+                "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+                "panels/x/panel.json": #"{ "type": "cli", "command": "ls", "background": "# + value + " }",
+            ])
+        }
+        #expect(error(#""soon""#) == [#"panels/x/panel.json: background: can't read "soon", write it like "30s", "5m" or "1h""#])
+        #expect(error(#""1s""#) == [#"panels/x/panel.json: background: must be at least 5s, got "1s""#])
+        #expect(error("3") == [#"panels/x/panel.json: background: expected a duration like "5m", true or false"#])
+    }
+
+    @Test func backgroundOnAStreamPanelIsAWarning() throws {
+        let loaded = try load([
+            "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls", "mode": "stream", "background": "5m" }"#,
+        ])
+        #expect(loaded.config.tiles.count == 1)
+        #expect(loaded.warnings.map(\.description) == ["panels/x/panel.json: background: only applies to interval panels that run a command"])
+    }
+
+    @Test func hiddenPanelsRunWithoutASpot() throws {
+        let loaded = try load([
+            "config.json": #"{ "menuBar": "x", "panels": [{ "panel": "x", "show": false }, { "panel": "y", "size": "xl" }, { "panel": "y", "size": "xl" }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls" }"#,
+            "panels/y/panel.json": #"{ "type": "cli", "command": "pwd" }"#,
+        ])
+        #expect(loaded.config.tiles[0].show == false)
+        #expect(loaded.config.tiles[0].slot == nil)
+        #expect(loaded.config.tiles[1].slot != nil)
+        #expect(loaded.config.tiles[2].slot != nil)
+        #expect(loaded.warnings.isEmpty)
+    }
+
+    @Test func hiddenPanelThatNeverRunsIsAWarning() throws {
+        let loaded = try load([
+            "config.json": #"{ "panels": [{ "panel": "x", "show": false, "background": false }] }"#,
+            "panels/x/panel.json": #"{ "type": "cli", "command": "ls" }"#,
+        ])
+        #expect(loaded.warnings.map(\.description) == [#"config.json: panels[0].show: "x" is hidden and doesn't run in the background, so it never runs"#])
+    }
+
+    @Test func pauseDefaultsToBoth() throws {
+        #expect(try load(["config.json": "{}"]).config.pause == Config.Pause())
+        #expect(try load(["config.json": #"{ "pause": { "onLowPower": false } }"#]).config.pause
+            == Config.Pause(whenLocked: true, onLowPower: false))
+    }
 }

@@ -11,6 +11,7 @@ struct RawConfig: Decodable {
     var trigger: RawTrigger?
     var launchAtLogin: Bool?
     var menuBar: OneOrMany?
+    var pause: RawPause?
     var panels: [RawPanelRef]?
 }
 
@@ -31,10 +32,34 @@ struct RawTrigger: Decodable {
     var holdMs: Int?
 }
 
+struct RawPause: Decodable {
+    var whenLocked: Bool?
+    var onLowPower: Bool?
+}
+
+/// `background`: a duration, or true or false.
+enum RawBackground: Decodable {
+    case flag(Bool)
+    case duration(String)
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let flag = try? container.decode(Bool.self) {
+            self = .flag(flag)
+        } else if let text = try? container.decode(String.self) {
+            self = .duration(text)
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: #"expected a duration like "5m", true or false"#))
+        }
+    }
+}
+
 /// An entry in `config.jsonc`'s `panels`: which panel, and optionally its size here.
 struct RawPanelRef: Decodable {
     var panel: String?
     var size: String?
+    var background: RawBackground?
+    var show: Bool?
 }
 
 /// `panels/<name>/panel.jsonc`
@@ -52,6 +77,7 @@ struct RawPanel: Decodable {
     var size: String?
     var history: Int?
     var file: String?
+    var background: RawBackground?
 }
 
 /// `themes/<name>.jsonc`
