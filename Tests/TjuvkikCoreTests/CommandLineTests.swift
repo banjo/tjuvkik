@@ -56,6 +56,48 @@ struct CLIArgumentsTests {
         #expect(usageError("schema nope") == "unknown schema \"nope\", expected config, panel, theme")
         #expect(usageError("run a --frob") == "unknown option --frob")
     }
+
+    @Test func readsOptions() throws {
+        #expect(try command("run ci --option repo=a/b --option limit=5").command == .run(panel: "ci", raw: false, options: ["repo": "a/b", "limit": "5"]))
+        #expect(try command("run ci --option=repo=a=b").command == .run(panel: "ci", raw: false, options: ["repo": "a=b"]))
+        #expect(try command("preview ci --option repo=x").command
+            == .preview(panel: "ci", size: nil, theme: nil, output: nil, scale: 2, options: ["repo": "x"]))
+        #expect(usageError("run ci --option repo") == #"--option needs key=value, got "repo""#)
+        #expect(usageError("run ci --option =x") == #"--option needs key=value, got "=x""#)
+        #expect(usageError("run ci --option a=1 --option a=2") == "--option a is given twice")
+        #expect(usageError("validate --option a=1") == "validate doesn't take --option")
+    }
+}
+
+struct RunnableTests {
+    private let fixture = ConfigFixture([
+        "config.json": #"{ "panels": [{ "panel": "ci", "id": "ci-a", "options": { "repo": "a/b" } }] }"#,
+        "panels/ci/panel.json": ConfigLoaderTests.ci,
+    ])
+
+    private func failure(_ name: String, _ options: [String: String]) -> [String] {
+        guard case .failure(let errors) = ConfigLoader.runnable(name, options: options, in: fixture.directory) else { return [] }
+        return errors.issues.map(\.description)
+    }
+
+    @Test func aTileUsesItsOptions() throws {
+        let tile = try ConfigLoader.runnable("ci-a", options: [:], in: fixture.directory).get()
+        #expect(tile.options["repo"] == .string("a/b"))
+        #expect(tile.id == "ci-a")
+        #expect(try ConfigLoader.runnable("ci-a", options: ["limit": "3"], in: fixture.directory).get().options["limit"] == .number(3))
+    }
+
+    @Test func aPanelUsesItsDefaults() throws {
+        let tile = try ConfigLoader.runnable("ci", options: ["repo": "x/y"], in: fixture.directory).get()
+        #expect(tile.id == "ci")
+        #expect(tile.options["repo"] == .string("x/y"))
+    }
+
+    @Test func errors() {
+        #expect(failure("ci", [:]) == [#""ci" needs "repo": add --option repo=<value>"#])
+        #expect(failure("ci-a", ["nope": "1"]) == [#"--option nope: "ci" has no option "nope", expected one of "branch", "drafts", "limit", "repo""#])
+        #expect(failure("ci-a", ["limit": "x"]) == [#"--option limit: expected a number, got "x""#])
+    }
 }
 
 struct PanelTemplateTests {

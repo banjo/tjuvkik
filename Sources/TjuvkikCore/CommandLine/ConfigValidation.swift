@@ -7,7 +7,7 @@ public struct ConfigValidation: Equatable, Sendable {
     public var warnings: [ConfigIssue]
     /// Every panel folder found.
     public var panels: [String]
-    /// The panels on the board, in order. Empty when the config has errors.
+    /// The tiles on the board, by id, in order. Empty when the config has errors.
     public var shown: [String]
 
     public var isValid: Bool { errors.isEmpty }
@@ -25,7 +25,7 @@ public struct ConfigValidation: Equatable, Sendable {
         switch ConfigLoader.load(from: directory) {
         case .success(let loaded):
             issues += loaded.warnings
-            shown = loaded.config.tiles.filter { $0.slot != nil }.map(\.panel)
+            shown = loaded.config.tiles.filter { $0.slot != nil }.map(\.id)
         case .failure(let failure):
             issues += failure.issues
         }

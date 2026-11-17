@@ -45,24 +45,36 @@ public enum ConfigLoader {
         let trigger: Trigger = if let raw = raw.trigger { Self.trigger(raw, file: file, files: &files) } else { .fn }
 
         let refs = raw.panels ?? []
-        var tiles = refs.enumerated().compactMap { index, ref in
-            tile(ref, path: "panels[\(index)]", config: file, files: &files)
+        var tiles: [Tile] = []
+        var used: [String: Int] = [:]
+        for (index, ref) in refs.enumerated() {
+            let id = ref.id ?? ref.panel ?? ""
+            if !id.isEmpty, let earlier = used[id] {
+                if ref.id == nil {
+                    files.error(file, "panels[\(index)]", "\"\(id)\" is already on the board, give this one an \"id\"")
+                } else {
+                    files.error(file, "panels[\(index)].id", "\"\(id)\" is already used by panels[\(earlier)]")
+                }
+                continue
+            }
+            if !id.isEmpty { used[id] = index }
+            if let tile = tile(ref, path: "panels[\(index)]", config: file, requireOptions: true, files: &files) { tiles.append(tile) }
         }
         let shown = tiles.indices.filter { tiles[$0].show }
         let slots = BentoPacking.pack(shown.map { tiles[$0].size })
         for (position, index) in shown.enumerated() {
             tiles[index].slot = slots[position]
             if slots[position] == nil {
-                files.warning(file, "panels[\(index)]", "\"\(tiles[index].panel)\" doesn't fit on the 4×3 grid and is left out")
+                files.warning(file, "panels[\(index)]", "\"\(tiles[index].id)\" doesn't fit on the 4×3 grid and is left out")
             }
         }
 
         let menuBar = raw.menuBar?.values ?? []
         for (index, name) in menuBar.enumerated() {
             let path = raw.menuBar.map { $0.values.count == 1 ? "menuBar" : "menuBar[\(index)]" } ?? "menuBar"
-            if !refs.contains(where: { $0.panel == name }) {
+            if !tiles.contains(where: { $0.id == name }) {
                 files.error(file, path, "\"\(name)\" isn't in panels")
-            } else if let tile = tiles.first(where: { $0.panel == name }), tile.show, tile.slot == nil {
+            } else if let tile = tiles.first(where: { $0.id == name }), tile.show, tile.slot == nil {
                 files.warning(file, path, "\"\(name)\" doesn't fit on the grid, so it doesn't run")
             }
         }
@@ -83,10 +95,39 @@ public enum ConfigLoader {
     /// panel's own, and it has no slot.
     public static func panel(_ name: String, in directory: URL) -> Result<Tile, ConfigErrors> {
         var files = ConfigFiles(directory: directory)
-        let tile = tile(RawPanelRef(panel: name), path: "", config: "", files: &files)
+        let tile = tile(RawPanelRef(panel: name), path: "", config: "", requireOptions: false, files: &files)
         let errors = files.issues.filter { $0.severity == .error }
         guard errors.isEmpty, let tile else { return .failure(ConfigErrors(issues: errors)) }
         return .success(tile)
+    }
+
+    /// What `tjuvkik run` and `preview` run: a tile on the board by its id, with its options, or
+    /// else a panel by its folder name, with its defaults. `options` win over both.
+    public static func runnable(_ name: String, options: [String: String], in directory: URL) -> Result<Tile, ConfigErrors> {
+        var tile: Tile
+        if case .success(let loaded) = load(from: directory), let placed = loaded.config.tiles.first(where: { $0.id == name }) {
+            tile = placed
+        } else {
+            switch panel(name, in: directory) {
+            case .success(let found): tile = found
+            case .failure(let failure): return .failure(failure)
+            }
+        }
+        var issues: [ConfigIssue] = []
+        for key in options.keys.sorted() {
+            guard let option = tile.declaredOptions.first(where: { $0.name == key }) else {
+                issues.append(ConfigIssue(severity: .error, file: "", path: "--option \(key)", message: PanelOptions.unknown(key, panel: tile.panel, declared: tile.declaredOptions)))
+                continue
+            }
+            switch PanelOptions.parse(options[key]!, as: option) {
+            case .success(let value): tile.options[key] = value
+            case .failure(let error): issues.append(ConfigIssue(severity: .error, file: "", path: "--option \(key)", message: error.message))
+            }
+        }
+        for option in tile.declaredOptions where option.required && tile.options[option.name] == nil {
+            issues.append(ConfigIssue(severity: .error, file: "", message: "\"\(tile.panel)\" needs \"\(option.name)\": add --option \(option.name)=<value>"))
+        }
+        return issues.isEmpty ? .success(tile) : .failure(ConfigErrors(issues: issues))
     }
 
     /// The folders in `panels/` that have a `panel.jsonc` or `panel.json`, sorted.
@@ -155,13 +196,18 @@ public enum ConfigLoader {
     }
 
     /// Resolves a `panels` entry to its panel. The size here wins over the panel's own.
-    private static func tile(_ ref: RawPanelRef, path: String, config: String, files: inout ConfigFiles) -> Tile? {
+    private static func tile(_ ref: RawPanelRef, path: String, config: String, requireOptions: Bool, files: inout ConfigFiles) -> Tile? {
         guard let name = ref.panel, !name.isEmpty else {
             files.error(config, path, "missing \"panel\"")
             return nil
         }
         let start = files.issues.count
         func at(_ key: String) -> String { path.isEmpty ? "" : "\(path).\(key)" }
+        let id = ref.id ?? name
+        if ref.id != nil, !PanelTemplate.isValidName(id) {
+            files.error(config, at("id"), "\"\(id)\" can't be an id: use letters, digits, - and _")
+            return nil
+        }
         var refSize: TileSize?
         if let value = ref.size {
             refSize = TileSize(rawValue: value)
@@ -265,10 +311,12 @@ public enum ConfigLoader {
         for (index, tool) in requires.enumerated() where tool.isEmpty || tool.contains("/") {
             files.error(file, "requires[\(index)]", "\"\(tool)\" isn't a command name")
         }
+        let declared = PanelOptions.declarations(raw.options, file: file, files: &files)
+        let options = PanelOptions.resolve(ref.options, declared: declared, panel: name, required: requireOptions, file: config, path: path, files: &files)
 
         guard !files.issues[start...].contains(where: { $0.severity == .error }), let kind, let every, let timeout else { return nil }
         return Tile(
-            panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
+            id: id, panel: name, declaredOptions: declared, options: options, kind: kind, mode: mode, command: command, title: ref.title ?? raw.title ?? name,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
             directory: files.directory.appending(path: "panels/\(name)"), content: content,
             history: history, file: source, background: background, show: show, notify: notify

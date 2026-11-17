@@ -5,7 +5,7 @@ import TjuvkikCore
 @MainActor
 struct MenuBarPanels {
     struct Entry {
-        var panel: String
+        var id: String
         var title: String
         var menuBar: RowsContent.MenuBar
     }
@@ -13,17 +13,17 @@ struct MenuBarPanels {
     /// What picking a menu row does.
     enum Action {
         case open(URL)
-        case run(command: String, panel: String)
+        case run(command: String, id: String)
     }
 
     let entries: [Entry]
 
     init(config: Config, panels: PanelStore) {
         entries = config.menuBar.compactMap { name in
-            guard let tile = config.tiles.first(where: { $0.panel == name }),
+            guard let tile = config.tiles.first(where: { $0.id == name }),
                   let menuBar = panels.states[name]?.content?.menuBar
             else { return nil }
-            return Entry(panel: name, title: tile.title, menuBar: menuBar)
+            return Entry(id: name, title: tile.title, menuBar: menuBar)
         }
     }
 
@@ -46,13 +46,13 @@ struct MenuBarPanels {
         for entry in sections {
             menu.addItem(.sectionHeader(title: entry.title))
             for row in entry.menuBar.menu ?? [] {
-                menu.addItem(Self.item(for: row, panel: entry.panel, target: target, perform: perform))
+                menu.addItem(Self.item(for: row, id: entry.id, target: target, perform: perform))
             }
         }
         if !sections.isEmpty { menu.addItem(.separator()) }
     }
 
-    private static func item(for row: RowsContent.Row, panel: String, target: AnyObject, perform: Selector) -> NSMenuItem {
+    private static func item(for row: RowsContent.Row, id: String, target: AnyObject, perform: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         let title = NSMutableAttributedString(
             string: [row.icon, row.title].compactMap { $0 }.joined(separator: "  "),
@@ -66,7 +66,7 @@ struct MenuBarPanels {
         item.attributedTitle = title
         item.subtitle = [row.subtitle, row.note].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
         let action: Action? = if let command = row.command, !command.isEmpty {
-            .run(command: command, panel: panel)
+            .run(command: command, id: id)
         } else {
             row.url.flatMap(URL.init(string:)).map(Action.open)
         }

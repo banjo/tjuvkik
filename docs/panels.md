@@ -2,6 +2,8 @@
 
 A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [config.jsonc](config.md) to show it.
 
+A panel placed on the board is a tile. One panel can be placed many times, each tile with its own `id`, title and [options](#options).
+
 `panels/<name>/panel.jsonc`, with every setting:
 
 ```jsonc
@@ -38,9 +40,59 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 | `requires` | `[]` | Commands that must be on PATH. If one is missing, the tile says so instead of running. |
 | `background` | `true` | How often an interval panel runs while the glance is closed: `true`, `false` or a duration like `"5m"`, at least `5s`. See [Background](#background). |
 | `notify` | `true` | `false`, or when and how the panel notifies. See [Notifications](notifications.md#a-panels-notify). |
+| `options` | | Settings each tile sets in `config.jsonc`. See [Options](#options). |
 | `description`, `author`, `version` | | For sharing. Not shown. |
 
 Durations take `ms`, `s`, `m` or `h`: `"500ms"`, `"30s"`, `"5m"`, `"1h"`.
+
+## Options
+
+A panel can take options, so the same panel works for several repos, clusters or hosts without editing its script. The panel declares them in `options`; each tile sets their values in [config.jsonc](config.md#panels).
+
+| Key | |
+|---|---|
+| `type` | Required: `string`, `number` or `boolean`. |
+| `title` | A label for forms. Default: the option's name. |
+| `description` | What it's for. |
+| `default` | The value when a tile doesn't set it. |
+| `required` | `true`: every tile of the panel must set it. |
+| `enum` | The allowed values of a `string` option. |
+
+```jsonc
+// panels/ci/panel.jsonc: what the panel takes
+"options": {
+  "repo":   { "type": "string", "title": "Repository", "description": "owner/name", "required": true },
+  "limit":  { "type": "number", "default": 10 },
+  "branch": { "type": "string", "enum": ["main", "release"], "default": "main" },
+  "drafts": { "type": "boolean", "default": false }
+}
+```
+
+```jsonc
+// config.jsonc: what you set
+"panels": [
+  { "panel": "ci", "id": "ci-app",  "title": "CI · app",  "options": { "repo": "banjo/tjuvkik" } },
+  { "panel": "ci", "id": "ci-dots", "title": "CI · dots", "options": { "repo": "banjo/dotfiles", "limit": 5 } },
+]
+```
+
+The command reads them from the environment, in two ways:
+
+- One variable per option, `TJUVKIK_OPTION_<NAME>`: the name upper-cased, `-` turned into `_`. Numbers print without `.0` when whole (`10`, `2.5`), booleans as `true` or `false`.
+- All of them as one JSON object, with sorted keys, in `TJUVKIK_OPTIONS`.
+
+```sh
+gh run list --repo "$TJUVKIK_OPTION_REPO" --limit "$TJUVKIK_OPTION_LIMIT"
+repo=$(echo "$TJUVKIK_OPTIONS" | jq -r .repo)
+```
+
+An option with no value and no default is left out of both. Options are never put into `command`, since `sh -c` would run them.
+
+Option names start with a letter, then use letters, digits, `-` and `_`. A tile that sets an option the panel doesn't declare, or leaves out a required one, is an error.
+
+### Secrets
+
+Don't put tokens in options: `config.jsonc` often ends up in a dotfiles repo. Read them in the script instead, with `gh auth token`, `security find-generic-password -s <name> -w`, or an environment variable. See [#23](https://github.com/banjo/tjuvkik/issues/23).
 
 ## Types
 
@@ -75,11 +127,11 @@ A run fails if it exits with a non-zero status, times out, or a script prints in
 
 A stream that exits is restarted after 1 second, then after up to 30 seconds if it keeps exiting.
 
-`tjuvkik run <panel>` runs a panel once from a terminal, the same way, and prints the error. See [Command line](cli.md).
+`tjuvkik run <tile|panel>` runs a panel once from a terminal, the same way, and prints the error. See [Command line](cli.md).
 
 ## Environment
 
-Commands get your login shell's PATH, so tools from Homebrew, mise and the like are found. `TJUVKIK_PANEL` is the panel's name. `TJUVKIK_RUN` says what started the run: `glance` or `background` for an interval panel, `stream`, `action` for a row's command, or `cli`.
+Commands get your login shell's PATH, so tools from Homebrew, mise and the like are found. `TJUVKIK_PANEL` is the panel's folder name, `TJUVKIK_ID` the tile's id, and each [option](#options) is a `TJUVKIK_OPTION_<NAME>`, all of them as JSON in `TJUVKIK_OPTIONS`. `TJUVKIK_RUN` says what started the run: `glance` or `background` for an interval panel, `stream`, `action` for a row's command, or `cli`.
 
 ## Examples
 

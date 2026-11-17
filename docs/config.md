@@ -29,7 +29,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. See [Themes](themes.md). |
 | `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
-| `menuBar` | none | Panels from `panels` to show in the menu bar: `"agents"` or `["agents", "github"]`. |
+| `menuBar` | none | Tiles from `panels`, by id, to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `pause` | both `true` | When background runs stop. See [Pause](#pause). |
 | `notifications` | on | Sound, quiet hours and whether to notify while glancing. See [Notifications](#notifications). |
 | `panels` | `[]` | Which panels to show, in order. |
@@ -74,10 +74,22 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 ```
 
 - `panel`: a folder in `panels/`. See [Panels](panels.md).
+- `id`: the tile's name, for `menuBar` and `tjuvkik run`. Letters, digits, `-` and `_`. Default: `panel`.
+- `title`: the tile's title; overrides the panel's own. Optional.
+- `options`: values for the [options](panels.md#options) the panel declares.
 - `size`: overrides the panel's own size. Optional.
 - `background`: overrides the panel's own, for when it runs while the glance is closed: `true`, `false` or a duration like `"5m"`. See [Background](panels.md#background).
 - `show`: `false` runs the panel for the menu bar without giving it a spot on the grid. Optional.
 - `notify`: overrides the panel's own, key by key: `false`, `true` or an object. See [Notifications](notifications.md#a-panels-notify).
+
+The same panel can be on the board more than once; give each an `id`:
+
+```jsonc
+"panels": [
+  { "panel": "ci", "id": "ci-app",  "title": "CI · app",  "options": { "repo": "banjo/tjuvkik" } },
+  { "panel": "ci", "id": "ci-dots", "title": "CI · dots", "options": { "repo": "banjo/dotfiles", "limit": 5 } },
+]
+```
 
 Panels fill a 4×3 grid in order:
 
@@ -119,6 +131,8 @@ See [Notifications](notifications.md) for how panels send them.
 ```jsonc
 "menuBar": ["agents", "github"]
 ```
+
+`menuBar` lists tile ids: an entry's `id`, or its `panel` when it has none.
 
 Each panel decides what it shows, with [`menuBar` in its output](script-output.md#menu-bar): an icon and text in the menu bar, like `❓ 2  👀 3`, and its own rows in the menu. When no panel shows anything, the menu bar shows the grid icon. A broken config shows a warning sign.
 

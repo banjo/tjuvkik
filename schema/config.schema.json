@@ -106,7 +106,7 @@
           "type": "null"
         }
       ],
-      "description": "Panels in panels shown in the menu bar, in order. Each panel decides what it shows there; by default its first summary count.",
+      "description": "Tiles shown in the menu bar, by id (the panel name unless the entry sets an id), in order. Each panel decides what it shows there; by default its first summary count.",
       "examples": [
         "agents",
         [
@@ -175,6 +175,15 @@
             "type": "string",
             "description": "A folder in panels/."
           },
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "The tile's name, for menuBar and tjuvkik run. Default: panel. Needed when the same panel is on the board twice."
+          },
+          "title": {
+            "type": "string",
+            "description": "The tile's title here; overrides the panel's own."
+          },
           "size": {
             "enum": [
               "s",
@@ -242,6 +251,17 @@
             ],
             "default": true,
             "description": "false: this panel never notifies."
+          },
+          "options": {
+            "type": "object",
+            "description": "Values for the options the panel declares in its panel.jsonc.",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            }
           }
         }
       }

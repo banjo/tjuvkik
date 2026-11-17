@@ -91,11 +91,123 @@ struct ConfigLoaderTests {
 
     @Test func panelSizeInConfigWinsOverThePanels() throws {
         let config = try load([
-            "config.json": #"{ "panels": [{ "panel": "pods", "size": "l" }, { "panel": "pods" }] }"#,
+            "config.json": #"{ "panels": [{ "panel": "pods", "size": "l" }, { "panel": "pods", "id": "pods2" }] }"#,
             "panels/pods/panel.json": #"{ "type": "cli", "command": "kubectl get pods", "size": "m" }"#,
         ]).config
         #expect(config.tiles.map(\.size) == [.l, .m])
         #expect(config.tiles[0].title == "pods")
+    }
+
+    @Test func tileIdDefaultsToThePanel() throws {
+        let config = try load([
+            "config.json": #"{ "panels": [{ "panel": "pods" }] }"#,
+            "panels/pods/panel.json": #"{ "type": "cli", "command": "kubectl get pods" }"#,
+        ]).config
+        #expect(config.tiles[0].id == "pods")
+    }
+
+    @Test func samePanelTwiceWithIdsAndTitles() throws {
+        let panels = #"[{ "panel": "pods", "id": "a", "title": "Pods A" }, { "panel": "pods", "id": "b" }]"#
+        let pods = #"{ "type": "cli", "command": "kubectl get pods" }"#
+        let loaded = try load(["config.json": #"{ "menuBar": "a", "panels": \#(panels) }"#, "panels/pods/panel.json": pods])
+        #expect(loaded.config.tiles.map(\.id) == ["a", "b"])
+        #expect(loaded.config.tiles.map(\.title) == ["Pods A", "pods"])
+        #expect(loaded.warnings.isEmpty)
+        #expect(errors(["config.json": #"{ "menuBar": "pods", "panels": \#(panels) }"#, "panels/pods/panel.json": pods])
+            == [#"config.json: menuBar: "pods" isn't in panels"#])
+    }
+
+    @Test func tileIdErrors() {
+        let pods = #"{ "type": "cli", "command": "kubectl get pods" }"#
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "pods" }, { "panel": "pods" }] }"#, "panels/pods/panel.json": pods])
+            == [#"config.json: panels[1]: "pods" is already on the board, give this one an "id""#])
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "pods", "id": "x" }, { "panel": "pods", "id": "x" }] }"#, "panels/pods/panel.json": pods])
+            == [#"config.json: panels[1].id: "x" is already used by panels[0]"#])
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "pods", "id": "a b" }] }"#, "panels/pods/panel.json": pods])
+            == [#"config.json: panels[0].id: "a b" can't be an id: use letters, digits, - and _"#])
+    }
+
+    static let ci = #"""
+    { "type": "cli", "command": "echo", "options": {
+        "repo": { "type": "string", "required": true }, "limit": { "type": "number", "default": 10 },
+        "branch": { "type": "string", "enum": ["main", "release"], "default": "main" }, "drafts": { "type": "boolean" } } }
+    """#
+
+    private func ciTiles(_ panels: String) throws -> [Tile] {
+        try load(["config.json": #"{ "panels": \#(panels) }"#, "panels/ci/panel.json": Self.ci]).config.tiles
+    }
+
+    private func ciErrors(_ options: String) -> [String] {
+        errors(["config.json": #"{ "panels": [{ "panel": "ci", "options": \#(options) }] }"#, "panels/ci/panel.json": Self.ci])
+    }
+
+    private func optionErrors(_ options: String) -> [String] {
+        errors(["config.json": #"{ "panels": [{ "panel": "ci" }] }"#, "panels/ci/panel.json": #"{ "type": "cli", "command": "echo", "options": \#(options) }"#])
+    }
+
+    @Test func optionsGetTheirDefaults() throws {
+        let tile = try ciTiles(#"[{ "panel": "ci", "options": { "repo": "a/b" } }]"#)[0]
+        #expect(tile.options == ["repo": .string("a/b"), "limit": .number(10), "branch": .string("main")])
+        #expect(tile.declaredOptions.map(\.name) == ["branch", "drafts", "limit", "repo"])
+    }
+
+    @Test func optionValuesKeepTheirTypes() throws {
+        let tile = try ciTiles(#"[{ "panel": "ci", "options": { "repo": "a/b", "limit": 1, "drafts": true } }]"#)[0]
+        #expect(tile.options["limit"] == .number(1))
+        #expect(tile.options["drafts"] == .bool(true))
+    }
+
+    @Test func eachTileHasItsOwnOptions() throws {
+        let tiles = try ciTiles(#"[{ "panel": "ci", "id": "ci-a", "options": { "repo": "a/a" } }, { "panel": "ci", "id": "ci-b", "options": { "repo": "b/b" } }]"#)
+        #expect(tiles.map { $0.options["repo"] } == [.string("a/a"), .string("b/b")])
+    }
+
+    @Test func aPanelOnItsOwnNeedsNoRequiredOptions() throws {
+        let fixture = ConfigFixture(["config.json": "{}", "panels/ci/panel.json": Self.ci])
+        let tile = try ConfigLoader.panel("ci", in: fixture.directory).get()
+        #expect(tile.options["repo"] == nil)
+    }
+
+    @Test func optionValueErrors() {
+        #expect(errors(["config.json": #"{ "panels": [{ "panel": "ci" }] }"#, "panels/ci/panel.json": Self.ci])
+            == [#"config.json: panels[0].options: missing "repo", which "ci" requires"#])
+        #expect(ciErrors(#"{ "repo": "a/b", "repoo": "x" }"#)
+            == [#"config.json: panels[0].options.repoo: "ci" has no option "repoo", expected one of "branch", "drafts", "limit", "repo""#])
+        #expect(ciErrors(#"{ "repo": "a/b", "limit": "ten" }"#) == [#"config.json: panels[0].options.limit: expected a number, got "ten""#])
+        #expect(ciErrors(#"{ "repo": "a/b", "drafts": "yes" }"#) == [#"config.json: panels[0].options.drafts: expected true or false, got "yes""#])
+        #expect(ciErrors(#"{ "repo": ["a"] }"#) == [#"config.json: panels[0].options.repo: expected a string, got an array"#])
+        #expect(ciErrors(#"{ "repo": "a/b", "branch": "dev" }"#) == [#"config.json: panels[0].options.branch: "dev" isn't one of "main", "release""#])
+        #expect(errors([
+            "config.json": #"{ "panels": [{ "panel": "pods", "options": { "x": 1 } }] }"#,
+            "panels/pods/panel.json": #"{ "type": "cli", "command": "kubectl get pods" }"#,
+        ]) == [#"config.json: panels[0].options.x: "pods" has no options"#])
+    }
+
+    @Test func optionDeclarationErrors() {
+        #expect(optionErrors(#"{ "my repo": { "type": "string" } }"#)
+            == [#"panels/ci/panel.json: options: "my repo" isn't an option name: start with a letter, then use letters, digits, - and _"#])
+        #expect(optionErrors(#"{ "x": {} }"#)
+            == [#"panels/ci/panel.json: options.x.type: missing "type", expected "string", "number" or "boolean""#])
+        #expect(optionErrors(#"{ "x": { "type": "int" } }"#)
+            == [#"panels/ci/panel.json: options.x.type: unknown type "int", expected "string", "number" or "boolean""#])
+        #expect(optionErrors(#"{ "x": { "type": "number", "enum": ["a"] } }"#)
+            == [#"panels/ci/panel.json: options.x.enum: only a string option can have enum"#])
+        #expect(optionErrors(#"{ "x": { "type": "string", "enum": [] } }"#)
+            == [#"panels/ci/panel.json: options.x.enum: can't be empty"#])
+        #expect(optionErrors(#"{ "x": { "type": "number", "default": "ten" } }"#)
+            == [#"panels/ci/panel.json: options.x.default: expected a number, got "ten""#])
+        #expect(optionErrors(#"{ "x": { "type": "string", "enum": ["a"], "default": "b" } }"#)
+            == [#"panels/ci/panel.json: options.x.default: "b" isn't one of "a""#])
+        #expect(optionErrors(#"{ "my-repo": { "type": "string" }, "my_repo": { "type": "string" } }"#)
+            == [#"panels/ci/panel.json: options.my_repo: "my-repo" already uses TJUVKIK_OPTION_MY_REPO"#])
+    }
+
+    @Test func requiredWithADefaultIsAWarning() throws {
+        let loaded = try load([
+            "config.json": #"{ "panels": [{ "panel": "ci" }] }"#,
+            "panels/ci/panel.json": #"{ "type": "cli", "command": "echo", "options": { "x": { "type": "string", "required": true, "default": "a" } } }"#,
+        ])
+        #expect(loaded.warnings.map(\.description) == ["panels/ci/panel.json: options.x.required: it has a default, so it's never missing"])
     }
 
     @Test func unknownPanel() {
@@ -142,7 +254,7 @@ struct ConfigLoaderTests {
 
     @Test func panelsThatDontFitAreWarnedAndLeftOut() throws {
         let loaded = try load([
-            "config.json": #"{ "panels": [{ "panel": "x", "size": "xl" }, { "panel": "x", "size": "xl" }, { "panel": "x" }] }"#,
+            "config.json": #"{ "panels": [{ "panel": "x", "size": "xl" }, { "panel": "x", "id": "x2", "size": "xl" }, { "panel": "x", "id": "x3" }] }"#,
             "panels/x/panel.json": #"{ "type": "cli", "command": "ls" }"#,
         ])
         #expect(loaded.config.tiles.map(\.slot) == [
@@ -296,7 +408,7 @@ struct ConfigLoaderTests {
 
     @Test func hiddenPanelsRunWithoutASpot() throws {
         let loaded = try load([
-            "config.json": #"{ "menuBar": "x", "panels": [{ "panel": "x", "show": false }, { "panel": "y", "size": "xl" }, { "panel": "y", "size": "xl" }] }"#,
+            "config.json": #"{ "menuBar": "x", "panels": [{ "panel": "x", "show": false }, { "panel": "y", "size": "xl" }, { "panel": "y", "id": "y2", "size": "xl" }] }"#,
             "panels/x/panel.json": #"{ "type": "cli", "command": "ls" }"#,
             "panels/y/panel.json": #"{ "type": "cli", "command": "pwd" }"#,
         ])

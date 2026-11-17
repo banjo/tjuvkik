@@ -33,10 +33,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         pause.start()
         store.start()
-        notifier.onCommand = { [panels] command, panel in panels.runAction(command, panel: panel) }
-        panels.onChange = { [weak self] panel in
-            guard let self, let tile = panels.tiles.first(where: { $0.panel == panel }), let state = panels.states[panel] else { return }
-            notifier.update(panel: panel, tile: tile, state: state, config: store.config, glanceOpen: panels.glanceOpen)
+        notifier.onCommand = { [panels] command, id in panels.runAction(command, id: id) }
+        panels.onChange = { [weak self] id in
+            guard let self, let tile = panels.tiles.first(where: { $0.id == id }), let state = panels.states[id] else { return }
+            notifier.update(id: id, tile: tile, state: state, config: store.config, glanceOpen: panels.glanceOpen)
         }
         notifier.start()
         panels.start()
@@ -69,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trigger.configure(config.trigger)
         startTrigger()
         panels.update(config.tiles)
-        notifier.keep(Set(config.tiles.filter { $0.slot != nil || !$0.show }.map(\.panel)))
+        notifier.keep(Set(config.tiles.filter { $0.slot != nil || !$0.show }.map(\.id)))
         pause.configure(config.pause)
         launchAtLoginError = LaunchAtLogin.apply(config.launchAtLogin)
         updateIcon()
@@ -222,7 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func status(of tile: Tile) -> String {
         if tile.mode == .stream { return "live" }
         if let file = tile.file { return "watches \(file.lastPathComponent)" }
-        guard let lastRun = panels.states[tile.panel]?.lastRun else {
+        guard let lastRun = panels.states[tile.id]?.lastRun else {
             return tile.background == .off ? "runs when you glance" : "not run yet"
         }
         var status = "ran \(lastRun.formatted(.relative(presentation: .named)))"
@@ -234,7 +234,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func performRow(_ item: NSMenuItem) {
         switch item.representedObject as? MenuBarPanels.Action {
         case .open(let link): NSWorkspace.shared.open(link)
-        case .run(let command, let panel): panels.runAction(command, panel: panel)
+        case .run(let command, let id): panels.runAction(command, id: id)
         case nil: break
         }
     }
