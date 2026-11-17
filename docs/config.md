@@ -11,6 +11,7 @@
   "trigger": { "key": "fn", "mode": "hold", "holdMs": 250 },
   "launchAtLogin": true,
   "menuBar": null,
+  "pause": { "whenLocked": true, "onLowPower": true },
   "panels": [
     { "panel": "disk" },
   ],
@@ -29,6 +30,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
 | `menuBar` | none | Panels from `panels` to show in the menu bar: `"agents"` or `["agents", "github"]`. |
+| `pause` | both `true` | When background runs stop. See [Pause](#pause). |
 | `panels` | `[]` | Which panels to show, in order. |
 
 ## Trigger
@@ -63,6 +65,8 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 
 - `panel`: a folder in `panels/`. See [Panels](panels.md).
 - `size`: overrides the panel's own size. Optional.
+- `background`: overrides the panel's own, for when it runs while the glance is closed: `true`, `false` or a duration like `"5m"`. See [Background](panels.md#background).
+- `show`: `false` runs the panel for the menu bar without giving it a spot on the grid. Optional.
 
 Panels fill a 4×3 grid in order:
 
@@ -74,6 +78,17 @@ Panels fill a 4×3 grid in order:
 | `xl` | 2 × 3 |
 
 Panels that don't fit are left out, and the menu says which.
+
+## Pause
+
+```jsonc
+"pause": { "whenLocked": true, "onLowPower": true }
+```
+
+- `whenLocked`: stop background runs while the screen is locked or the displays sleep.
+- `onLowPower`: stop them while Low Power Mode is on.
+
+The glance always runs panels on their `every`, whatever `pause` says. Coming back from a pause runs whatever is overdue, so the first glance after you unlock is never stale.
 
 ## Menu bar
 

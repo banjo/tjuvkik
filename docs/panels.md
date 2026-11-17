@@ -17,6 +17,7 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
   "command": "./github.sh",
   "every": "60s",
   "timeout": "10s",
+  "background": true,
   "size": "s",
 }
 ```
@@ -35,6 +36,7 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 | `history` | | For a [chart](types/chart.md) whose script prints only its value: how many values to keep as the series, 2 to 1000. |
 | `file` | | A [markdown](types/markdown.md) panel only: a file to show instead of a command's output, reloaded when it changes. `~`, absolute, or in the panel's folder. |
 | `requires` | `[]` | Commands that must be on PATH. If one is missing, the tile says so instead of running. |
+| `background` | `true` | How often an interval panel runs while the glance is closed: `true`, `false` or a duration like `"5m"`, at least `5s`. See [Background](#background). |
 | `description`, `author`, `version` | | For sharing. Not shown. |
 
 Durations take `ms`, `s`, `m` or `h`: `"500ms"`, `"30s"`, `"5m"`, `"1h"`.
@@ -50,6 +52,22 @@ Durations take `ms`, `s`, `m` or `h`: `"500ms"`, `"30s"`, `"5m"`, `"1h"`.
 - **`interval`** runs the command every `every`.
 - **`stream`** keeps the command running. A script prints one JSON document per line, each time something changes, and the tile updates at once. A cli panel shows the latest lines, like `tail -f`. `every` and `timeout` don't apply.
 
+## Background
+
+While the glance is closed, an interval panel runs on its `background`:
+
+- `true`, the default: as often as it does while you glance, every `every`.
+- `false`: only while you glance. Opening the glance runs it at once if it's older than `every`.
+- A duration like `"5m"`: that often, at least `5s`.
+
+Cheap panels, like agents, can keep their interval. One that calls `gh` or `kubectl` is worth `"5m"`, or `false` if you only care when you look.
+
+Background runs pause while the screen is locked or the displays sleep, and while Low Power Mode is on, unless [`pause`](config.md#pause) turns that off. The glance always runs panels on their `every`.
+
+Stream panels and markdown panels that read a `file` are unaffected: a stream keeps running, and a file is read when it changes.
+
+A panel can also run without a spot on the grid, for the menu bar: see [`show`](config.md#panels).
+
 ## When a command fails
 
 A run fails if it exits with a non-zero status, times out, or a script prints invalid JSON. The tile keeps what it last showed, marks it stale and shows the last lines of stderr.
@@ -60,7 +78,7 @@ A stream that exits is restarted after 1 second, then after up to 30 seconds if 
 
 ## Environment
 
-Commands get your login shell's PATH, so tools from Homebrew, mise and the like are found. `TJUVKIK_PANEL` is the panel's name.
+Commands get your login shell's PATH, so tools from Homebrew, mise and the like are found. `TJUVKIK_PANEL` is the panel's name. `TJUVKIK_RUN` says what started the run: `glance` or `background` for an interval panel, `stream`, `action` for a row's command, or `cli`.
 
 ## Examples
 
