@@ -68,12 +68,13 @@ public enum ConfigLoader {
         }
 
         let pause = Config.Pause(whenLocked: raw.pause?.whenLocked ?? true, onLowPower: raw.pause?.onLowPower ?? true)
+        let notifications = Self.notifications(raw.notifications, file: file, files: &files)
         let errors = files.issues.filter { $0.severity == .error }
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
             view: view, layout: layout, themeName: themeName, theme: theme,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
-            pause: pause
+            pause: pause, notifications: notifications
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }
@@ -244,6 +245,10 @@ public enum ConfigLoader {
             files.warning(config, at("show"), "\"\(name)\" is hidden and doesn't run in the background, so it never runs")
         }
 
+        var notify: NotifySettings? = NotifySettings()
+        if let value = raw.notify { notify = Self.notify(value, onto: notify, file: file, path: "notify", files: &files) }
+        if let value = ref.notify { notify = Self.notify(value, onto: notify, file: config, path: at("notify"), files: &files) }
+
         let requires = raw.requires ?? []
         for (index, tool) in requires.enumerated() where tool.isEmpty || tool.contains("/") {
             files.error(file, "requires[\(index)]", "\"\(tool)\" isn't a command name")
@@ -254,7 +259,7 @@ public enum ConfigLoader {
             panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
             directory: files.directory.appending(path: "panels/\(name)"), content: content,
-            history: history, file: source, background: background, show: show
+            history: history, file: source, background: background, show: show, notify: notify
         )
     }
 
@@ -270,6 +275,42 @@ public enum ConfigLoader {
         case .duration(let text):
             interval(text, default: 0, minimum: minimumInterval, file: file, path: path, files: &files).map { .every($0) }
         }
+    }
+
+    /// `notifications`, with defaults for what isn't set.
+    private static func notifications(_ raw: RawNotifications?, file: String, files: inout ConfigFiles) -> NotificationSettings {
+        var settings = NotificationSettings()
+        guard let raw else { return settings }
+        settings.enabled = raw.enabled ?? settings.enabled
+        settings.sound = raw.sound ?? settings.sound
+        settings.whileOpen = raw.whileOpen ?? settings.whileOpen
+        if let text = raw.quietHours {
+            settings.quietHours = QuietHours.parse(text)
+            if settings.quietHours == nil {
+                files.error(file, "notifications.quietHours", "can't read \"\(text)\", write it like \"22:00-07:00\"")
+            }
+        }
+        return settings
+    }
+
+    /// A `notify` value applied onto what's set so far: nil is off.
+    private static func notify(_ raw: RawNotify, onto current: NotifySettings?, file: String, path: String, files: inout ConfigFiles) -> NotifySettings? {
+        guard case .on(let raw) = raw else { return nil }
+        var settings = current ?? NotifySettings()
+        if let sound = raw.sound { settings.sound = sound }
+        if raw.minInterval != nil, let seconds = interval(raw.minInterval, default: 0, minimum: 1, file: file, path: "\(path).minInterval", files: &files) {
+            settings.minInterval = seconds
+        }
+        if let values = raw.on {
+            var events: Set<NotifyEvent> = []
+            for (index, value) in values.enumerated() {
+                if let event = NotifyEvent(rawValue: value) { events.insert(event) } else {
+                    files.error(file, "\(path).on[\(index)]", "unknown event \"\(value)\", expected \"failed\", \"warning\" or \"error\"")
+                }
+            }
+            settings.on = events
+        }
+        return settings
     }
 
     private static func interval(_ text: String?, default value: Double, minimum: Double, file: String, path: String, files: inout ConfigFiles) -> Double? {

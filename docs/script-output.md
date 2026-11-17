@@ -13,7 +13,7 @@ A `script` panel prints JSON to stdout. By default the tile shows it as rows. A 
 - [`feed`](types/feed.md): who said what, and when, newest first, with unread marked.
 - [`checklist`](types/checklist.md): steps, and what's done, next and stuck.
 
-`summary` and `menuBar` work with every type. Setting `"type"` in [panel.jsonc](panels.md#types) to a type's name, like `"stats"`, makes the panel always read its output as that type.
+`summary`, `menuBar` and [`notify`](notifications.md) work with every type. Setting `"type"` in [panel.jsonc](panels.md#types) to a type's name, like `"stats"`, makes the panel always read its output as that type.
 
 ## Rows
 
@@ -66,6 +66,7 @@ Only `rows`, each row's `title` and the hero's `value` are required. A `stream` 
 | `progress` | A bar, from 0 to 1. |
 | `rows` | As many as fit, in order. |
 | `menuBar` | What the panel shows in the menu bar. See [Menu bar](#menu-bar). |
+| `notify` | macOS notifications, one per `id`. See [Notifications](notifications.md). |
 
 Each row:
 

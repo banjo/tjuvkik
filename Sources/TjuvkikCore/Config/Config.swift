@@ -16,6 +16,8 @@ public struct Config: Equatable, Sendable {
     public var menuBar: [String] = []
     /// When background runs stop.
     public var pause = Pause()
+    /// `notifications`: how panels' notifications are delivered.
+    public var notifications = NotificationSettings()
 
     /// When background runs stop.
     public struct Pause: Equatable, Sendable {
@@ -76,6 +78,8 @@ public struct Tile: Equatable, Sendable {
     public var background: Background = .same
     /// False: the panel runs, for the menu bar, but has no spot on the grid.
     public var show = true
+    /// What the panel notifies about; nil: it never notifies.
+    public var notify: NotifySettings? = NotifySettings()
 
     /// When an interval panel runs while the glance is closed.
     public enum Background: Equatable, Sendable {

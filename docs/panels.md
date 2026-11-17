@@ -37,6 +37,7 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 | `file` | | A [markdown](types/markdown.md) panel only: a file to show instead of a command's output, reloaded when it changes. `~`, absolute, or in the panel's folder. |
 | `requires` | `[]` | Commands that must be on PATH. If one is missing, the tile says so instead of running. |
 | `background` | `true` | How often an interval panel runs while the glance is closed: `true`, `false` or a duration like `"5m"`, at least `5s`. See [Background](#background). |
+| `notify` | `true` | `false`, or when and how the panel notifies. See [Notifications](notifications.md#a-panels-notify). |
 | `description`, `author`, `version` | | For sharing. Not shown. |
 
 Durations take `ms`, `s`, `m` or `h`: `"500ms"`, `"30s"`, `"5m"`, `"1h"`.

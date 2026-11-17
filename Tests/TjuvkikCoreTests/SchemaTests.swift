@@ -32,6 +32,7 @@ struct SchemaTests {
         #expect(Set(properties(config["trigger"]).keys) == keys(RawTrigger()))
         #expect(Set(properties(config["panels"]?["items"]).keys) == keys(RawPanelRef()))
         #expect(Set(properties(config["pause"]).keys) == keys(RawPause()))
+        #expect(Set(properties(config["notifications"]).keys) == keys(RawNotifications()))
     }
 
     @Test func configValues() throws {

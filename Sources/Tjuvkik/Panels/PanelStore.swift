@@ -35,6 +35,8 @@ final class PanelStore {
     @ObservationIgnored var glanceOpen = false
     /// Set by the app while the screen is locked or Low Power Mode is on.
     @ObservationIgnored var paused = false
+    /// Called after a panel's content or error changes.
+    @ObservationIgnored var onChange: (_ panel: String) -> Void = { _ in }
     @ObservationIgnored private(set) var tiles: [Tile] = []
     @ObservationIgnored private var environment: [String: String]?
     @ObservationIgnored private var timer: Timer?
@@ -107,11 +109,13 @@ final class PanelStore {
         for tile in tiles {
             let tools = RequiredTools.missing(tile.requires, path: path)
             missing[tile.panel] = tools
+            let error = states[tile.panel]?.error
             if !tools.isEmpty {
                 states[tile.panel]?.error = "needs \(tools.joined(separator: ", ")), not found on PATH"
-            } else if states[tile.panel]?.error?.hasPrefix("needs ") == true {
+            } else if error?.hasPrefix("needs ") == true {
                 states[tile.panel]?.error = nil
             }
+            if states[tile.panel]?.error != error { onChange(tile.panel) }
         }
     }
 
@@ -129,6 +133,7 @@ final class PanelStore {
             states[key]?.running = false
             guard result.succeeded else {
                 states[key]?.error = result.failureSummary(timeout: tile.timeout)
+                onChange(key)
                 return
             }
             show(String(decoding: result.stdout, as: UTF8.self), in: key, tile: tile)
@@ -173,6 +178,7 @@ final class PanelStore {
             states[key]?.content = .tail(lines.joined(separator: "\n"))
             states[key]?.error = nil
             states[key]?.updated = Date()
+            onChange(key)
         }
     }
 
@@ -186,6 +192,7 @@ final class PanelStore {
         state.stream = nil
         state.error = exit.summary
         states[key] = state
+        onChange(key)
     }
 
     // MARK: File panels
@@ -195,8 +202,12 @@ final class PanelStore {
         let key = tile.panel
         let path = (file.path as NSString).abbreviatingWithTildeInPath
         guard let date = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date else {
+            let error = "can't read \(path)"
             states[key]?.fileDate = nil
-            states[key]?.error = "can't read \(path)"
+            if states[key]?.error != error {
+                states[key]?.error = error
+                onChange(key)
+            }
             return
         }
         guard date != states[key]?.fileDate else { return }
@@ -208,6 +219,7 @@ final class PanelStore {
         } catch {
             states[key]?.error = "can't read \(path): \(error.localizedDescription)"
         }
+        onChange(key)
     }
 
     // MARK: Actions
@@ -220,6 +232,7 @@ final class PanelStore {
             let result = await CommandRunner.launch(command, in: tile.directory, environment: Self.environment(environment, tile, run: "action"))
             if !result.succeeded {
                 states[panel]?.error = "\(command): \(result.failureSummary(timeout: 30))"
+                onChange(panel)
             }
         }
     }
@@ -237,6 +250,7 @@ final class PanelStore {
         case .failure(let error):
             states[key]?.error = error.message
         }
+        onChange(key)
     }
 
     private static func environment(_ base: [String: String], _ tile: Tile, run: String) -> [String: String] {

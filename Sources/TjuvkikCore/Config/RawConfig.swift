@@ -12,6 +12,7 @@ struct RawConfig: Decodable {
     var launchAtLogin: Bool?
     var menuBar: OneOrMany?
     var pause: RawPause?
+    var notifications: RawNotifications?
     var panels: [RawPanelRef]?
 }
 
@@ -54,12 +55,43 @@ enum RawBackground: Decodable {
     }
 }
 
+struct RawNotifications: Decodable {
+    var enabled: Bool?
+    var sound: Bool?
+    var quietHours: String?
+    var whileOpen: Bool?
+}
+
+/// `notify`: false, true, or an object.
+enum RawNotify: Decodable {
+    case off
+    case on(RawNotifySettings)
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let flag = try? container.decode(Bool.self) {
+            self = flag ? .on(RawNotifySettings()) : .off
+        } else if let settings = try? container.decode(RawNotifySettings.self) {
+            self = .on(settings)
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "expected true, false or an object"))
+        }
+    }
+}
+
+struct RawNotifySettings: Decodable {
+    var sound: Bool?
+    var minInterval: String?
+    var on: [String]?
+}
+
 /// An entry in `config.jsonc`'s `panels`: which panel, and optionally its size here.
 struct RawPanelRef: Decodable {
     var panel: String?
     var size: String?
     var background: RawBackground?
     var show: Bool?
+    var notify: RawNotify?
 }
 
 /// `panels/<name>/panel.jsonc`
@@ -78,6 +110,7 @@ struct RawPanel: Decodable {
     var history: Int?
     var file: String?
     var background: RawBackground?
+    var notify: RawNotify?
 }
 
 /// `themes/<name>.jsonc`
