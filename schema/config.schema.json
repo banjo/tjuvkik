@@ -124,6 +124,35 @@
         }
       }
     },
+    "notifications": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Notifications from panels. A panel sends them with notify in its output, or its notify setting's on.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "sound": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play the system's notification sound."
+        },
+        "quietHours": {
+          "type": "string",
+          "pattern": "^\\s*\\d{1,2}:\\d{2}\\s*-\\s*\\d{1,2}:\\d{2}\\s*$",
+          "examples": [
+            "22:00-07:00"
+          ],
+          "description": "Nothing is delivered between these times, local time."
+        },
+        "whileOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Deliver while the glance is showing."
+        }
+      }
+    },
     "panels": {
       "type": "array",
       "description": "Panels fill a 4×3 grid in order.",
@@ -168,6 +197,43 @@
             "type": "boolean",
             "default": true,
             "description": "false: the panel runs, for the menu bar, but has no spot on the grid."
+          },
+          "notify": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sound": {
+                    "type": "boolean"
+                  },
+                  "minInterval": {
+                    "type": "string",
+                    "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
+                    "examples": [
+                      "1m"
+                    ],
+                    "description": "At most one notification this often. The rest are grouped."
+                  },
+                  "on": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "failed",
+                        "warning",
+                        "error"
+                      ]
+                    },
+                    "description": "failed: while the panel shows an error. warning, error: rows with that tone."
+                  }
+                }
+              }
+            ],
+            "default": true,
+            "description": "false: this panel never notifies."
           }
         }
       }

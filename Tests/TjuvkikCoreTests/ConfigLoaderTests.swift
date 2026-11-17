@@ -299,6 +299,54 @@ struct ConfigLoaderTests {
         #expect(loaded.warnings.map(\.description) == [#"config.json: panels[0].show: "x" is hidden and doesn't run in the background, so it never runs"#])
     }
 
+    // MARK: Notifications
+
+    /// A panel's `notify`, with `panel.json`'s and the entry's extra keys.
+    private func notify(_ panel: String = "", _ ref: String = "") throws -> NotifySettings? {
+        var json = #"{ "type": "cli", "command": "ls""#
+        if !panel.isEmpty { json += ", " + panel }
+        json += " }"
+        var entry = #"{ "panel": "x""#
+        if !ref.isEmpty { entry += ", " + ref }
+        entry += " }"
+        let config = try load([
+            "config.json": "{ \"panels\": [\(entry)] }",
+            "panels/x/panel.json": json,
+        ]).config
+        return config.tiles[0].notify
+    }
+
+    @Test func notificationsDefaults() throws {
+        #expect(try load(["config.json": "{}"]).config.notifications == NotificationSettings())
+        #expect(try notify() == NotifySettings())
+    }
+
+    @Test func quietHours() throws {
+        let config = try load(["config.json": #"{ "notifications": { "quietHours": "22:00-07:00" } }"#]).config
+        #expect(config.notifications.quietHours == QuietHours(start: 1320, end: 420))
+        #expect(errors(["config.json": #"{ "notifications": { "quietHours": "10pm" } }"#])
+            == [#"config.json: notifications.quietHours: can't read "10pm", write it like "22:00-07:00""#])
+    }
+
+    @Test func notifyMerges() throws {
+        #expect(try notify(#""notify": false"#) == nil)
+        #expect(try notify(#""notify": { "minInterval": "1m", "on": ["failed"] }"#, #""notify": { "sound": false }"#)
+            == NotifySettings(sound: false, minInterval: 60, on: [.failed]))
+        #expect(try notify(#""notify": false"#, #""notify": true"#) == NotifySettings())
+    }
+
+    @Test func notifyErrors() {
+        func error(_ value: String) -> [String] {
+            errors([
+                "config.json": #"{ "panels": [{ "panel": "x" }] }"#,
+                "panels/x/panel.json": #"{ "type": "cli", "command": "ls", "notify": "# + value + " }",
+            ])
+        }
+        #expect(error("3") == ["panels/x/panel.json: notify: expected true, false or an object"])
+        #expect(error(#"{ "on": ["fail"] }"#) == [#"panels/x/panel.json: notify.on[0]: unknown event "fail", expected "failed", "warning" or "error""#])
+        #expect(error(#"{ "minInterval": "soon" }"#) == [#"panels/x/panel.json: notify.minInterval: can't read "soon", write it like "30s", "5m" or "1h""#])
+    }
+
     @Test func pauseDefaultsToBoth() throws {
         #expect(try load(["config.json": "{}"]).config.pause == Config.Pause())
         #expect(try load(["config.json": #"{ "pause": { "onLowPower": false } }"#]).config.pause

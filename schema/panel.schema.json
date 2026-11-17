@@ -109,6 +109,43 @@
       ],
       "description": "How often an interval panel runs while the glance is closed. true: every `every`. false: only while you glance. At least 5s."
     },
+    "notify": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sound": {
+              "type": "boolean"
+            },
+            "minInterval": {
+              "type": "string",
+              "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$",
+              "examples": [
+                "1m"
+              ],
+              "description": "At most one notification this often. The rest are grouped."
+            },
+            "on": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "failed",
+                  "warning",
+                  "error"
+                ]
+              },
+              "description": "failed: while the panel shows an error. warning, error: rows with that tone."
+            }
+          }
+        }
+      ],
+      "default": true,
+      "description": "false: this panel never notifies."
+    },
     "size": {
       "enum": [
         "s",

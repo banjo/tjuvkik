@@ -52,6 +52,24 @@ public enum ModuleContent: Equatable, Sendable {
         case .checklist(let content): content.extras.menuBar
         }
     }
+
+    /// The notifications the script asks for.
+    public var notify: [PanelNotification] {
+        switch self {
+        case .rows(let rows): rows.notify
+        case .text, .tail: []
+        case .chart(let content): content.extras.notify
+        case .meters(let content): content.extras.notify
+        case .grid(let content): content.extras.notify
+        case .timeline(let content): content.extras.notify
+        case .stats(let content): content.extras.notify
+        case .markdown(let content): content.extras.notify
+        case .keyvalue(let content): content.extras.notify
+        case .table(let content): content.extras.notify
+        case .feed(let content): content.extras.notify
+        case .checklist(let content): content.extras.notify
+        }
+    }
 }
 
 /// Colors by meaning; each theme maps them to a color.
@@ -144,6 +162,7 @@ public struct RowsContent: Equatable, Sendable, Decodable {
     public var progress: Double?
     public var rows: [Row]
     public var menuBarSetting: MenuBarSetting
+    public var notify: [PanelNotification] = []
 
     public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row], menuBar: MenuBarSetting = .automatic) {
         self.hero = hero
@@ -163,6 +182,7 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         let extras = try PanelExtras(from: decoder)
         summary = extras.summary
         menuBarSetting = extras.menuBarSetting
+        notify = extras.notify
     }
 
     /// What the menu bar shows for this panel, or nil for nothing.

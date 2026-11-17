@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let store = ConfigStore()
     private let panels = PanelStore()
     private let pause = PauseMonitor()
+    private let notifier = Notifier()
     private let trigger = GlanceTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
@@ -32,6 +33,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         pause.start()
         store.start()
+        notifier.onCommand = { [panels] command, panel in panels.runAction(command, panel: panel) }
+        panels.onChange = { [weak self] panel in
+            guard let self, let tile = panels.tiles.first(where: { $0.panel == panel }), let state = panels.states[panel] else { return }
+            notifier.update(panel: panel, tile: tile, state: state, config: store.config, glanceOpen: panels.glanceOpen)
+        }
+        notifier.start()
         panels.start()
         apply(store.config)
         glance.onShow = { [panels] in
@@ -62,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trigger.configure(config.trigger)
         startTrigger()
         panels.update(config.tiles)
+        notifier.keep(Set(config.tiles.filter { $0.slot != nil || !$0.show }.map(\.panel)))
         pause.configure(config.pause)
         launchAtLoginError = LaunchAtLogin.apply(config.launchAtLogin)
         updateIcon()
@@ -129,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
+        notifier.refreshPermission()
         menu.removeAllItems()
         menuBarPanels.addItems(to: menu, target: self, perform: #selector(performRow(_:)))
         if let error = trigger.shortcutError {
@@ -141,6 +150,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         if let reason = pause.reason {
             menu.addItem(disabled: "Background runs paused: \(reason.rawValue)", symbol: "pause.circle")
+        }
+        if notifier.permission == .denied, store.config.notifications.enabled {
+            menu.addItem(disabled: "Notifications are off for Tjuvkik", symbol: "bell.slash")
+            menu.addItem(action: "Open Notification Settings…", target: self, #selector(openNotificationSettings))
         }
 
         if !store.errors.isEmpty {
@@ -180,6 +193,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openInputMonitoring() {
         InputMonitoring.openSettings()
+    }
+
+    @objc private func openNotificationSettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!)
     }
 
     /// Each panel and what it last did, for the menu. Left out when there are no panels.

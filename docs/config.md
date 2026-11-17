@@ -31,6 +31,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
 | `menuBar` | none | Panels from `panels` to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `pause` | both `true` | When background runs stop. See [Pause](#pause). |
+| `notifications` | on | Sound, quiet hours and whether to notify while glancing. See [Notifications](#notifications). |
 | `panels` | `[]` | Which panels to show, in order. |
 
 ## Trigger
@@ -67,6 +68,7 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 - `size`: overrides the panel's own size. Optional.
 - `background`: overrides the panel's own, for when it runs while the glance is closed: `true`, `false` or a duration like `"5m"`. See [Background](panels.md#background).
 - `show`: `false` runs the panel for the menu bar without giving it a spot on the grid. Optional.
+- `notify`: overrides the panel's own, key by key: `false`, `true` or an object. See [Notifications](notifications.md#a-panels-notify).
 
 Panels fill a 4×3 grid in order:
 
@@ -89,6 +91,19 @@ Panels that don't fit are left out, and the menu says which.
 - `onLowPower`: stop them while Low Power Mode is on.
 
 The glance always runs panels on their `every`, whatever `pause` says. Coming back from a pause runs whatever is overdue, so the first glance after you unlock is never stale.
+
+## Notifications
+
+```jsonc
+"notifications": { "enabled": true, "sound": true, "quietHours": "22:00-07:00", "whileOpen": false }
+```
+
+- `enabled`: `false` turns off notifications from every panel.
+- `sound`: play the system's notification sound.
+- `quietHours`: nothing is delivered between these times, local time, like `"22:00-07:00"`.
+- `whileOpen`: deliver while the glance is showing. Off by default.
+
+See [Notifications](notifications.md) for how panels send them.
 
 ## Menu bar
 

@@ -101,6 +101,26 @@ struct ContentTypeTests {
         let hidden = try self.content(#"{ "stats": [{ "value": "1" }], "summary": [{ "value": "2" }], "menuBar": null }"#).get()
         #expect(hidden.menuBar == nil)
     }
+
+    @Test func notifyWithRows() throws {
+        let content = try content(#"{ "rows": [], "notify": [{ "id": "a", "title": "A" }] }"#).get()
+        #expect(content.notify == [PanelNotification(id: "a", title: "A")])
+    }
+
+    @Test func notifyWorksWithEveryType() throws {
+        let content = try content(#"{ "stats": [{ "label": "x", "value": "1" }], "notify": [{ "id": "a", "title": "A", "url": "https://x" }] }"#).get()
+        #expect(content.type == .stats)
+        #expect(content.notify == [PanelNotification(id: "a", title: "A", url: "https://x")])
+    }
+
+    @Test func noNotifyIsEmpty() throws {
+        #expect(try content(#"{ "rows": [] }"#).get().notify == [])
+        #expect(try content(#"{ "stats": [{ "value": "1" }] }"#).get().notify == [])
+    }
+
+    @Test func notifyNeedsAnID() {
+        #expect(content(#"{ "rows": [], "notify": [{ "title": "A" }] }"#).failureMessage == #"missing "id" in notify[0]"#)
+    }
 }
 
 struct StatsContentTests {

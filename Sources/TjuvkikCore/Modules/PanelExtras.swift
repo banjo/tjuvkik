@@ -5,13 +5,15 @@ import Foundation
 public struct PanelExtras: Equatable, Sendable, Decodable {
     public var summary: [RowsContent.Chip]?
     public var menuBarSetting: RowsContent.MenuBarSetting
+    public var notify: [PanelNotification]
 
-    public init(summary: [RowsContent.Chip]? = nil, menuBar: RowsContent.MenuBarSetting = .automatic) {
+    public init(summary: [RowsContent.Chip]? = nil, menuBar: RowsContent.MenuBarSetting = .automatic, notify: [PanelNotification] = []) {
         self.summary = summary
         self.menuBarSetting = menuBar
+        self.notify = notify
     }
 
-    private enum CodingKeys: String, CodingKey { case summary, menuBar }
+    private enum CodingKeys: String, CodingKey { case summary, menuBar, notify }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -23,6 +25,7 @@ public struct PanelExtras: Equatable, Sendable, Decodable {
         } else {
             menuBarSetting = .custom(try container.decode(RowsContent.MenuBar.self, forKey: .menuBar))
         }
+        notify = try container.decodeIfPresent([PanelNotification].self, forKey: .notify) ?? []
     }
 
     /// What the menu bar shows for this panel, or nil for nothing.
