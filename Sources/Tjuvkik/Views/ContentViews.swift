@@ -11,10 +11,10 @@ struct RowsView: View {
             if let hero = content.hero {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(hero.value)
-                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .font(theme.font(30, weight: .semibold, rounded: true))
                         .foregroundStyle(theme.color(for: hero.tone, default: theme.text))
                     if let label = hero.label {
-                        Text(label).font(.system(size: 12)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
+                        Text(label).font(theme.font(12)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
                     }
                 }
                 .padding(.bottom, 4)
@@ -35,7 +35,7 @@ struct RowsView: View {
             ForEach(Array(content.rows.enumerated()), id: \.offset) { index, row in
                 if let group = row.group, index == 0 || content.rows[index - 1].group != group {
                     Text(group.uppercased())
-                        .font(.system(size: 9.5, weight: .semibold))
+                        .font(theme.font(9.5, weight: .semibold))
                         .tracking(0.6)
                         .foregroundStyle(Color(theme.tertiaryText))
                         .lineLimit(1)
@@ -59,14 +59,14 @@ private struct SummaryView: View {
         HStack(spacing: 12) {
             ForEach(Array(chips.enumerated()), id: \.offset) { _, chip in
                 HStack(spacing: 4) {
-                    if let icon = chip.icon { Text(icon).font(.system(size: 11.5)) }
+                    if let icon = chip.icon { Text(icon).font(theme.font(11.5)) }
                     if let value = chip.value {
                         Text(value)
-                            .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                            .font(theme.font(12, weight: .semibold).monospacedDigit())
                             .foregroundStyle(theme.color(for: chip.tone, default: theme.text))
                     }
                     if let label = chip.label {
-                        Text(label).font(.system(size: 11.5)).foregroundStyle(Color(theme.secondaryText))
+                        Text(label).font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText))
                     }
                 }
                 .lineLimit(1)
@@ -84,14 +84,14 @@ private struct NoteView: View {
     var body: some View {
         let color = theme.color(for: tone, default: theme.secondaryText)
         Text(text)
-            .font(.system(size: 11, design: .monospaced))
+            .font(theme.font(11, mono: true))
             .foregroundStyle(color)
             .lineLimit(1)
             .truncationMode(.middle)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .background(theme.background(for: tone, color: color, opacity: 0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             .padding(.leading, 26)
             .padding(.bottom, 2)
     }
@@ -104,21 +104,21 @@ private struct RowView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             if let icon = row.icon {
-                Text(icon).font(.system(size: 13)).frame(width: 18)
+                Text(icon).font(theme.font(13)).frame(width: 18)
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(row.title)
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(theme.font(12.5, weight: .medium))
                     .foregroundStyle(Color(row.tone == .muted ? theme.secondaryText : theme.text))
                     .lineLimit(1)
                 if let subtitle = row.subtitle {
-                    Text(subtitle).font(.system(size: 11)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
+                    Text(subtitle).font(theme.font(11)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
                 }
             }
             Spacer(minLength: 4)
             if let trailing = row.trailing {
                 Text(trailing)
-                    .font(.system(size: 11).monospacedDigit())
+                    .font(theme.font(11).monospacedDigit())
                     .foregroundStyle(theme.color(for: row.tone, default: theme.tertiaryText))
                     .lineLimit(1)
             }
@@ -138,7 +138,7 @@ struct TextOutputView: View {
         FittingStack(fromBottom: tail) {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 Text(line.isEmpty ? " " : line)
-                    .font(.system(size: 10.5, design: .monospaced))
+                    .font(theme.font(10.5, mono: true))
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
                     .truncationMode(.tail)

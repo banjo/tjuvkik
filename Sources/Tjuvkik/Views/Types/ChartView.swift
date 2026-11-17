@@ -33,7 +33,7 @@ struct ChartView: View {
 
     private func label(lines: Int) -> some View {
         Text(content.label ?? "")
-            .font(.system(size: 11.5))
+            .font(theme.font(11.5))
             .foregroundStyle(Color(theme.secondaryText))
             .lineLimit(lines)
     }
@@ -98,7 +98,7 @@ struct ChartView: View {
                         Text(text)
                     }
                 }
-                .font(.system(size: 10).monospacedDigit())
+                .font(theme.font(10).monospacedDigit())
                 .foregroundStyle(Color(theme.tertiaryText))
                 .lineLimit(1)
                 .padding(.top, 6)
@@ -120,7 +120,7 @@ struct ChartView: View {
             Text(name).foregroundStyle(Color(theme.tertiaryText))
             Text(content.format(number)).fontWeight(.medium).foregroundStyle(Color(theme.secondaryText))
         }
-        .font(.system(size: 11).monospacedDigit())
+        .font(theme.font(11).monospacedDigit())
         .lineLimit(1)
         .fixedSize()
     }
@@ -161,7 +161,7 @@ private struct ChartPlot: View {
                     }
                     .stroke(Color(theme.warning).opacity(0.7), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     Text(threshold.text)
-                        .font(.system(size: 9.5).monospacedDigit())
+                        .font(theme.font(9.5).monospacedDigit())
                         .foregroundStyle(Color(theme.warning).opacity(0.8))
                         .lineLimit(1)
                         .fixedSize()

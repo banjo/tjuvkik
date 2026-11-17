@@ -27,14 +27,14 @@ struct GridView: View {
         let headline = content.headline
         return VStack(alignment: .leading, spacing: 0) {
             Text(headline.value)
-                .font(.system(size: 26, weight: .semibold).monospacedDigit())
+                .font(theme.font(26, weight: .semibold).monospacedDigit())
                 .tracking(-0.52)
                 .foregroundStyle(theme.color(for: headline.tone, default: theme.text))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let label = headline.label {
                 Text(label)
-                    .font(.system(size: 11.5))
+                    .font(theme.font(11.5))
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
                     .padding(.top, 4)
@@ -89,14 +89,14 @@ struct GridView: View {
                 Circle().fill(tone).frame(width: 7, height: 7)
             }
             Text(row.label)
-                .font(.system(size: 11.5))
+                .font(theme.font(11.5))
                 .foregroundStyle(Color(theme.text))
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let value = row.value {
                 Text(value)
-                    .font(.system(size: 10.5).monospacedDigit())
+                    .font(theme.font(10.5).monospacedDigit())
                     .foregroundStyle(loud ? tone : Color(theme.tertiaryText))
                     .lineLimit(1)
                     .fixedSize()
@@ -137,7 +137,7 @@ struct GridView: View {
                         Text(text).lineLimit(1)
                     }
                 }
-                .font(.system(size: 10).monospacedDigit())
+                .font(theme.font(10).monospacedDigit())
                 .foregroundStyle(Color(theme.tertiaryText))
                 .padding(.leading, labelWidth + columnGap)
                 .padding(.trailing, hasValues ? valueWidth + columnGap : 0)
@@ -159,7 +159,7 @@ struct GridView: View {
                         Text(footer).lineLimit(1).truncationMode(.tail)
                     }
                 }
-                .font(.system(size: 10.5))
+                .font(theme.font(10.5))
                 .foregroundStyle(Color(theme.tertiaryText))
                 .padding(.top, 8)
             }
@@ -170,7 +170,7 @@ struct GridView: View {
     private func historyRow(_ row: GridContent.Row) -> some View {
         HStack(spacing: columnGap) {
             Text(row.label)
-                .font(.system(size: 12))
+                .font(theme.font(12))
                 .foregroundStyle(Color(theme.text))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -186,7 +186,7 @@ struct GridView: View {
             .frame(maxWidth: .infinity, minHeight: 18, maxHeight: 18)
             if hasValues {
                 Text(row.value ?? "")
-                    .font(.system(size: 11).monospacedDigit())
+                    .font(theme.font(11).monospacedDigit())
                     .foregroundStyle(row.tone.map { theme.color(for: $0, default: theme.secondaryText) } ?? Color(theme.secondaryText))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -252,7 +252,7 @@ struct GridView: View {
                     }
                     .fixedSize()
                 }
-                .font(.system(size: 11).monospacedDigit())
+                .font(theme.font(11).monospacedDigit())
                 .foregroundStyle(Color(theme.tertiaryText))
                 .padding(.top, 8)
             }

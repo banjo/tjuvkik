@@ -25,4 +25,10 @@ extension Theme {
         case .normal, nil: Color(fallback)
         }
     }
+
+    /// What a view draws behind something in `tone`: the theme's background for it, or `color` at `opacity`.
+    func background(for tone: Tone?, color: Color, opacity: Double) -> Color {
+        if let tone, let background = toneBackgrounds[tone] { return Color(background) }
+        return color.opacity(opacity)
+    }
 }

@@ -6,8 +6,8 @@ struct ThemeResolver {
     var files: ConfigFiles
 
     /// `file` is the config file that names the theme.
-    mutating func resolve(_ name: String, from file: String) -> Theme? {
-        resolve(name, seen: [], file: file, path: "theme")
+    mutating func resolve(_ name: String, from file: String, path: String = "theme") -> Theme? {
+        resolve(name, seen: [], file: file, path: path)
     }
 
     private mutating func resolve(_ name: String, seen: [String], file: String, path: String) -> Theme? {
@@ -55,9 +55,62 @@ struct ThemeResolver {
         ]
         for (key, value, keyPath) in colors {
             guard let value else { continue }
-            if let color = RGBA(hex: value) { theme[keyPath: keyPath] = color } else {
-                files.error(file, key, "can't read color \"\(value)\", write it like \"#ff79c6\" or \"#ff79c680\"")
+            if let color = color(value, file: file, path: key) { theme[keyPath: keyPath] = color }
+        }
+
+        if let value = raw.material {
+            if let material = Theme.Material(rawValue: value) { theme.material = material } else {
+                files.error(file, "material", "unknown material \"\(value)\", expected \"hud\", \"popover\", \"menu\", \"sidebar\" or \"underWindow\"")
             }
+        }
+        if let font = raw.font {
+            if let family = font.family {
+                if InstalledFonts.has(family) { theme.font.family = family } else {
+                    files.warning(file, "font.family", "\"\(family)\" isn't installed, using the system font")
+                }
+            }
+            if let mono = font.mono {
+                if InstalledFonts.has(mono) { theme.font.mono = mono } else {
+                    files.warning(file, "font.mono", "\"\(mono)\" isn't installed, using the system's monospaced font")
+                }
+            }
+            number(font.scale, in: Theme.Fonts.scales, file: file, path: "font.scale") { theme.font.scale = $0 }
+        }
+        if let board = raw.board {
+            number(board.gap, in: Theme.Board.gaps, file: file, path: "board.gap") { theme.board.gap = $0 }
+            number(board.inset, in: Theme.Board.insets, file: file, path: "board.inset") { theme.board.inset = $0 }
+        }
+        if let tile = raw.tile {
+            number(tile.border, in: Theme.TileStyle.borders, file: file, path: "tile.border") { theme.tile.border = $0 }
+            number(tile.padding, in: Theme.TileStyle.paddings, file: file, path: "tile.padding") { theme.tile.padding = $0 }
+            if let shadow = tile.shadow { theme.tile.shadow = shadow }
+            if let uppercase = tile.header?.uppercase { theme.tile.uppercaseTitle = uppercase }
+            if let kind = tile.header?.kind { theme.tile.showKind = kind }
+            if let interval = tile.header?.interval { theme.tile.showInterval = interval }
+        }
+        for (key, style) in (raw.tones ?? [:]).sorted(by: { $0.key < $1.key }) {
+            guard let tone = Tone(rawValue: key), tone != .normal else {
+                files.error(file, "tones.\(key)", "unknown tone, expected \"muted\", \"warning\", \"error\", \"success\", \"info\" or \"accent\"")
+                continue
+            }
+            if let value = style.background, let color = color(value, file: file, path: "tones.\(key).background") {
+                theme.toneBackgrounds[tone] = color
+            }
+        }
+    }
+
+    private mutating func color(_ value: String, file: String, path: String) -> RGBA? {
+        guard let color = RGBA(hex: value) else {
+            files.error(file, path, "can't read color \"\(value)\", write it like \"#ff79c6\" or \"#ff79c680\"")
+            return nil
+        }
+        return color
+    }
+
+    private mutating func number(_ value: Double?, in range: ClosedRange<Double>, file: String, path: String, set: (Double) -> Void) {
+        guard let value else { return }
+        if range.contains(value) { set(value) } else {
+            files.error(file, path, "must be between \(range.lowerBound.secondsText) and \(range.upperBound.secondsText), got \(value.secondsText)")
         }
     }
 }

@@ -26,6 +26,7 @@ final class GlancePanel: NSPanel {
 @Observable
 final class GlanceModel {
     var isVisible = false
+    var systemIsDark = false
 }
 
 @MainActor
@@ -33,12 +34,25 @@ final class GlanceController {
     private let panel = GlancePanel()
     private let model = GlanceModel()
     private var hideGeneration = 0
+    private var appearanceObservation: NSKeyValueObservation?
 
     var onShow: () -> Void = {}
     var onHide: () -> Void = {}
 
     init(store: ConfigStore, panels: PanelStore) {
         panel.contentView = NSHostingView(rootView: GlanceView(model: model, store: store, panels: panels))
+        model.systemIsDark = Self.isDark(NSApp.effectiveAppearance)
+        // KVO may call this off the main thread.
+        appearanceObservation = NSApp.observe(\.effectiveAppearance, options: [.new]) { @Sendable [weak self] _, _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.model.systemIsDark = Self.isDark(NSApp.effectiveAppearance)
+            }
+        }
+    }
+
+    private static func isDark(_ appearance: NSAppearance) -> Bool {
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
 
     func show() {

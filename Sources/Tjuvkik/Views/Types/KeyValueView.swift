@@ -30,7 +30,7 @@ struct KeyValueView: View {
             ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
                 VStack(alignment: .leading, spacing: 0) {
                     Text(pair.key)
-                        .font(.system(size: 10.5))
+                        .font(theme.font(10.5))
                         .foregroundStyle(Color(theme.secondaryText))
                         .lineLimit(1)
                     value(pair, size: 13)
@@ -51,7 +51,7 @@ struct KeyValueView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if let heading = line.heading {
                         Text(heading.uppercased())
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(theme.font(10, weight: .semibold))
                             .tracking(0.6)
                             .foregroundStyle(Color(theme.tertiaryText))
                             .lineLimit(1)
@@ -68,7 +68,7 @@ struct KeyValueView: View {
     private func row(_ pair: KeyValueContent.Pair, divider: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(pair.key)
-                .font(.system(size: 12))
+                .font(theme.font(12))
                 .foregroundStyle(Color(theme.secondaryText))
                 .lineLimit(1)
                 .layoutPriority(1)
@@ -85,14 +85,14 @@ struct KeyValueView: View {
     @ViewBuilder private func value(_ pair: KeyValueContent.Pair, size: CGFloat) -> some View {
         let color = theme.color(for: pair.tone, default: theme.text)
         let text = Text(pair.value)
-            .font(.system(size: size, design: .monospaced))
+            .font(theme.font(size, mono: true))
             .foregroundStyle(color)
             .lineLimit(1)
             .truncationMode(.middle)
         if pair.pill && pair.tone != nil {
             text
                 .padding(.horizontal, 6)
-                .background(color.opacity(0.16), in: Capsule())
+                .background(theme.background(for: pair.tone, color: color, opacity: 0.16), in: Capsule())
         } else {
             text
         }

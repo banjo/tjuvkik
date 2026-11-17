@@ -222,8 +222,8 @@ struct OutlineTests {
     @Test func tileSizesMatchTheBoard() {
         let s = BentoGeometry.size(of: .s)
         let m = BentoGeometry.size(of: .m)
-        #expect(m.width == s.width * 2 + BentoGeometry.gap)
+        #expect(m.width == s.width * 2 + CGFloat(Theme.Board().gap))
         #expect(m.height == s.height)
-        #expect(BentoGeometry.size(of: .l).height == s.height * 2 + BentoGeometry.gap)
+        #expect(BentoGeometry.size(of: .l).height == s.height * 2 + CGFloat(Theme.Board().gap))
     }
 }

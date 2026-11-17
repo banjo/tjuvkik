@@ -34,24 +34,24 @@ private struct TimelineCountdown: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 0)
             if let label = countdown.label {
-                Text(label).font(.system(size: 11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
+                Text(label).font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
             }
             if let value = countdown.value {
                 Text(value)
-                    .font(.system(size: 30, weight: .semibold).monospacedDigit())
+                    .font(theme.font(30, weight: .semibold).monospacedDigit())
                     .tracking(-0.6)
                     .foregroundStyle(tone)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             }
             Text(countdown.title)
-                .font(.system(size: 13, weight: .medium))
+                .font(theme.font(13, weight: .medium))
                 .foregroundStyle(Color(countdown.value == nil ? theme.tertiaryText : theme.text))
                 .lineLimit(1)
                 .padding(.top, countdown.value == nil ? 0 : 8)
             if let detail = countdown.detail {
                 Text(detail)
-                    .font(.system(size: 11.5))
+                    .font(theme.font(11.5))
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
                     .padding(.top, 2)
@@ -103,11 +103,11 @@ private struct TimelineStrip: View {
                 let x = width * item.from
                 let boxWidth = max(width * (item.to - item.from) - 2, 6)
                 TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text),
-                                 state: item.state, radius: 5) {
+                                 fill: theme.eventFill(item), state: item.state, radius: 5) {
                     // Too narrow for a readable title: color only; the notes below name what matters.
                     ViewThatFits(in: .horizontal) {
                         Text(item.event.title)
-                            .font(.system(size: 10.5, weight: .semibold))
+                            .font(theme.font(10.5, weight: .semibold))
                             .foregroundStyle(Color(theme.text))
                             .lineLimit(1)
                             .fixedSize()
@@ -130,7 +130,7 @@ private struct TimelineStrip: View {
     @ViewBuilder private var notes: some View {
         let notes = snapshot.notes
         if notes.isEmpty {
-            Text("Nothing coming up").font(.system(size: 12)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
+            Text("Nothing coming up").font(theme.font(12)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
         } else {
             // Drop notes from the right until the rest fit.
             ViewThatFits(in: .horizontal) {
@@ -146,11 +146,11 @@ private struct TimelineStrip: View {
             ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(note.key.uppercased())
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(theme.font(10, weight: .semibold))
                         .tracking(0.6)
                         .foregroundStyle(Color(theme.tertiaryText))
                     noteLine(note)
-                        .font(.system(size: 12))
+                        .font(theme.font(12))
                         .lineLimit(1)
                 }
             }
@@ -170,14 +170,13 @@ private struct TimelineAxis: View {
     let width: CGFloat
     let theme: Theme
 
-    private static let font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-
     var body: some View {
+        let font = theme.nsFont(10).monospacedDigits
         ZStack(alignment: .topLeading) {
             ForEach(Array(ticks.enumerated()), id: \.offset) { _, tick in
-                let label = ceil((tick.label as NSString).size(withAttributes: [.font: Self.font]).width)
+                let label = ceil((tick.label as NSString).size(withAttributes: [.font: font]).width)
                 Text(tick.label)
-                    .font(.system(size: 10).monospacedDigit())
+                    .font(theme.font(10).monospacedDigit())
                     .foregroundStyle(Color(theme.tertiaryText))
                     .fixedSize()
                     .offset(x: min(max(width * tick.position - label / 2, 0), max(width - label, 0)))
@@ -208,7 +207,7 @@ private struct TimelineAgenda: View {
                             .frame(width: width, height: 1)
                             .offset(x: gutter, y: height * tick.position)
                         Text(tick.label)
-                            .font(.system(size: 10).monospacedDigit())
+                            .font(theme.font(10).monospacedDigit())
                             .foregroundStyle(Color(theme.tertiaryText))
                             .fixedSize()
                             .offset(y: height * tick.position - 6)
@@ -228,7 +227,7 @@ private struct TimelineAgenda: View {
                 }
                 if snapshot.items.isEmpty {
                     Text("Nothing scheduled")
-                        .font(.system(size: 11.5))
+                        .font(theme.font(11.5))
                         .foregroundStyle(Color(theme.tertiaryText))
                         .frame(width: width, height: height)
                         .offset(x: gutter)
@@ -241,22 +240,22 @@ private struct TimelineAgenda: View {
     }
 
     private func event(_ item: TimelineContent.Snapshot.Item, short: Bool) -> some View {
-        TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text), state: item.state, radius: 6) {
+        TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text), fill: theme.eventFill(item), state: item.state, radius: 6) {
             Group {
                 if short {
-                    Text("\(Text(item.event.title).fontWeight(.semibold)) \(Text(item.startTime).font(.system(size: 10.5)).foregroundStyle(Color(theme.secondaryText)))")
-                        .font(.system(size: 11.5))
+                    Text("\(Text(item.event.title).fontWeight(.semibold)) \(Text(item.startTime).font(theme.font(10.5)).foregroundStyle(Color(theme.secondaryText)))")
+                        .font(theme.font(11.5))
                         .foregroundStyle(Color(theme.text))
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(item.event.title)
-                            .font(.system(size: 11.5, weight: .semibold))
+                            .font(theme.font(11.5, weight: .semibold))
                             .foregroundStyle(Color(theme.text))
                             .lineLimit(1)
                         Text(item.detail)
-                            .font(.system(size: 10.5))
+                            .font(theme.font(10.5))
                             .foregroundStyle(Color(theme.secondaryText))
                             .lineLimit(1)
                     }
@@ -271,10 +270,11 @@ private struct TimelineAgenda: View {
 
 // MARK: Parts
 
-/// An event's block: a tint of its tone with a bar on the left. Past events fade; the current
+/// An event's block: `fill`, with a bar of its tone on the left. Past events fade; the current
 /// one gets an outline.
 private struct TimelineEventBox<Label: View>: View {
     let tone: Color
+    let fill: Color
     let state: TimelineContent.Snapshot.State
     let radius: CGFloat
     @ViewBuilder let label: Label
@@ -282,7 +282,7 @@ private struct TimelineEventBox<Label: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         ZStack(alignment: .leading) {
-            shape.fill(tone.opacity(0.16))
+            shape.fill(fill)
             Rectangle().fill(tone).frame(width: 2)
             label
         }
@@ -316,5 +316,12 @@ private struct NowMarker: View {
             }
             .frame(height: 7, alignment: .leading)
         }
+    }
+}
+
+extension Theme {
+    fileprivate func eventFill(_ item: TimelineContent.Snapshot.Item) -> Color {
+        let tone = item.event.tone ?? .accent
+        return background(for: tone, color: color(for: tone, default: text), opacity: 0.16)
     }
 }

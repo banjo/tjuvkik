@@ -25,13 +25,33 @@
       "description": "How the board sits on screen. Only \"framed\" for now."
     },
     "theme": {
-      "type": "string",
       "default": "dark-glass",
-      "description": "\"dark-glass\", \"light-glass\", \"dracula\", or a file in themes/ without \".json\".",
-      "examples": [
-        "dark-glass",
-        "light-glass",
-        "dracula"
+      "description": "\"dark-glass\", \"light-glass\", \"dracula\", or a file in themes/ without \".json\". Or one for light mode and one for dark: { \"light\": \"light-glass\", \"dark\": \"dracula\" }.",
+      "anyOf": [
+        {
+          "type": "string",
+          "examples": [
+            "dark-glass",
+            "light-glass",
+            "dracula"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "light",
+            "dark"
+          ],
+          "properties": {
+            "light": {
+              "type": "string"
+            },
+            "dark": {
+              "type": "string"
+            }
+          }
+        }
       ]
     },
     "trigger": {

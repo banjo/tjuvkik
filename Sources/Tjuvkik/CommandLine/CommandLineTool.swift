@@ -119,7 +119,9 @@ enum CommandLineTool {
     private static func preview(_ panel: String, size: TileSize?, themeName: String?, output: String?, scale: Double, options: [String: String], directory: URL) async -> Exit {
         guard var tile = loadPanel(panel, options: options, directory: directory) else { return .failed }
         let config = try? ConfigLoader.load(from: directory).get().config
-        let name = themeName ?? config?.themeName ?? "dark-glass"
+        // No NSApplication runs here, so no effectiveAppearance.
+        let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+        let name = themeName ?? config?.themeName(dark: isDark) ?? "dark-glass"
         let theme: Theme
         switch ConfigLoader.theme(name, in: directory) {
         case .success(let resolved): theme = resolved
@@ -154,14 +156,14 @@ enum CommandLineTool {
             printError("can't write \(url.path): \(error.localizedDescription)")
             return .failed
         }
-        let points = BentoGeometry.size(of: tile.size)
+        let points = BentoGeometry.size(of: tile.size, board: theme.board)
         print("\(url.path): \(tile.size.rawValue), \(Int(points.width))×\(Int(points.height)) pt at \(scale.formatted())x, \(name)")
         return exit
     }
 
     /// The tile at its size on the largest board, with room around it for its shadow.
     private static func render(tile: Tile, state: PanelStore.State, theme: Theme, scale: Double, to url: URL) throws {
-        let size = BentoGeometry.size(of: tile.size)
+        let size = BentoGeometry.size(of: tile.size, board: theme.board)
         let margin: CGFloat = 24
         let view = TileView(tile: tile, state: state, theme: theme, index: 0, isVisible: true, solid: true)
             .frame(width: size.width, height: size.height)

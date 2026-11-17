@@ -10,22 +10,24 @@ struct GlanceView: View {
 
     var body: some View {
         let config = store.config
+        let theme = config.theme(dark: model.systemIsDark)
         GeometryReader { geometry in
-            let cell = BentoGeometry.cell(in: geometry.size)
-            let gap = BentoGeometry.gap
+            let board = theme.board
+            let cell = BentoGeometry.cell(in: geometry.size, board: board)
+            let gap = CGFloat(board.gap), inset = CGFloat(board.inset)
             ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
                 if let slot = tile.slot {
-                    let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell)
-                    TileView(tile: tile, state: panels.states[tile.id], theme: config.theme, index: index, isVisible: model.isVisible)
+                    let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell, board: board)
+                    TileView(tile: tile, state: panels.states[tile.id], theme: theme, index: index, isVisible: model.isVisible)
                         .frame(width: size.width, height: size.height)
                         .position(
-                            x: BentoGeometry.inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,
-                            y: BentoGeometry.inset + (cell.height + gap) * CGFloat(slot.row) + size.height / 2
+                            x: inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,
+                            y: inset + (cell.height + gap) * CGFloat(slot.row) + size.height / 2
                         )
                 }
             }
         }
-        .environment(\.colorScheme, config.theme.appearance.colorScheme)
+        .environment(\.colorScheme, theme.appearance.colorScheme)
     }
 }
 
@@ -42,35 +44,37 @@ struct TileView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    private let padding: CGFloat = 12
-
     var body: some View {
         let radius = CGFloat(theme.radius)
+        let padding = CGFloat(theme.tile.padding)
         // Content may draw into the padding at the sides, and at the bottom unless an error is
         // shown there.
         let bleed = TileBleed(horizontal: padding, bottom: state?.error == nil ? padding : 0)
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text(tile.title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(theme.font(12, weight: .semibold))
                     .foregroundStyle(Color(theme.secondaryText))
-                Text(state?.content?.type?.rawValue ?? tile.typeName)
-                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
-                    .foregroundStyle(Color(theme.tertiaryText))
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Color(theme.well), in: RoundedRectangle(cornerRadius: 4))
+                    .textCase(theme.tile.uppercaseTitle ? .uppercase : nil)
+                if theme.tile.showKind {
+                    Text(state?.content?.type?.rawValue ?? tile.typeName)
+                        .font(theme.font(9.5, weight: .medium, mono: true))
+                        .foregroundStyle(Color(theme.tertiaryText))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Color(theme.well), in: RoundedRectangle(cornerRadius: 4))
+                }
                 Spacer()
                 if state?.error != nil && state?.content != nil {
-                    Text("stale").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Color(theme.warning))
+                    Text("stale").font(theme.font(10.5, weight: .medium)).foregroundStyle(Color(theme.warning))
                 } else if let state, state.running, tile.mode == .interval, state.content != nil,
                           let updated = state.updated, Date().timeIntervalSince(updated) >= tile.every {
                     Text("updating…")
-                        .font(.system(size: 10.5))
+                        .font(theme.font(10.5))
                         .foregroundStyle(Color(theme.tertiaryText))
-                } else {
+                } else if theme.tile.showInterval {
                     Text(tile.mode == .stream ? "live" : "every \(Duration.seconds(tile.every).formatted(.units(allowed: [.days, .hours, .minutes, .seconds], width: .narrow)))")
-                        .font(.system(size: 10.5))
+                        .font(theme.font(10.5))
                         .foregroundStyle(Color(theme.tertiaryText))
                 }
             }
@@ -80,7 +84,7 @@ struct TileView: View {
                 .clipShape(BleedClip(bleed: bleed))
             if let error = state?.error {
                 Text(error)
-                    .font(.system(size: 10.5))
+                    .font(theme.font(10.5))
                     .foregroundStyle(Color(theme.error))
                     .lineLimit(2)
             }
@@ -91,7 +95,7 @@ struct TileView: View {
         .background {
             if theme.blur && !reduceTransparency && !solid {
                 ZStack {
-                    VisualEffect(cornerRadius: radius, appearance: theme.appearance)
+                    VisualEffect(cornerRadius: radius, appearance: theme.appearance, material: theme.material)
                     RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Color(theme.panel))
                 }
             } else {
@@ -99,8 +103,15 @@ struct TileView: View {
                     .fill(Color(reduceTransparency || solid ? theme.panel.opaque : theme.panel))
             }
         }
-        .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color(theme.line)))
-        .shadow(color: .black.opacity(theme.blur ? 0.18 : 0.35), radius: 18, y: 10)
+        .overlay {
+            if theme.tile.border > 0 {
+                RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color(theme.line), lineWidth: theme.tile.border)
+            }
+        }
+        .shadow(
+            color: theme.tile.shadow ? .black.opacity(theme.blur ? 0.18 : 0.35) : .clear,
+            radius: theme.tile.shadow ? 18 : 0, y: theme.tile.shadow ? 10 : 0
+        )
         .opacity(isVisible ? 1 : 0)
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)
         .animation(.easeOut(duration: 0.22).delay(Double(index) * 0.03), value: isVisible)
@@ -136,7 +147,7 @@ struct TileView: View {
             ChecklistView(content: content, size: tile.size, theme: theme)
         case nil:
             if state?.error == nil {
-                Text("Loading…").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
+                Text("Loading…").font(theme.font(11.5)).foregroundStyle(Color(theme.tertiaryText))
             }
         }
     }

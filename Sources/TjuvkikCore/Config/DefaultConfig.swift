@@ -9,7 +9,7 @@ public enum DefaultConfig {
 
     /// Used until the directory has been read.
     public static let fallback = Config(
-        view: .bento, layout: .framed, themeName: "dark-glass", theme: .darkGlass,
+        view: .bento, layout: .framed, lightThemeName: "dark-glass", darkThemeName: "dark-glass", lightTheme: .darkGlass, darkTheme: .darkGlass,
         trigger: .fn, launchAtLogin: true,
         tiles: []
     )

@@ -39,7 +39,8 @@ struct SchemaTests {
         let config = properties(try schema("config"))
         #expect(enumValues(config["view"]) == Set(Config.View.allCases.map(\.rawValue)))
         #expect(enumValues(config["layout"]) == Set(Config.Layout.allCases.map(\.rawValue)))
-        #expect(Set(config["theme"]?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
+        let themeName = (config["theme"]?["anyOf"] as? [[String: Any]])?.first { $0["type"] as? String == "string" }
+        #expect(Set(themeName?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
         #expect(enumValues(properties(config["panels"]?["items"])["size"]) == Set(TileSize.allCases.map(\.rawValue)))
         #expect(enumValues(properties(config["trigger"])["key"]) == Set(Trigger.Key.allCases.map(\.rawValue)))
         #expect(enumValues(properties(config["trigger"])["mode"]) == Set(Trigger.Mode.allCases.map(\.rawValue)))
@@ -61,6 +62,12 @@ struct SchemaTests {
         #expect(Set(theme.keys) == keys(RawTheme()).union(["$schema"]))
         #expect(enumValues(theme["appearance"]) == Set(Theme.Appearance.allCases.map(\.rawValue)))
         #expect(Set(theme["extends"]?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
+        #expect(enumValues(theme["material"]) == Set(Theme.Material.allCases.map(\.rawValue)))
+        #expect(Set(properties(theme["font"]).keys) == keys(RawThemeFont()))
+        #expect(Set(properties(theme["board"]).keys) == keys(RawThemeBoard()))
+        #expect(Set(properties(theme["tile"]).keys) == keys(RawThemeTile()))
+        #expect(Set(properties(properties(theme["tile"])["header"]).keys) == keys(RawThemeHeader()))
+        #expect(Set(properties(theme["tones"]).keys) == Set(Tone.allCases.filter { $0 != .normal }.map(\.rawValue)))
     }
 
     @Test func defaultFilesPointAtTheSchemas() throws {

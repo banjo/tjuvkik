@@ -22,7 +22,7 @@ struct ConfigArchiveTests {
         try ConfigArchive.import(zip, into: target.directory, backup: backup)
 
         let config = try target.load().get().config
-        #expect(config.theme == .dracula)
+        #expect(config.darkTheme == .dracula)
         #expect(config.tiles.map(\.panel) == ["x"])
         let files = FileManager.default.subpaths(atPath: target.directory.path)!.sorted()
         #expect(files.contains("panels/x/run.sh"))
@@ -41,7 +41,7 @@ struct ConfigArchiveTests {
         #expect(throws: ConfigArchive.Failure.self) {
             try ConfigArchive.import(zip, into: target.directory, backup: temp.appending(path: "b.zip"))
         }
-        #expect(try target.load().get().config.theme == .dracula)
+        #expect(try target.load().get().config.darkTheme == .dracula)
     }
 
     @Test func fingerprintChangesWhenAPanelIsAdded() throws {

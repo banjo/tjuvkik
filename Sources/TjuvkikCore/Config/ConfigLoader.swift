@@ -37,9 +37,21 @@ public enum ConfigLoader {
             layout = .framed
         }
 
-        let themeName = raw.theme ?? "dark-glass"
+        var lightName = "dark-glass", darkName = "dark-glass"
+        var light: Theme?, dark: Theme?
         var resolver = ThemeResolver(files: files)
-        let theme = resolver.resolve(themeName, from: file)
+        switch raw.theme ?? .one(lightName) {
+        case .one(let name):
+            (lightName, darkName) = (name, name)
+            light = resolver.resolve(name, from: file)
+            dark = light
+        case .pair(let lightValue?, let darkValue?):
+            (lightName, darkName) = (lightValue, darkValue)
+            light = resolver.resolve(lightValue, from: file, path: "theme.light")
+            dark = resolver.resolve(darkValue, from: file, path: "theme.dark")
+        case .pair:
+            resolver.files.error(file, "theme", "set both \"light\" and \"dark\"")
+        }
         files = resolver.files
 
         let trigger: Trigger = if let raw = raw.trigger { Self.trigger(raw, file: file, files: &files) } else { .fn }
@@ -82,9 +94,9 @@ public enum ConfigLoader {
         let pause = Config.Pause(whenLocked: raw.pause?.whenLocked ?? true, onLowPower: raw.pause?.onLowPower ?? true)
         let notifications = Self.notifications(raw.notifications, file: file, files: &files)
         let errors = files.issues.filter { $0.severity == .error }
-        guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
+        guard errors.isEmpty, let light, let dark else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
-            view: view, layout: layout, themeName: themeName, theme: theme,
+            view: view, layout: layout, lightThemeName: lightName, darkThemeName: darkName, lightTheme: light, darkTheme: dark,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
             pause: pause, notifications: notifications
         )

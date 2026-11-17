@@ -28,7 +28,7 @@ struct MetersView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if let footer = content.footer, !footer.isEmpty {
                     Text(footer)
-                        .font(.system(size: 11).monospacedDigit())
+                        .font(theme.font(11).monospacedDigit())
                         .foregroundStyle(Color(theme.tertiaryText))
                         .lineLimit(1)
                         .padding(.top, 8)
@@ -45,18 +45,18 @@ struct MetersView: View {
     private func column(_ meter: MetersContent.Meter) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(meter.label ?? " ")
-                .font(.system(size: 11.5))
+                .font(theme.font(11.5))
                 .foregroundStyle(Color(theme.secondaryText))
                 .lineLimit(1)
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text(meter.text)
-                    .font(.system(size: 22, weight: .semibold).monospacedDigit())
+                    .font(theme.font(22, weight: .semibold).monospacedDigit())
                     .tracking(-0.44)
                     .foregroundStyle(tone(meter))
                     .layoutPriority(1)
                 if let of = meter.of {
                     Text(" / \(of)")
-                        .font(.system(size: 12, weight: .medium).monospacedDigit())
+                        .font(theme.font(12, weight: .medium).monospacedDigit())
                         .foregroundStyle(Color(theme.secondaryText))
                 }
             }
@@ -72,7 +72,7 @@ struct MetersView: View {
         VStack(spacing: 5) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(meter.label ?? "")
-                    .font(.system(size: 12.5))
+                    .font(theme.font(12.5))
                     .foregroundStyle(Color(theme.text))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -85,7 +85,7 @@ struct MetersView: View {
                         Text(" / \(of)").foregroundStyle(Color(theme.secondaryText))
                     }
                 }
-                .font(.system(size: 11.5).monospacedDigit())
+                .font(theme.font(11.5).monospacedDigit())
                 .lineLimit(1)
                 .fixedSize()
             }
@@ -143,12 +143,12 @@ private struct MeterRing: View {
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 2) {
                     Text(meter.text)
-                        .font(.system(size: 22, weight: .semibold).monospacedDigit())
+                        .font(theme.font(22, weight: .semibold).monospacedDigit())
                         .tracking(-0.44)
                         .foregroundStyle(color)
                     if let caption {
                         Text(caption)
-                            .font(.system(size: 10.5))
+                            .font(theme.font(10.5))
                             .foregroundStyle(Color(theme.secondaryText))
                     }
                 }

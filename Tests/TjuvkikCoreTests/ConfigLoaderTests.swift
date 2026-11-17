@@ -8,7 +8,7 @@ struct ConfigLoaderTests {
         try DefaultConfig.write(to: fixture.directory)
         let loaded = try fixture.load().get()
         #expect(loaded.warnings.isEmpty)
-        #expect(loaded.config.theme == .darkGlass)
+        #expect(loaded.config.darkTheme == .darkGlass)
         #expect(loaded.config.tiles.map(\.panel) == ["disk"])
         #expect(loaded.config.tiles[0].kind == .cli)
         #expect(loaded.config.tiles[0].command == "df -h /")
@@ -21,7 +21,7 @@ struct ConfigLoaderTests {
     @Test func writingDefaultsKeepsExistingFiles() throws {
         let fixture = ConfigFixture(["config.json": #"{ "theme": "dracula" }"#])
         try DefaultConfig.write(to: fixture.directory)
-        #expect(try fixture.load().get().config.theme == .dracula)
+        #expect(try fixture.load().get().config.darkTheme == .dracula)
         #expect(FileManager.default.fileExists(atPath: fixture.directory.appending(path: "panels/disk/panel.jsonc").path))
     }
 
@@ -39,13 +39,42 @@ struct ConfigLoaderTests {
             "themes/mine.json": #"{ "extends": "dracula" }"#,
         ]).config
         #expect(config.tiles.map(\.command) == ["ls", "pwd"])
-        #expect(config.theme == .dracula)
+        #expect(config.darkTheme == .dracula)
     }
 
     @Test func jsoncWinsOverJSONWithAWarning() throws {
         let loaded = try load(["config.jsonc": #"{ "theme": "dracula" }"#, "config.json": #"{ "theme": "light-glass" }"#])
-        #expect(loaded.config.theme == .dracula)
+        #expect(loaded.config.darkTheme == .dracula)
         #expect(loaded.warnings.map(\.description) == ["config.json: ignored, because config.jsonc exists"])
+    }
+
+    @Test func themeDefaultsToDarkGlass() throws {
+        let config = try load(["config.json": "{}"]).config
+        #expect(config.lightThemeName == "dark-glass")
+        #expect(config.darkThemeName == "dark-glass")
+        #expect(config.lightTheme == .darkGlass)
+        #expect(config.darkTheme == .darkGlass)
+    }
+
+    @Test func oneThemeForBoth() throws {
+        let config = try load(["config.json": #"{ "theme": "dracula" }"#]).config
+        #expect(config.lightTheme == .dracula)
+        #expect(config.darkTheme == .dracula)
+    }
+
+    @Test func themeForLightAndForDark() throws {
+        let config = try load(["config.json": #"{ "theme": { "light": "light-glass", "dark": "dracula" } }"#]).config
+        #expect(config.theme(dark: false) == .lightGlass)
+        #expect(config.theme(dark: true) == .dracula)
+        #expect(config.themeName(dark: false) == "light-glass")
+        #expect(config.themeName(dark: true) == "dracula")
+    }
+
+    @Test func themePairNeedsBoth() {
+        #expect(errors(["config.json": #"{ "theme": { "light": "light-glass" } }"#]) == [#"config.json: theme: set both "light" and "dark""#])
+        let unknown = errors(["config.json": #"{ "theme": { "light": "light-glass", "dark": "nope" } }"#])
+        #expect(unknown.count == 1)
+        #expect(unknown.first?.hasPrefix(#"config.json: theme.dark: unknown theme "nope""#) == true)
     }
 
     @Test func emptyConfigGetsDefaults() throws {
@@ -67,7 +96,7 @@ struct ConfigLoaderTests {
           "panels": [{ "panel": "x", "size": "l", },],
         }
         """, "panels/x/panel.json": #"{ "type": "cli", "command": "ls", }"#]).config
-        #expect(config.theme == .dracula)
+        #expect(config.darkTheme == .dracula)
         #expect(config.tiles[0].size == .l)
     }
 
