@@ -36,7 +36,7 @@ struct StatsView: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 0)
             if let label = stat.label {
-                Text(label).font(.system(size: 11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
+                Text(label).font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
             }
             ValueText(value: stat.value, unit: stat.unit, size: 34, unitSize: 15, theme: theme)
                 .padding(.top, 6)
@@ -49,7 +49,7 @@ struct StatsView: View {
     private func cell(_ stat: StatsContent.Stat) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(stat.label ?? " ")
-                .font(.system(size: 11.5))
+                .font(theme.font(11.5))
                 .foregroundStyle(Color(theme.secondaryText))
                 .lineLimit(1)
             Spacer(minLength: 0)

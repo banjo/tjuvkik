@@ -176,7 +176,7 @@ public enum CLIArguments {
       preview <tile|panel>     Run a panel and render its tile to a PNG.
           --option key=value   Set an option. Repeat for more.
           --size s|m|l|xl      The tile's size. Default: the panel's size.
-          --theme <name>       Default: the theme in config.jsonc.
+          --theme <name>       Default: the theme in config.jsonc for the current appearance.
           -o, --out <file>     Default: <panel>-<size>.png in this folder.
           --scale <1-4>        Pixels per point. Default: 2.
       new <name>               Make panels/<name>/ with a panel.jsonc and a script.

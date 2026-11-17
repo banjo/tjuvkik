@@ -86,6 +86,181 @@
       "type": "string",
       "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
       "description": "Working, highlights (#rgb, #rrggbb or #rrggbbaa)"
+    },
+    "material": {
+      "enum": [
+        "hud",
+        "popover",
+        "menu",
+        "sidebar",
+        "underWindow"
+      ],
+      "default": "hud",
+      "description": "The glass behind the tiles. Only matters while \"blur\" is on."
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Fonts. Unset: the system's.",
+      "properties": {
+        "family": {
+          "type": "string",
+          "description": "The font family for text, as Font Book lists it. One that isn't installed is a warning, and the system font is used."
+        },
+        "mono": {
+          "type": "string",
+          "description": "The font family for monospaced text, as Font Book lists it. One that isn't installed is a warning, and the system's monospaced font is used."
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.85,
+          "maximum": 1.25,
+          "default": 1,
+          "description": "Multiplies every text size."
+        }
+      }
+    },
+    "board": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Spacing on the board.",
+      "properties": {
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24,
+          "default": 10,
+          "description": "Space between tiles. The board's outer size doesn't change, so the tiles get bigger or smaller."
+        },
+        "inset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "default": 10,
+          "description": "Space around the tiles. The board's outer size doesn't change, so the tiles get bigger or smaller."
+        }
+      }
+    },
+    "tile": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How tiles are drawn.",
+      "properties": {
+        "border": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "default": 1,
+          "description": "The width of the tile's outline. 0: no outline."
+        },
+        "shadow": {
+          "type": "boolean",
+          "default": true,
+          "description": "Draw a shadow under each tile."
+        },
+        "padding": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 12,
+          "description": "Space inside a tile."
+        },
+        "header": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The tile's header.",
+          "properties": {
+            "uppercase": {
+              "type": "boolean",
+              "default": false,
+              "description": "Write titles in upper case."
+            },
+            "kind": {
+              "type": "boolean",
+              "default": true,
+              "description": "Show the type tag, like \"table\"."
+            },
+            "interval": {
+              "type": "boolean",
+              "default": true,
+              "description": "Show how often it runs, like \"every 1m\" or \"live\". \"stale\" always shows."
+            }
+          }
+        }
+      }
+    },
+    "tones": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per tone: the background drawn behind pills, highlighted rows and table rows with that tone. Unset: the tone's color, faded.",
+      "properties": {
+        "muted": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        },
+        "warning": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        },
+        "success": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        },
+        "info": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        },
+        "accent": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "description": "Background (#rgb, #rrggbb or #rrggbbaa)"
+            }
+          }
+        }
+      }
     }
   }
 }

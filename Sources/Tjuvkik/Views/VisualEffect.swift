@@ -6,10 +6,11 @@ import TjuvkikCore
 struct VisualEffect: NSViewRepresentable {
     var cornerRadius: CGFloat
     var appearance: Theme.Appearance
+    var material: Theme.Material
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .hudWindow
+        view.material = material.nsMaterial
         view.blendingMode = .behindWindow
         view.state = .active
         view.wantsLayer = true
@@ -21,5 +22,18 @@ struct VisualEffect: NSViewRepresentable {
     func updateNSView(_ view: NSVisualEffectView, context: Context) {
         view.layer?.cornerRadius = cornerRadius
         view.appearance = appearance.nsAppearance
+        view.material = material.nsMaterial
+    }
+}
+
+extension Theme.Material {
+    var nsMaterial: NSVisualEffectView.Material {
+        switch self {
+        case .hud: .hudWindow
+        case .popover: .popover
+        case .menu: .menu
+        case .sidebar: .sidebar
+        case .underWindow: .underWindowBackground
+        }
     }
 }

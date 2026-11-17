@@ -7,8 +7,11 @@ public struct Config: Equatable, Sendable {
 
     public var view: View
     public var layout: Layout
-    public var themeName: String
-    public var theme: Theme
+    /// The theme in light mode, and in dark mode. The same theme twice when config.jsonc names one.
+    public var lightThemeName: String
+    public var darkThemeName: String
+    public var lightTheme: Theme
+    public var darkTheme: Theme
     public var trigger: Trigger
     public var launchAtLogin: Bool
     public var tiles: [Tile]
@@ -18,6 +21,9 @@ public struct Config: Equatable, Sendable {
     public var pause = Pause()
     /// `notifications`: how panels' notifications are delivered.
     public var notifications = NotificationSettings()
+
+    public func theme(dark: Bool) -> Theme { dark ? darkTheme : lightTheme }
+    public func themeName(dark: Bool) -> String { dark ? darkThemeName : lightThemeName }
 
     /// When background runs stop.
     public struct Pause: Equatable, Sendable {

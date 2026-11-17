@@ -26,7 +26,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 |---|---|---|
 | `view` | `"bento"` | Only `bento` for now. |
 | `layout` | `"framed"` | Only `framed` for now. |
-| `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. See [Themes](themes.md). |
+| `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. Or `{ "light": …, "dark": … }` to follow the system's appearance. See [Themes](themes.md#light-and-dark). |
 | `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
 | `menuBar` | none | Tiles from `panels`, by id, to show in the menu bar: `"agents"` or `["agents", "github"]`. |

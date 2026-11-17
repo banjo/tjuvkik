@@ -29,7 +29,7 @@ struct ChecklistView: View {
             if let next = content.next {
                 label("Next")
                 Text(next.title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(theme.font(13, weight: .medium))
                     .foregroundStyle(Color(theme.text))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -37,13 +37,13 @@ struct ChecklistView: View {
             } else if let blocked = content.tasks.first(where: { $0.state == .blocked }) {
                 label("Blocked")
                 Text(blocked.title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(theme.font(13, weight: .medium))
                     .foregroundStyle(Color(theme.error))
                     .lineLimit(1)
                     .padding(.top, 2)
             } else if content.isComplete {
                 Text("All done")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(theme.font(13, weight: .medium))
                     .foregroundStyle(Color(theme.success))
                     .lineLimit(1)
             }
@@ -89,7 +89,7 @@ struct ChecklistView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             if let folded = content.foldedLine {
                 Text(folded)
-                    .font(.system(size: 11))
+                    .font(theme.font(11))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .lineLimit(1)
                     .padding(.top, 6)
@@ -104,12 +104,12 @@ struct ChecklistView: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(content.count)
-                .font(.system(size: 20, weight: .semibold).monospacedDigit())
+                .font(theme.font(20, weight: .semibold).monospacedDigit())
                 .foregroundStyle(Color(theme.text))
                 .fixedSize()
             if let caption = content.caption {
                 Text(caption)
-                    .font(.system(size: 11.5))
+                    .font(theme.font(11.5))
                     .foregroundStyle(Color(theme.secondaryText))
                     .truncationMode(.tail)
             }
@@ -136,7 +136,7 @@ struct ChecklistView: View {
 
     private func label(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.system(size: 10, weight: .semibold))
+            .font(theme.font(10, weight: .semibold))
             .tracking(0.6)
             .foregroundStyle(Color(theme.tertiaryText))
             .lineLimit(1)
@@ -145,7 +145,7 @@ struct ChecklistView: View {
 
     private func section(_ title: String, first: Bool) -> some View {
         Text(title.uppercased())
-            .font(.system(size: 10, weight: .semibold))
+            .font(theme.font(10, weight: .semibold))
             .tracking(0.6)
             .foregroundStyle(Color(theme.tertiaryText))
             .lineLimit(1)
@@ -160,14 +160,14 @@ struct ChecklistView: View {
             box(task.state).padding(.top, 1)
             VStack(alignment: .leading, spacing: 1) {
                 Text(task.title)
-                    .font(.system(size: 12.5))
+                    .font(theme.font(12.5))
                     .foregroundStyle(Color(finished ? theme.tertiaryText : theme.text))
                     .strikethrough(finished, color: ink.opacity(0.25))
                     .lineSpacing(2)
                     .lineLimit(2)
                 if let note = task.note {
                     Text(note)
-                        .font(.system(size: 11))
+                        .font(theme.font(11))
                         .foregroundStyle(Color(task.state == .blocked ? theme.error : theme.secondaryText))
                         .lineLimit(2)
                 }
@@ -175,7 +175,7 @@ struct ChecklistView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             if let who = task.who {
                 Text(who)
-                    .font(.system(size: 10.5))
+                    .font(theme.font(10.5))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .lineLimit(1)
                     .fixedSize()
@@ -193,16 +193,16 @@ struct ChecklistView: View {
             switch state {
             case .done:
                 shape.fill(Color(theme.success))
-                Text("✓").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.black.opacity(0.8))
+                Text("✓").font(theme.font(10, weight: .bold)).foregroundStyle(Color.black.opacity(0.8))
             case .doing:
                 shape.strokeBorder(Color(theme.accent), lineWidth: 1.5)
                 RoundedRectangle(cornerRadius: 2, style: .continuous).fill(Color(theme.accent)).frame(width: 7, height: 7)
             case .blocked:
                 shape.strokeBorder(Color(theme.error), lineWidth: 1.5)
-                Text("!").font(.system(size: 10, weight: .bold)).foregroundStyle(Color(theme.error))
+                Text("!").font(theme.font(10, weight: .bold)).foregroundStyle(Color(theme.error))
             case .skipped:
                 shape.strokeBorder(ink.opacity(0.18), lineWidth: 1.5)
-                Text("–").font(.system(size: 10, weight: .bold)).foregroundStyle(Color(theme.tertiaryText))
+                Text("–").font(theme.font(10, weight: .bold)).foregroundStyle(Color(theme.tertiaryText))
             case .todo:
                 shape.strokeBorder(ink.opacity(0.28), lineWidth: 1.5)
             }

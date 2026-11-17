@@ -7,13 +7,28 @@ import Foundation
 struct RawConfig: Decodable {
     var view: String?
     var layout: String?
-    var theme: String?
+    var theme: RawThemeChoice?
     var trigger: RawTrigger?
     var launchAtLogin: Bool?
     var menuBar: OneOrMany?
     var pause: RawPause?
     var notifications: RawNotifications?
     var panels: [RawPanelRef]?
+}
+
+/// `"theme"`: a name, or one for each appearance.
+enum RawThemeChoice: Decodable {
+    case one(String)
+    case pair(light: String?, dark: String?)
+
+    private struct Pair: Decodable { var light: String?; var dark: String? }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let name = try? container.decode(String.self) { self = .one(name) }
+        else if let pair = try? container.decode(Pair.self) { self = .pair(light: pair.light, dark: pair.dark) }
+        else { throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: #"expected a theme name, or { "light": …, "dark": … }"#)) }
+    }
 }
 
 /// A string or an array of strings.
@@ -164,4 +179,15 @@ struct RawTheme: Decodable {
     var success: String?
     var info: String?
     var accent: String?
+    var material: String?
+    var font: RawThemeFont?
+    var board: RawThemeBoard?
+    var tile: RawThemeTile?
+    var tones: [String: RawToneStyle]?
 }
+
+struct RawThemeFont: Decodable { var family: String?; var mono: String?; var scale: Double? }
+struct RawThemeBoard: Decodable { var gap: Double?; var inset: Double? }
+struct RawThemeTile: Decodable { var border: Double?; var shadow: Bool?; var padding: Double?; var header: RawThemeHeader? }
+struct RawThemeHeader: Decodable { var uppercase: Bool?; var kind: Bool?; var interval: Bool? }
+struct RawToneStyle: Decodable { var background: String? }

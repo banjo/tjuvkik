@@ -104,7 +104,7 @@ struct MarkdownView: View {
             VStack(alignment: .leading, spacing: 5.75) {
                 ForEach(Array(text.split(separator: "\n", omittingEmptySubsequences: false).enumerated()), id: \.offset) { _, line in
                     Text(line.isEmpty ? " " : String(line))
-                        .font(.system(size: 11.5, design: .monospaced))
+                        .font(theme.font(11.5, mono: true))
                         .foregroundStyle(tint ?? Color(theme.text))
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -142,7 +142,7 @@ struct MarkdownView: View {
         .padding(.vertical, 6)
         .padding(.horizontal, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(warning.opacity(0.12))
+        .background(theme.background(for: .warning, color: warning, opacity: 0.12))
         .overlay(alignment: .leading) { Rectangle().fill(warning).frame(width: 2) }
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous)))
     }
@@ -150,17 +150,17 @@ struct MarkdownView: View {
     @ViewBuilder private func marker(_ item: MarkdownListItem, tint: Color?) -> some View {
         if let checked = item.checked {
             Text(Image(systemName: checked ? "checkmark.square.fill" : "square"))
-                .font(.system(size: 11.5))
+                .font(theme.font(11.5))
                 .foregroundStyle(checked ? Color(theme.success) : (tint ?? Color(theme.tertiaryText)))
         } else {
             switch item.marker {
             case .bullet:
                 Text(item.depth == 0 ? "•" : "◦")
-                    .font(.system(size: 12.5))
+                    .font(theme.font(12.5))
                     .foregroundStyle(tint ?? Color(theme.tertiaryText))
             case .number(let number):
                 Text("\(number).")
-                    .font(.system(size: 12.5).monospacedDigit())
+                    .font(theme.font(12.5).monospacedDigit())
                     .foregroundStyle(tint ?? Color(theme.tertiaryText))
                     .lineLimit(1)
                     .fixedSize()
@@ -182,7 +182,7 @@ struct MarkdownView: View {
             failurePolicy: .returnPartiallyParsedIfPossible
         )
         var attributed = (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
-        attributed[AttributeScopes.SwiftUIAttributes.FontAttribute.self] = .system(size: size, weight: weight)
+        attributed[AttributeScopes.SwiftUIAttributes.FontAttribute.self] = theme.font(size, weight: weight)
         attributed[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = color
 
         var runs: [(range: Range<AttributedString.Index>, intent: InlinePresentationIntent, link: Bool)] = []
@@ -192,13 +192,13 @@ struct MarkdownView: View {
         for run in runs {
             let intent = run.intent
             if intent.contains(.code) {
-                attributed[run.range][AttributeScopes.SwiftUIAttributes.FontAttribute.self] = .system(size: size - 1, design: .monospaced)
+                attributed[run.range][AttributeScopes.SwiftUIAttributes.FontAttribute.self] = theme.font(size - 1, mono: true)
                 attributed[run.range][AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = tint ?? Color(theme.text)
                 attributed[run.range][AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] = Color(theme.well)
                 continue
             }
             if intent.contains(.stronglyEmphasized) || intent.contains(.emphasized) {
-                var font = Font.system(size: size, weight: intent.contains(.stronglyEmphasized) ? .semibold : weight)
+                var font = theme.font(size, weight: intent.contains(.stronglyEmphasized) ? .semibold : weight)
                 if intent.contains(.emphasized) { font = font.italic() }
                 attributed[run.range][AttributeScopes.SwiftUIAttributes.FontAttribute.self] = font
             }

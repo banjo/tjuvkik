@@ -44,12 +44,12 @@ struct ValueText: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Text(value)
-                .font(.system(size: size, weight: .semibold).monospacedDigit())
+                .font(theme.font(size, weight: .semibold).monospacedDigit())
                 .tracking(-0.02 * size)
                 .foregroundStyle(color ?? Color(theme.text))
             if let unit, !unit.isEmpty {
                 Text(unit)
-                    .font(.system(size: unitSize ?? (size * 0.5).rounded(), weight: .medium))
+                    .font(theme.font(unitSize ?? (size * 0.5).rounded(), weight: .medium))
                     .foregroundStyle(Color(theme.secondaryText))
             }
         }
@@ -70,13 +70,13 @@ struct DeltaLine: View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             if let delta {
                 Text(delta)
-                    .font(.system(size: deltaSize, weight: .medium).monospacedDigit())
+                    .font(theme.font(deltaSize, weight: .medium).monospacedDigit())
                     .foregroundStyle(theme.color(for: tone, default: theme.secondaryText))
                     .fixedSize()
             }
             if let vs {
                 Text(vs)
-                    .font(.system(size: vsSize))
+                    .font(theme.font(vsSize))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .truncationMode(.tail)
             }

@@ -39,7 +39,7 @@ struct FeedView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             if let title = entry.title {
                                 Text(title.uppercased())
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(theme.font(10, weight: .semibold))
                                     .tracking(0.6)
                                     .foregroundStyle(Color(theme.tertiaryText))
                                     .lineLimit(1)
@@ -56,7 +56,7 @@ struct FeedView: View {
     }
 
     private var empty: some View {
-        Text("Nothing yet").font(.system(size: 11.5)).foregroundStyle(Color(theme.tertiaryText))
+        Text("Nothing yet").font(theme.font(11.5)).foregroundStyle(Color(theme.tertiaryText))
     }
 
     /// The newest message, large, at the bottom of the tile, with who and when under it.
@@ -64,20 +64,20 @@ struct FeedView: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 0)
             Text(FeedMessage.text(item.text, theme: theme, boldSize: 14))
-                .font(.system(size: 14))
+                .font(theme.font(14))
                 .lineSpacing(3)
                 .foregroundStyle(Color(theme.text))
                 .lineLimit(4)
             HStack(spacing: 7) {
                 FeedAvatarView(item: item, diameter: 20, theme: theme)
                 Text([item.author, when].compactMap { $0 }.joined(separator: " · "))
-                    .font(.system(size: 11.5).monospacedDigit())
+                    .font(theme.font(11.5).monospacedDigit())
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 if more > 0 {
                     Text("+\(more)")
-                        .font(.system(size: 11.5).monospacedDigit())
+                        .font(theme.font(11.5).monospacedDigit())
                         .foregroundStyle(Color(theme.info))
                         .fixedSize()
                 }
@@ -123,20 +123,20 @@ private struct FeedRow: View {
                             Circle().fill(Color(theme.info)).frame(width: 6, height: 6)
                         }
                         who
-                            .font(.system(size: 12))
+                            .font(theme.font(12))
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Spacer(minLength: 4)
                         if let when {
                             Text(when)
-                                .font(.system(size: 10.5).monospacedDigit())
+                                .font(theme.font(10.5).monospacedDigit())
                                 .foregroundStyle(Color(theme.tertiaryText))
                                 .lineLimit(1)
                                 .fixedSize()
                         }
                     }
                     Text(FeedMessage.text(item.text, theme: theme, boldSize: 12))
-                        .font(.system(size: 12))
+                        .font(theme.font(12))
                         .lineSpacing(2)
                         .foregroundStyle(Color(theme.secondaryText))
                         .lineLimit(2)
@@ -165,7 +165,7 @@ private struct FeedAvatarView: View {
     var body: some View {
         if let icon = item.icon, !icon.isEmpty {
             Text(icon)
-                .font(.system(size: diameter * 0.5))
+                .font(theme.font(diameter * 0.5))
                 .frame(width: diameter, height: diameter)
                 .background(Color(theme.well), in: RoundedRectangle(cornerRadius: diameter * 0.27, style: .continuous))
         } else {
@@ -173,7 +173,7 @@ private struct FeedAvatarView: View {
             ZStack {
                 Circle().fill(theme.color(for: FeedAuthor.tone(name), default: theme.accent))
                 Text(FeedAuthor.initials(name))
-                    .font(.system(size: diameter * 0.4, weight: .semibold))
+                    .font(theme.font(diameter * 0.4, weight: .semibold))
                     .foregroundStyle(Color.black.opacity(0.85))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -203,7 +203,7 @@ private enum FeedMessage {
         }
         for run in attributed.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
             attributed[run.range][AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Color(theme.text)
-            attributed[run.range][AttributeScopes.SwiftUIAttributes.FontAttribute.self] = .system(size: boldSize, weight: .medium)
+            attributed[run.range][AttributeScopes.SwiftUIAttributes.FontAttribute.self] = theme.font(boldSize, weight: .medium)
         }
         return attributed
     }

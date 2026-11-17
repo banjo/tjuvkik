@@ -52,6 +52,50 @@ public struct Theme: Equatable, Sendable {
     public var info: RGBA
     public var accent: RGBA
     public var radius: Double
+    /// The glass behind the tiles, when `blur` is on.
+    public var material = Material.hud
+    public var font = Fonts()
+    public var board = Board()
+    public var tile = TileStyle()
+    /// Backgrounds for tones that set one. Others use the tone's color, faded.
+    public var toneBackgrounds: [Tone: RGBA] = [:]
+}
+
+extension Theme {
+    public enum Material: String, CaseIterable, Sendable { case hud, popover, menu, sidebar, underWindow }
+
+    public struct Fonts: Equatable, Sendable {
+        /// Nil: the system font.
+        public var family: String?
+        /// Nil: the system's monospaced font.
+        public var mono: String?
+        public var scale: Double = 1
+        public static let scales = 0.85...1.25
+
+        public init() {}
+    }
+
+    public struct Board: Equatable, Sendable {
+        public var gap: Double = 10
+        public var inset: Double = 10
+        public static let gaps = 0.0...24
+        public static let insets = 0.0...40
+
+        public init() {}
+    }
+
+    public struct TileStyle: Equatable, Sendable {
+        public var border: Double = 1
+        public var shadow = true
+        public var padding: Double = 12
+        public var uppercaseTitle = false
+        public var showKind = true
+        public var showInterval = true
+        public static let borders = 0.0...4
+        public static let paddings = 6.0...20
+
+        public init() {}
+    }
 }
 
 extension Theme {

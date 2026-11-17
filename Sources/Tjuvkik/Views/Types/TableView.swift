@@ -60,7 +60,7 @@ struct TableView: View {
             ForEach(Array(shown.enumerated()), id: \.offset) { position, index in
                 let column = content.columns[index]
                 Text(column.title.uppercased())
-                    .font(.system(size: Self.headerSize, weight: .semibold))
+                    .font(theme.font(Self.headerSize, weight: .semibold))
                     .tracking(0.6)
                     .foregroundStyle(Color(theme.tertiaryText))
                     .lineLimit(1)
@@ -82,7 +82,7 @@ struct TableView: View {
             .padding(.vertical, 5)
             .background {
                 if let tone = row.highlight {
-                    theme.color(for: tone, default: theme.text).opacity(0.08)
+                    theme.background(for: tone, color: theme.color(for: tone, default: theme.text), opacity: 0.08)
                 }
             }
         }
@@ -98,8 +98,8 @@ struct TableView: View {
             }
             Text(cell.text)
                 .font(column.mono
-                    ? .system(size: Self.monoSize, design: .monospaced)
-                    : .system(size: Self.cellSize).monospacedDigit())
+                    ? theme.font(Self.monoSize, mono: true)
+                    : theme.font(Self.cellSize).monospacedDigit())
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -118,9 +118,9 @@ struct TableView: View {
     private func needed(_ index: Int) -> CGFloat {
         let column = content.columns[index]
         let cellFont = column.mono
-            ? NSFont.monospacedSystemFont(ofSize: Self.monoSize, weight: .regular)
-            : NSFont.monospacedDigitSystemFont(ofSize: Self.cellSize, weight: .regular)
-        let headerFont = NSFont.systemFont(ofSize: Self.headerSize, weight: .semibold)
+            ? theme.nsFont(Self.monoSize, mono: true)
+            : theme.nsFont(Self.cellSize).monospacedDigits
+        let headerFont = theme.nsFont(Self.headerSize, weight: .semibold)
         let title = column.title.uppercased()
         var widest = measure(title, headerFont) + 0.6 * CGFloat(title.count)
         // The first rows are enough for an estimate, and keep this cheap for long tables.
