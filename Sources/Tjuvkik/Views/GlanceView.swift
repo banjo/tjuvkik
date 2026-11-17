@@ -10,24 +10,7 @@ struct GlanceView: View {
 
     var body: some View {
         let config = store.config
-        let theme = config.theme(dark: model.systemIsDark)
-        GeometryReader { geometry in
-            let board = theme.board
-            let cell = BentoGeometry.cell(in: geometry.size, board: board)
-            let gap = CGFloat(board.gap), inset = CGFloat(board.inset)
-            ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
-                if let slot = tile.slot {
-                    let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell, board: board)
-                    TileView(tile: tile, state: panels.states[tile.id], theme: theme, index: index, isVisible: model.isVisible)
-                        .frame(width: size.width, height: size.height)
-                        .position(
-                            x: inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,
-                            y: inset + (cell.height + gap) * CGFloat(slot.row) + size.height / 2
-                        )
-                }
-            }
-        }
-        .environment(\.colorScheme, theme.appearance.colorScheme)
+        BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible)
     }
 }
 

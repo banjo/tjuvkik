@@ -1,5 +1,7 @@
 # Config
 
+The settings window (Settings…, ⌘,) writes this file for you. It changes only the lines it needs to and keeps your comments, and it removes a setting that's back at its default. Anything it doesn't cover stays in the file as you wrote it.
+
 `~/.config/tjuvkik/config.jsonc`, with every setting at its default:
 
 ```jsonc

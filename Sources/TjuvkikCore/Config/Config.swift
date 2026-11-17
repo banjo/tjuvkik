@@ -68,6 +68,10 @@ public struct Tile: Equatable, Sendable {
     public var mode: Mode
     public var command: String
     public var title: String
+    /// From panel.jsonc, for the settings window.
+    public var description: String?
+    public var author: String?
+    public var version: String?
     public var size: TileSize
     /// Seconds between refreshes, for interval panels.
     public var every: Double

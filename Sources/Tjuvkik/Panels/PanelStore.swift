@@ -95,6 +95,22 @@ final class PanelStore {
         }
     }
 
+    /// Runs an interval tile now, whatever its schedule, or reads a file tile again. Not a stream tile.
+    func runNow(_ id: String) {
+        guard let environment, let tile = tiles.first(where: { $0.id == id }), let state = states[id], !state.running, !isBlocked(tile) else { return }
+        if let file = tile.file {
+            states[id]?.fileDate = nil
+            read(file, for: tile)
+        } else if tile.mode == .interval {
+            run(tile, environment: environment)
+        }
+    }
+
+    /// The tools a tile needs that aren't on the login PATH. Nil until that's known.
+    func missingTools(_ tile: Tile) -> [String]? {
+        environment?["PATH"].map { RequiredTools.missing(tile.requires, path: $0) }
+    }
+
     // MARK: Requirements
 
     @ObservationIgnored private var missing: [String: [String]] = [:]

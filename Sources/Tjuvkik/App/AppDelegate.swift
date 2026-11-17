@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let notifier = Notifier()
     private let trigger = GlanceTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
+    private lazy var settings = SettingsWindowController(model: SettingsModel(store: store, panels: panels))
     private var permissionPoll: Timer?
     private var terminationSignal: (any DispatchSourceSignal)?
     private var launchAtLoginError: String?
@@ -22,7 +23,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = item
 
         quitOnTerminationSignal()
-        trigger.onShow = { [glance] in glance.show() }
+        trigger.onShow = { [weak self] in
+            guard let self else { return }
+            glance.show()
+            settings.model.lastTriggered = Date()
+        }
         trigger.onHide = { [glance] in glance.hide() }
         store.onChange = { [weak self] config in self?.apply(config) }
         pause.onChange = { [weak self] in
@@ -34,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pause.start()
         store.start()
         notifier.onCommand = { [panels] command, id in panels.runAction(command, id: id) }
+        notifier.onPermissionChange = { [weak self] permission in self?.settings.model.notificationsDenied = permission == .denied }
         panels.onChange = { [weak self] id in
             guard let self, let tile = panels.tiles.first(where: { $0.id == id }), let state = panels.states[id] else { return }
             notifier.update(id: id, tile: tile, state: state, config: store.config, glanceOpen: panels.glanceOpen)
@@ -185,7 +191,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        menu.addItem(action: "Open Config", target: self, #selector(openConfig), key: ",")
+        menu.addItem(action: "Settings…", target: self, #selector(openSettings), key: ",")
+        menu.addItem(action: "Open Config", target: self, #selector(openConfig))
         menu.addItem(action: "Show Config Folder", target: self, #selector(showConfigFolder))
         menu.addItem(action: "Reload Config", target: self, #selector(reloadConfig), key: "r")
         menu.addItem(.separator())
@@ -241,6 +248,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openLoginItems() {
         LaunchAtLogin.openSettings()
+    }
+
+    @objc private func openSettings() {
+        notifier.refreshPermission()
+        settings.show()
     }
 
     @objc private func openConfig() {

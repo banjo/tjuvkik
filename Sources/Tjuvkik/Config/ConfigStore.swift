@@ -11,6 +11,8 @@ final class ConfigStore {
     private(set) var config = DefaultConfig.fallback
     private(set) var warnings: [ConfigIssue] = []
     private(set) var errors: [ConfigIssue] = []
+    /// Counts reloads, so the settings window reads the file again after each.
+    private(set) var revision = 0
 
     var onChange: (Config) -> Void = { _ in }
 
@@ -42,6 +44,7 @@ final class ConfigStore {
     }
 
     func reload() {
+        revision += 1
         fingerprint = ConfigFingerprint.of(directory)
         switch ConfigLoader.load(from: directory) {
         case .success(let loaded):
