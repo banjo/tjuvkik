@@ -18,4 +18,15 @@ Hold fn to glance, let go to close. fn with another key (fn+arrows, fn+F-keys) d
 
 No fn key, or using it for something else? Pick right ⌥, right ⌘ or a shortcut like ⌃⌥Space as the [trigger](config.md#trigger).
 
-On first start Tjuvkik writes a default config to `~/.config/tjuvkik/`. Next: [Config](config.md).
+## First start
+
+On first start Tjuvkik writes a default config to `~/.config/tjuvkik/` and opens a short setup, four steps you can each skip:
+
+1. **Trigger:** the key or shortcut, and hold, toggle or double tap. Try it right there.
+2. **Panels:** tick [starter panels](panels.md#starter-panels), with a miniature of your board.
+3. **Theme:** pick one from previews of your board.
+4. **Done:** launch at login, background runs and notifications. Done shows the glance once.
+
+Each step writes to `config.jsonc` straight away, so quitting halfway leaves a working config. "Set Up…" in the menu opens it again. A config folder that's already there, say from your dotfiles, skips it.
+
+Next: [Config](config.md).

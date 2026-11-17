@@ -160,6 +160,11 @@ public struct TriggerGesture: Sendable {
         }
     }
 
+    /// Shows without the trigger, as after setup. The next toggle or Esc hides it.
+    public mutating func open() -> [Effect] {
+        isShown ? [] : show()
+    }
+
     private mutating func show() -> [Effect] {
         isShown = true
         return [.show]

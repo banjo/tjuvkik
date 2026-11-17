@@ -106,6 +106,9 @@ final class PanelStore {
         }
     }
 
+    /// The login shell's PATH. Nil until it's loaded.
+    var loginPath: String? { environment?["PATH"] }
+
     /// The tools a tile needs that aren't on the login PATH. Nil until that's known.
     func missingTools(_ tile: Tile) -> [String]? {
         environment?["PATH"].map { RequiredTools.missing(tile.requires, path: $0) }

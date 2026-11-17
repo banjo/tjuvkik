@@ -1,0 +1,10 @@
+// Sample data: what a panel for coding agents can look like.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "description": "Sample data, to show what a panel can look like",
+  "type": "script",
+  "title": "Agents (demo)",
+  "command": "cat agents.json",
+  "every": "1h",
+  "size": "l",
+}

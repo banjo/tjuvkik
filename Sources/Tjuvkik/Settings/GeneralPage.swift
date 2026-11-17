@@ -117,8 +117,14 @@ private struct NotificationsSection: View {
     private func write(_ change: (inout NotificationSettings) -> Void) {
         var new = settings
         change(&new)
-        let quiet = new.quietHours.map { "\(Self.clock($0.start))-\(Self.clock($0.end))" }
-        model.change { try $0.setNotifications(enabled: new.enabled, sound: new.sound, quietHours: quiet, whileOpen: new.whileOpen) }
+        model.change { try $0.setNotifications(enabled: new.enabled, sound: new.sound, quietHours: new.quietHoursText, whileOpen: new.whileOpen) }
+    }
+}
+
+extension NotificationSettings {
+    /// `quietHours` as config.jsonc writes it: "22:00-07:00".
+    var quietHoursText: String? {
+        quietHours.map { "\(Self.clock($0.start))-\(Self.clock($0.end))" }
     }
 
     private static func clock(_ minutes: Int) -> String {

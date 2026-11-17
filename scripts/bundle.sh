@@ -12,6 +12,7 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp Resources/Info.plist "$app/Contents/"
 cp Resources/AppIcon.icns "$app/Contents/Resources/"
 cp -R schema "$app/Contents/Resources/schemas"
+cp -R starters "$app/Contents/Resources/starters"
 cp "$bin/Tjuvkik" "$app/Contents/MacOS/"
 
 codesign --force --options runtime --sign "Tjuvkik Dev" "$app"

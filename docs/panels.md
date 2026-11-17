@@ -147,7 +147,19 @@ A log that updates live:
 { "type": "cli", "mode": "stream", "title": "Server", "command": "tail -f /tmp/server.log", "size": "l" }
 ```
 
-More in [examples/panels](../examples/panels):
+More in the [starter panels](#starter-panels).
 
-- [`agents`](../examples/panels/agents): coding agents from [agent-watcher](https://github.com/banjo/dotfiles/tree/master/.config/agent-watcher), streamed.
-- [`github`](../examples/panels/github): pull requests waiting for your review, then yours.
+## Starter panels
+
+Tjuvkik ships a few panels to start from, in [starters/panels](../starters/panels). Picking one during setup copies its folder into `panels/`, unless a folder with that name is already there, and adds a tile. It's then yours to change.
+
+| Folder | Shows | Needs |
+|---|---|---|
+| `disk` | disk use (already in the default config) | nothing |
+| [`cpu-memory`](../starters/panels/cpu-memory) | CPU, memory and load, as `stats` | nothing |
+| [`battery`](../starters/panels/battery) | battery charge, as `meters` | a Mac with a battery |
+| [`github`](../starters/panels/github) | PRs waiting for your review, then yours | `gh`, `jq` |
+| [`demo-agents`](../starters/panels/demo-agents) | **sample** coding agents, as rows | nothing |
+| [`demo-slack`](../starters/panels/demo-slack) | **sample** Slack mentions, as a `feed` | nothing |
+
+The demos show sample data, to show what a panel can look like.
