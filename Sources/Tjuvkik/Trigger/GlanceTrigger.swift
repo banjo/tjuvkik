@@ -125,7 +125,7 @@ final class GlanceTrigger {
             shortcutDown = pressed
             switch trigger.mode {
             case .hold: send(pressed ? .triggerDown(otherModifiers: false) : .triggerUp)
-            case .toggle: if pressed { send(.toggle) }
+            case .toggle, .doubleTap: if pressed { send(.toggle) }
             }
         default:
             break
@@ -139,8 +139,9 @@ final class GlanceTrigger {
             switch effect {
             case .startTimer:
                 timer?.cancel()
-                timer = Task { [weak self, trigger] in
-                    try? await Task.sleep(for: .milliseconds(trigger.holdMilliseconds))
+                let milliseconds = trigger.mode == .doubleTap ? trigger.doubleTapMilliseconds : trigger.holdMilliseconds
+                timer = Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(milliseconds))
                     guard !Task.isCancelled else { return }
                     self?.send(.timerFired)
                 }
@@ -149,7 +150,7 @@ final class GlanceTrigger {
                 timer = nil
             case .show:
                 // Esc hides a toggled glance. It's only taken while the glance shows.
-                if trigger.mode == .toggle { _ = hotKeys.register(Self.escapeID, keyCode: UInt32(kVK_Escape), modifiers: 0) }
+                if trigger.mode != .hold { _ = hotKeys.register(Self.escapeID, keyCode: UInt32(kVK_Escape), modifiers: 0) }
                 onShow()
             case .hide:
                 hotKeys.unregister(Self.escapeID)

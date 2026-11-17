@@ -31,6 +31,7 @@ struct RawTrigger: Decodable {
     var shortcut: String?
     var mode: String?
     var holdMs: Int?
+    var doubleTapMs: Int?
 }
 
 struct RawPause: Decodable {

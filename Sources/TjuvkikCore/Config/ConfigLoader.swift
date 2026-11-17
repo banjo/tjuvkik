@@ -127,16 +127,28 @@ public enum ConfigLoader {
         }
         if let value = raw.mode {
             if let mode = Trigger.Mode(rawValue: value) { trigger.mode = mode } else {
-                files.error(file, "trigger.mode", "unknown mode \"\(value)\", expected \"hold\" or \"toggle\"")
+                files.error(file, "trigger.mode", "unknown mode \"\(value)\", expected \"hold\", \"toggle\" or \"doubleTap\"")
             }
+        }
+        if trigger.mode == .doubleTap, case .shortcut = trigger.input {
+            files.error(file, "trigger.mode", "\"doubleTap\" only works with \"key\"")
         }
         if let value = raw.holdMs {
             if !(50...2000).contains(value) {
                 files.error(file, "trigger.holdMs", "must be between 50 and 2000, got \(value)")
-            } else if trigger.mode == .toggle {
+            } else if trigger.mode != .hold {
                 files.warning(file, "trigger.holdMs", "only applies with \"mode\": \"hold\"")
             } else {
                 trigger.holdMilliseconds = value
+            }
+        }
+        if let value = raw.doubleTapMs {
+            if !(150...600).contains(value) {
+                files.error(file, "trigger.doubleTapMs", "must be between 150 and 600, got \(value)")
+            } else if trigger.mode != .doubleTap {
+                files.warning(file, "trigger.doubleTapMs", "only applies with \"mode\": \"doubleTap\"")
+            } else {
+                trigger.doubleTapMilliseconds = value
             }
         }
         return trigger

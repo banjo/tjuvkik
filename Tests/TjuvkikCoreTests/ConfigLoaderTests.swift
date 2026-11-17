@@ -225,7 +225,23 @@ struct ConfigLoaderTests {
             #"config.json: trigger.key: caps lock can't be held, macOS locks it on press: map it to F18 and set "shortcut": "F18""#,
         ])
         #expect(error(#"{ "shortcut": "space" }"#) == [#"config.json: trigger.shortcut: needs ⌃, ⌥ or ⌘, so it doesn't take a key you type"#])
-        #expect(error(#"{ "mode": "press" }"#) == [#"config.json: trigger.mode: unknown mode "press", expected "hold" or "toggle""#])
+        #expect(error(#"{ "mode": "press" }"#) == [#"config.json: trigger.mode: unknown mode "press", expected "hold", "toggle" or "doubleTap""#])
+        #expect(error(#"{ "shortcut": "F18", "mode": "doubleTap" }"#) == [#"config.json: trigger.mode: "doubleTap" only works with "key""#])
+        #expect(error(#"{ "mode": "doubleTap", "doubleTapMs": 100 }"#) == ["config.json: trigger.doubleTapMs: must be between 150 and 600, got 100"])
+    }
+
+    @Test func triggerDoubleTap() throws {
+        #expect(try trigger(#"{ "mode": "doubleTap" }"#) == Trigger(input: .key(.fn), mode: .doubleTap))
+        #expect(try trigger(#"{ "key": "rightCommand", "mode": "doubleTap", "doubleTapMs": 400 }"#)
+            == Trigger(input: .key(.rightCommand), mode: .doubleTap, doubleTapMilliseconds: 400))
+    }
+
+    @Test func triggerDoubleTapWarnings() throws {
+        func warnings(_ json: String) throws -> [String] {
+            try load(["config.json": #"{ "trigger": "# + json + " }"]).warnings.map(\.description)
+        }
+        #expect(try warnings(#"{ "doubleTapMs": 300 }"#) == [#"config.json: trigger.doubleTapMs: only applies with "mode": "doubleTap""#])
+        #expect(try warnings(#"{ "mode": "doubleTap", "holdMs": 300 }"#) == [#"config.json: trigger.holdMs: only applies with "mode": "hold""#])
     }
 
     // MARK: Background

@@ -100,6 +100,102 @@ struct TriggerGestureTests {
         #expect(g.handle(.dismiss) == [.hide])
         #expect(g.handle(.dismiss) == [])
     }
+
+    // MARK: Double tap
+
+    private let d = TriggerGesture.Event.triggerDown(otherModifiers: false)
+    private let u = TriggerGesture.Event.triggerUp
+
+    @Test func doubleTapShowsAndHides() {
+        var g = TriggerGesture(mode: .doubleTap)
+        #expect(g.handle(d) == [.startTimer])
+        #expect(g.handle(u) == [])
+        #expect(g.handle(d) == [.cancelTimer, .show])
+        #expect(g.handle(u) == [])
+        #expect(g.isShown)
+        #expect(g.handle(d) == [.startTimer])
+        #expect(g.handle(u) == [])
+        #expect(g.handle(d) == [.cancelTimer, .hide])
+    }
+
+    @Test func singleTapDoesNothing() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        #expect(g.handle(.timerFired) == [])
+        #expect(!g.isShown)
+        #expect(g.handle(d) == [.startTimer])
+    }
+
+    @Test func slowSecondTapStartsOver() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        _ = g.handle(.timerFired)
+        #expect(g.handle(d) == [.startTimer])
+    }
+
+    @Test func heldFirstPressDoesNotCount() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        #expect(g.handle(.timerFired) == [])
+        #expect(g.handle(u) == [])
+        #expect(g.handle(d) == [.startTimer])
+        _ = g.handle(u)
+        #expect(g.handle(d) == [.cancelTimer, .show])
+    }
+
+    @Test func keyBetweenTapsCancels() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        #expect(g.handle(.otherKey) == [.cancelTimer])
+        #expect(g.handle(d) == [.startTimer])
+    }
+
+    @Test func modifierOnSecondPressCancels() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        #expect(g.handle(.triggerDown(otherModifiers: true)) == [.cancelTimer])
+        #expect(g.handle(u) == [])
+        #expect(!g.isShown)
+    }
+
+    @Test func keyDuringFirstPressCancels() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        #expect(g.handle(.otherKey) == [.cancelTimer])
+        #expect(g.handle(u) == [])
+        #expect(g.handle(d) == [.startTimer])
+    }
+
+    @Test func doubleTapKeysDontHideAndEscDoes() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        #expect(g.handle(.otherKey) == [])
+        #expect(g.isShown)
+        #expect(g.handle(.dismiss) == [.hide])
+        #expect(g.handle(.dismiss) == [])
+    }
+
+    @Test func holdingSecondPressKeepsShowing() {
+        var g = TriggerGesture(mode: .doubleTap)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        _ = g.handle(d)
+        #expect(g.handle(.timerFired) == [])
+        #expect(g.handle(u) == [])
+        #expect(g.isShown)
+    }
+
+    @Test func doubleTapIgnoresToggle() {
+        var g = TriggerGesture(mode: .doubleTap)
+        #expect(g.handle(.toggle) == [])
+    }
 }
 
 struct TriggerKeyTests {
@@ -128,6 +224,7 @@ struct TriggerKeyTests {
     @Test func instructions() {
         #expect(Trigger.fn.instruction == "Hold fn")
         #expect(Trigger(input: .key(.rightOption), mode: .toggle).instruction == "Tap right ⌥")
+        #expect(Trigger(input: .key(.fn), mode: .doubleTap).instruction == "Double-tap fn")
         let shortcut = try! Shortcut.parse("ctrl+opt+space").get()
         #expect(Trigger(input: .shortcut(shortcut), mode: .toggle).instruction == "Press ⌃⌥Space")
         #expect(Trigger(input: .shortcut(shortcut), mode: .hold).instruction == "Hold ⌃⌥Space")

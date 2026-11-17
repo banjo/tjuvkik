@@ -147,6 +147,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(action: "Allow Input Monitoring…", target: self, #selector(openInputMonitoring))
         } else {
             menu.addItem(disabled: "\(trigger.trigger.instruction) to glance")
+            if case .key(.fn) = trigger.trigger.input, trigger.trigger.mode == .doubleTap {
+                menu.addItem(disabled: "If double-tapping fn starts dictation, change its shortcut")
+                menu.addItem(action: "Open Keyboard Settings…", target: self, #selector(openKeyboardSettings))
+            }
         }
         if let reason = pause.reason {
             menu.addItem(disabled: "Background runs paused: \(reason.rawValue)", symbol: "pause.circle")
@@ -193,6 +197,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openInputMonitoring() {
         InputMonitoring.openSettings()
+    }
+
+    @objc private func openKeyboardSettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")!)
     }
 
     @objc private func openNotificationSettings() {

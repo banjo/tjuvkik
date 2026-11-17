@@ -50,8 +50,17 @@ Or press a shortcut:
 
 - `key`: `fn`, `rightOption`, `rightCommand`, `rightControl` or `rightShift`. Pressed with another key or modifier, it doesn't open the glance, so fn+arrows and ⌥+letters still work. Needs Input Monitoring.
 - `shortcut`: `"⌃⌥Space"`, `"ctrl+option+space"`, `"cmd+shift+g"`. It needs ⌃, ⌥ or ⌘, except F1–F20, which work alone. Keys are named by their place on a US keyboard. Tjuvkik takes the shortcut from other apps, and needs no permission for it. If another app already has it, the menu says so.
-- `mode`: `hold` shows the glance while you hold, `toggle` shows it on a tap or press and hides it on the next one or Esc. A key holds by default, a shortcut toggles.
+- `mode`: `hold` shows the glance while you hold, `toggle` shows it on a tap or press and hides it on the next one or Esc. `doubleTap`: two taps of the key, the second within `doubleTapMs`, show the glance; two more or Esc hide it. A single tap does nothing. Keys only. A key holds by default, a shortcut toggles.
 - `holdMs`: how long to hold before the glance shows, 50–2000. Default 250. Only with `hold`.
+- `doubleTapMs`: how soon the second tap must follow the first, 150–600. Default 300. Only with `doubleTap`.
+
+Or double-tap a key:
+
+```jsonc
+"trigger": { "key": "rightCommand", "mode": "doubleTap" }
+```
+
+With fn, macOS may start dictation on a double tap. Change the dictation shortcut in System Settings → Keyboard → Dictation, or use another key.
 
 Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks it on press. To use it, map it to F18 (with [hidutil](https://developer.apple.com/library/archive/technotes/tn2450/) or Karabiner-Elements) and set `"shortcut": "F18"`.
 
