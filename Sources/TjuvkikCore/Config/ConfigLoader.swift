@@ -149,6 +149,11 @@ public enum ConfigLoader {
         return names.filter { !$0.hasPrefix(".") && ConfigFiles.locate(ConfigFiles.panel($0), in: directory) != nil }.sorted()
     }
 
+    /// The themes in `themes/`, by name, sorted.
+    public static func themeNames(in directory: URL) -> [String] {
+        ConfigFiles(directory: directory).themeNames()
+    }
+
     /// A built-in theme or one in `themes/`, resolved as `config.jsonc`'s `theme` would be.
     public static func theme(_ name: String, in directory: URL) -> Result<Theme, ConfigErrors> {
         var resolver = ThemeResolver(files: ConfigFiles(directory: directory))
@@ -329,6 +334,7 @@ public enum ConfigLoader {
         guard !files.issues[start...].contains(where: { $0.severity == .error }), let kind, let every, let timeout else { return nil }
         return Tile(
             id: id, panel: name, declaredOptions: declared, options: options, kind: kind, mode: mode, command: command, title: ref.title ?? raw.title ?? name,
+            description: raw.description, author: raw.author, version: raw.version,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
             directory: files.directory.appending(path: "panels/\(name)"), content: content,
             history: history, file: source, background: background, show: show, notify: notify

@@ -7,7 +7,10 @@ import TjuvkikCore
 final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     enum Permission { case unknown, granted, denied }
 
-    private(set) var permission = Permission.unknown
+    private(set) var permission = Permission.unknown {
+        didSet { if permission != oldValue { onPermissionChange(permission) } }
+    }
+    var onPermissionChange: (Permission) -> Void = { _ in }
     /// Runs a clicked notification's command: `(command, tile id)`.
     var onCommand: (String, String) -> Void = { _, _ in }
 

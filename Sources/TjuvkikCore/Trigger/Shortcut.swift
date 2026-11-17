@@ -66,6 +66,13 @@ public struct Shortcut: Equatable, Sendable, CustomStringConvertible {
         return .success(Shortcut(modifiers: modifiers, keyCode: code, key: name))
     }
 
+    /// How a key code is written in a shortcut, like "Space" or "G". Nil for keys a shortcut can't use.
+    public static func name(forKeyCode code: UInt32) -> String? {
+        if let (_, name) = named.values.first(where: { $0.0 == code }) { return name }
+        if let index = functionKeys.firstIndex(of: code) { return "F\(index + 1)" }
+        return characters.first { $0.value == code }.map { String($0.key).uppercased() }
+    }
+
     private static let modifierWords: [String: Modifiers] = [
         "ctrl": .control, "control": .control, "⌃": .control,
         "opt": .option, "option": .option, "alt": .option, "⌥": .option,
