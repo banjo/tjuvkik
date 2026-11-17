@@ -75,6 +75,23 @@ final class SettingsModel {
         store.reload()
     }
 
+    /// Copies a starter's folder into panels/ unless one with that name is there, then adds a tile.
+    func addStarter(_ starter: Starter) {
+        guard let source = Starters.directory?.appending(path: "panels/\(starter.name)") else { return }
+        let panels = store.directory.appending(path: "panels")
+        let target = panels.appending(path: starter.name)
+        if !FileManager.default.fileExists(atPath: target.path) {
+            do {
+                try FileManager.default.createDirectory(at: panels, withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: source, to: target)
+            } catch {
+                writeError = "Couldn't copy \(starter.name) to panels/: \(error.localizedDescription)"
+                return
+            }
+        }
+        change { try $0.addTile(panel: starter.name) }
+    }
+
     /// The entries in config.jsonc, empty while it can't be parsed.
     var entries: [ConfigEditor.Entry] { editor?.entries() ?? [] }
 }

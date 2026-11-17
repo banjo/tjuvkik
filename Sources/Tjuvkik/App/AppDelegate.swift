@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let trigger = GlanceTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
     private lazy var settings = SettingsWindowController(model: SettingsModel(store: store, panels: panels))
+    private lazy var onboarding = OnboardingWindowController(model: settings.model)
     private var permissionPoll: Timer?
     private var terminationSignal: (any DispatchSourceSignal)?
     private var launchAtLoginError: String?
@@ -37,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             panels.refreshDue()
         }
         pause.start()
+        let firstRun = !FileManager.default.fileExists(atPath: store.directory.path)
         store.start()
         notifier.onCommand = { [panels] command, id in panels.runAction(command, id: id) }
         notifier.onPermissionChange = { [weak self] permission in self?.settings.model.notificationsDenied = permission == .denied }
@@ -55,6 +57,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateIcon()
         observeMenuBarPanel()
         observeErrors()
+        onboarding.onDone = { [weak self] in self?.showGlanceOnce() }
+        if firstRun {
+            onboarding.ticksStarters = true
+            onboarding.show()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -191,6 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        menu.addItem(action: "Set Up…", target: self, #selector(openOnboarding))
         menu.addItem(action: "Settings…", target: self, #selector(openSettings), key: ",")
         menu.addItem(action: "Open Config", target: self, #selector(openConfig))
         menu.addItem(action: "Show Config Folder", target: self, #selector(showConfigFolder))
@@ -253,6 +261,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openSettings() {
         notifier.refreshPermission()
         settings.show()
+    }
+
+    @objc private func openOnboarding() {
+        onboarding.show()
+    }
+
+    /// After setup: the board, without holding anything. A held trigger shows it for 3 seconds,
+    /// others until the next trigger or Esc.
+    private func showGlanceOnce() {
+        guard store.config.trigger.mode == .hold else { return trigger.open() }
+        glance.show()
+        Task { [glance] in
+            try? await Task.sleep(for: .seconds(3))
+            glance.hide()
+        }
     }
 
     @objc private func openConfig() {

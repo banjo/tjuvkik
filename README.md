@@ -9,7 +9,7 @@ scripts/create-cert.sh   # once
 scripts/bundle.sh --open # build, install and start
 ```
 
-Turn on Input Monitoring when asked, then hold fn. Config lives in `~/.config/tjuvkik/`.
+A short setup picks your trigger, [starter panels](starters/panels) and theme. Turn on Input Monitoring when asked, then hold fn. Config lives in `~/.config/tjuvkik/`.
 
 ## Docs
 

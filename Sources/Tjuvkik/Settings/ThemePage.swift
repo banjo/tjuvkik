@@ -11,10 +11,7 @@ struct ThemePage: View {
         let config = model.store.config
         let directory = model.store.directory
         let files = ConfigLoader.themeNames(in: directory)
-        let names = Theme.builtIn.keys.sorted() + files.filter { Theme.builtIn[$0] == nil }
-        let themes = names.map { name in
-            (name: name, result: Theme.builtIn[name].map { Result<Theme, ConfigErrors>.success($0) } ?? ConfigLoader.theme(name, in: directory))
-        }
+        let themes = Self.themes(in: directory)
         let pair = config.lightThemeName != config.darkThemeName
         let current = config.themeName(dark: colorScheme == .dark)
         return Form {
@@ -70,9 +67,18 @@ struct ThemePage: View {
         }
         .formStyle(.grouped)
     }
+
+    /// The built-in themes, then the ones in themes/.
+    static func themes(in directory: URL) -> [(name: String, result: Result<Theme, ConfigErrors>)] {
+        let files = ConfigLoader.themeNames(in: directory)
+        let names = Theme.builtIn.keys.sorted() + files.filter { Theme.builtIn[$0] == nil }
+        return names.map { name in
+            (name: name, result: Theme.builtIn[name].map { Result<Theme, ConfigErrors>.success($0) } ?? ConfigLoader.theme(name, in: directory))
+        }
+    }
 }
 
-private struct ThemeGrid: View {
+struct ThemeGrid: View {
     let model: SettingsModel
     let themes: [(name: String, result: Result<Theme, ConfigErrors>)]
     let selected: String

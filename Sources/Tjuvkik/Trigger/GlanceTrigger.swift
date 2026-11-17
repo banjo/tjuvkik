@@ -134,8 +134,17 @@ final class GlanceTrigger {
 
     // MARK: Gesture
 
+    /// Shows the glance as a toggle would, so the next trigger or Esc hides it.
+    func open() {
+        perform(gesture.open())
+    }
+
     private func send(_ event: TriggerGesture.Event) {
-        for effect in gesture.handle(event) {
+        perform(gesture.handle(event))
+    }
+
+    private func perform(_ effects: [TriggerGesture.Effect]) {
+        for effect in effects {
             switch effect {
             case .startTimer:
                 timer?.cancel()

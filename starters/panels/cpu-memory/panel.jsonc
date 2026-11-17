@@ -1,0 +1,11 @@
+// CPU, memory and load. Uses only tools that come with macOS.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "description": "CPU, memory and load average",
+  "type": "stats",
+  "title": "CPU & Memory",
+  "command": "./cpu-memory.sh",
+  "every": "10s",
+  "timeout": "8s",
+  "size": "m",
+}

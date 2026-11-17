@@ -2,6 +2,17 @@ import Testing
 @testable import TjuvkikCore
 
 struct TriggerGestureTests {
+    @Test func openShowsUntilTheNextToggleOrEsc() {
+        var g = TriggerGesture(mode: .toggle)
+        #expect(g.open() == [.show])
+        #expect(g.open() == [])
+        #expect(g.handle(.toggle) == [.hide])
+
+        var d = TriggerGesture(mode: .doubleTap)
+        #expect(d.open() == [.show])
+        #expect(d.handle(.dismiss) == [.hide])
+    }
+
     @Test func holdShowsAndReleaseHides() {
         var g = TriggerGesture()
         #expect(g.handle(.triggerDown(otherModifiers: false)) == [.startTimer])

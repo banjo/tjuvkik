@@ -124,7 +124,7 @@ Sources/
 Tests/TjuvkikCoreTests/
 schema/config.schema.json
 scripts/bundle.sh          build, assemble Tjuvkik.app, sign, install to ~/Applications
-examples/panels/           github/ (gh script panel), example cli panels
+starters/panels/           panels to start from: cpu-memory, battery, github, demos
 design/prototype.html
 ```
 
@@ -171,7 +171,7 @@ Done when changing `theme` or `panels` in the file updates the panel within a se
 3. `ScriptModule` (decodes the JSON above) and `CLIModule` (text, ANSI stripped, as many lines as fit).
 4. Tile placement on the grid (dense packing is done in Phase 2, `BentoPacking`).
 5. `TileView`: header (title, kind tag, interval or "live", stale marker), then the content renderer: hero, progress bar, rows (icon, title, subtitle, trailing, tone), or monospace text. Rows that don't fit are cut, not scrolled.
-6. Example panel `examples/panels/github/` (`panel.jsonc` + `github.sh` using `gh`: review requests and your open PRs).
+6. Example panel `starters/panels/github/` (`panel.jsonc` + `github.sh` using `gh`: review requests and your open PRs).
 7. Tests: script output decoding, runner timeout and output cap, layout packing.
 
 Done when the GitHub script tile and a `kubectl`/`git status` CLI tile render and refresh, and a failing command shows its error.
@@ -183,7 +183,7 @@ Agents aren't built in: agent-watcher is a script in dotfiles, and there's no sh
 1. agent-watcher got `list --json`, every session with state, icon, place, title, `since`, key, ID and what a blocked session waits for, and `--watch`, which prints a new line on each change.
 2. Panels got `"mode": "stream"`: the command keeps running, and each line is a new JSON document (script) or output line (cli). Restarted with backoff when it exits.
 3. Rows got `group`, `note` (the waiting text under ❓ rows) and a `summary` line of chips.
-4. `examples/panels/agents/` streams agent-watcher through `agents.jq`.
+4. An agents panel streams agent-watcher through `agents.jq` (kept in dotfiles, not in this repo).
 5. Panels got metadata (`description`, `author`, `version`) and `requires`, checked on PATH.
 
 ## Phase 5: Polish and ship

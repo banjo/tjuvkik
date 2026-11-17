@@ -1,0 +1,10 @@
+// Sample data: what a panel for Slack mentions can look like.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "description": "Sample data, to show what a panel can look like",
+  "type": "feed",
+  "title": "Slack (demo)",
+  "command": "./slack.sh",
+  "every": "1m",
+  "size": "m",
+}

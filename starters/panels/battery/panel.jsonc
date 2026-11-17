@@ -1,0 +1,11 @@
+// The battery's charge. Uses only tools that come with macOS.
+{
+  "$schema": "../../schemas/panel.schema.json",
+  "description": "The battery's charge",
+  "type": "meters",
+  "title": "Battery",
+  "command": "./battery.sh",
+  "every": "1m",
+  "timeout": "8s",
+  "size": "s",
+}

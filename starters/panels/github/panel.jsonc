@@ -1,6 +1,8 @@
 // Pull requests waiting for your review, then your own open ones. Needs `gh` (logged in) and `jq`.
 {
   "$schema": "../../schemas/panel.schema.json",
+  "description": "Pull requests waiting for your review, then your own",
+  "requires": ["gh", "jq"],
   "type": "script",
   "title": "GitHub",
   "command": "./github.sh",
