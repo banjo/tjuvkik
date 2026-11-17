@@ -66,6 +66,15 @@ With fn, macOS may start dictation on a double tap. Change the dictation shortcu
 
 Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks it on press. To use it, map it to F18 (with [hidutil](https://developer.apple.com/library/archive/technotes/tn2450/) or Karabiner-Elements) and set `"shortcut": "F18"`.
 
+### Pinning
+
+- In `hold` mode, click the glance or press Space while you hold to keep it open after you let go.
+- `toggle` and `doubleTap` stay open on their own.
+- Esc, the trigger again, a click outside, or switching Space or app closes it.
+- With right ⌘, ⌘Space may belong to Spotlight, so click instead.
+
+The glance takes clicks whenever it's open, but never takes keyboard focus from the app in front.
+
 ## Panels
 
 ```jsonc

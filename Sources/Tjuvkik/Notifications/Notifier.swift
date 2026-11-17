@@ -13,6 +13,8 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     var onPermissionChange: (Permission) -> Void = { _ in }
     /// Runs a clicked notification's command: `(command, tile id)`.
     var onCommand: (String, String) -> Void = { _, _ in }
+    /// A clicked notification with neither a command nor a url: opens the glance, pinned.
+    var onOpenGlance: () -> Void = {}
 
     private let center: UNUserNotificationCenter?
     // Per tile, by id, replaced on each update and removed with the tile.
@@ -178,6 +180,8 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
                 self?.onCommand(command, id)
             } else if !url.isEmpty, let link = URL(string: url) {
                 NSWorkspace.shared.open(link)
+            } else {
+                self?.onOpenGlance()
             }
         }
         completionHandler()

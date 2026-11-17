@@ -26,7 +26,7 @@ A script prints `notify` next to its content, with any [content type](script-out
 
 - A notification is sent the first time its `id` shows up in the panel's output, and withdrawn from Notification Center when the `id` is gone. An `id` that stays shows nothing new.
 - The first output a panel gives after Tjuvkik starts, or after its config changes, sends nothing: what's already there counts as seen. Only what's new after that is sent.
-- Clicking runs its `command` or opens its `url`. With neither, it does nothing.
+- Clicking runs its `command` or opens its `url`. With neither, it opens the glance, pinned.
 
 ## A panel's `notify`
 

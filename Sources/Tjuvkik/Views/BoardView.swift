@@ -13,6 +13,9 @@ struct BoardView: View {
     /// Outlined with the accent color.
     var selected: String?
     var onSelect: ((String) -> Void)?
+    /// Set by the glance: what a row's click does, and each tile's right-click menu.
+    var onAction: ((Tile, RowAction) -> Void)?
+    var menu: ((Tile) -> TileMenu)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -22,7 +25,8 @@ struct BoardView: View {
             ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
                 if let slot = tile.slot {
                     let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell, board: board)
-                    TileView(tile: tile, state: states[tile.id], theme: theme, index: index, isVisible: isVisible, solid: solid)
+                    TileView(tile: tile, state: states[tile.id], theme: theme, index: index, isVisible: isVisible, solid: solid,
+                             onAction: onAction.map { onAction in { onAction(tile, $0) } }, menu: menu?(tile))
                         .frame(width: size.width, height: size.height)
                         .overlay {
                             if selected == tile.id {
@@ -33,7 +37,7 @@ struct BoardView: View {
                         }
                         .contentShape(Rectangle())
                         .onTapGesture { onSelect?(tile.id) }
-                        .allowsHitTesting(onSelect != nil)
+                        .allowsHitTesting(onSelect != nil || onAction != nil || menu != nil)
                         .position(
                             x: inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,
                             y: inset + (cell.height + gap) * CGFloat(slot.row) + size.height / 2

@@ -7,11 +7,22 @@ struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
     let panels: PanelStore
+    let onAction: (Tile, RowAction) -> Void
+    let menu: (Tile) -> TileMenu
 
     var body: some View {
         let config = store.config
-        BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible)
+        BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible,
+                  onAction: onAction, menu: menu)
     }
+}
+
+/// A tile's right-click menu in the glance.
+struct TileMenu {
+    var runNow: () -> Void = {}
+    var openConfig: () -> Void = {}
+    var showInFinder: () -> Void = {}
+    var openSettings: () -> Void = {}
 }
 
 /// One panel: its header, its content and its last error. `solid` draws the background without
@@ -23,6 +34,9 @@ struct TileView: View {
     let index: Int
     let isVisible: Bool
     var solid = false
+    /// Set by the glance, where rows with a `url` or `command` click.
+    var onAction: ((RowAction) -> Void)?
+    var menu: TileMenu?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -98,6 +112,8 @@ struct TileView: View {
         .opacity(isVisible ? 1 : 0)
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)
         .animation(.easeOut(duration: 0.22).delay(Double(index) * 0.03), value: isVisible)
+        .environment(\.performRow, onAction)
+        .tileMenu(menu)
     }
 
     @ViewBuilder private var content: some View {
@@ -132,6 +148,22 @@ struct TileView: View {
             if state?.error == nil {
                 Text("Loading…").font(theme.font(11.5)).foregroundStyle(Color(theme.tertiaryText))
             }
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder func tileMenu(_ menu: TileMenu?) -> some View {
+        if let menu {
+            contextMenu {
+                Button("Run Now", action: menu.runNow)
+                Button("Open panel.jsonc", action: menu.openConfig)
+                Button("Show in Finder", action: menu.showInFinder)
+                Divider()
+                Button("Settings…", action: menu.openSettings)
+            }
+        } else {
+            self
         }
     }
 }

@@ -117,6 +117,7 @@ private struct TimelineStrip: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
                 .frame(width: boxWidth, height: max(height - 8, 0))
+                .clickable(RowAction(url: item.event.url, command: item.event.command), theme: theme, radius: 5)
                 .offset(x: x, y: 4)
             }
             if let now = snapshot.nowPosition {
@@ -219,6 +220,7 @@ private struct TimelineAgenda: View {
                     let boxHeight = max(height * (item.to - item.from) - 2, 20)
                     event(item, short: boxHeight < 34)
                         .frame(width: max(laneWidth - (item.lanes > 1 ? 2 : 0), 0), height: boxHeight)
+                        .clickable(RowAction(url: item.event.url, command: item.event.command), theme: theme)
                         .offset(x: gutter + laneWidth * CGFloat(item.lane), y: top)
                 }
                 if let now = snapshot.nowPosition {
