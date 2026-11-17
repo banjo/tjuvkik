@@ -124,6 +124,7 @@ private struct RowView: View {
             }
         }
         .padding(.vertical, 4)
+        .clickable(RowAction(url: row.url, command: row.command), theme: theme)
     }
 }
 

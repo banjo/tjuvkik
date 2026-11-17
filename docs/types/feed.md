@@ -31,7 +31,7 @@ Each item:
 | `where` | Where it was said, after the author: `#dsp-spark`, `DM`, `logbook #1284`. |
 | `time` | When it was said. ISO 8601 (`2026-11-16T13:12:00Z`, or `2026-11-16T14:12` in your time zone) or a Unix timestamp. Shown relative: `now`, `5m`, `2h`, `Sun` within the week, `12 Nov`. Anything else is shown as is. |
 | `unread` | `true` puts a dot before the author. |
-| `url` | What the item opens. |
+| `url` | Opened when the item is clicked in the glance. Closes the glance. |
 
 When every item has a `time`, the tile shows the newest first; otherwise it keeps your order. Relative times update every minute between runs.
 

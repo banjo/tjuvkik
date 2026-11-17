@@ -243,8 +243,8 @@ final class PanelStore {
 
     // MARK: Actions
 
-    /// Runs a row's command, like the menu's. A failure shows on the panel's tile until it next
-    /// updates.
+    /// Runs a row's command, like the menu's, then the tile, so it shows the result. A failure
+    /// shows on the panel's tile until it next updates.
     func runAction(_ command: String, id: String) {
         guard let environment, let tile = tiles.first(where: { $0.id == id }) else { return }
         Task {
@@ -253,6 +253,7 @@ final class PanelStore {
                 states[id]?.error = "\(command): \(result.failureSummary(timeout: 30))"
                 onChange(id)
             }
+            runNow(id)
         }
     }
 

@@ -6,7 +6,7 @@ import SwiftUI
 @MainActor
 final class OnboardingWindowController: NSObject, NSWindowDelegate {
     let model: SettingsModel
-    /// Called after Done closes the window, to show the glance once.
+    /// Called after Done closes the window, to open the glance, pinned.
     var onDone: () -> Void = {}
     /// Set on first start: the panels step ticks the starters it starts with, once.
     var ticksStarters = false

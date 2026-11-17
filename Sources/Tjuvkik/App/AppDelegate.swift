@@ -26,10 +26,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         quitOnTerminationSignal()
         trigger.onShow = { [weak self] in
             guard let self else { return }
-            glance.show()
+            glance.show(sticky: trigger.trigger.mode != .hold)
             settings.model.lastTriggered = Date()
         }
         trigger.onHide = { [glance] in glance.hide() }
+        trigger.onPin = { [glance] in glance.stick() }
+        glance.onMouseDown = { [trigger] in trigger.pin() }
+        // Hiding always goes through the gesture, so its state stays right.
+        glance.onDismiss = { [trigger] in trigger.dismiss() }
+        glance.onRowAction = { [weak self] tile, action in self?.perform(action, in: tile) }
+        glance.tileMenu = { [weak self] tile in self?.menu(for: tile) ?? TileMenu() }
         store.onChange = { [weak self] config in self?.apply(config) }
         pause.onChange = { [weak self] in
             guard let self else { return }
@@ -41,6 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let firstRun = !FileManager.default.fileExists(atPath: store.directory.path)
         store.start()
         notifier.onCommand = { [panels] command, id in panels.runAction(command, id: id) }
+        notifier.onOpenGlance = { [trigger] in trigger.open() }
         notifier.onPermissionChange = { [weak self] permission in self?.settings.model.notificationsDenied = permission == .denied }
         panels.onChange = { [weak self] id in
             guard let self, let tile = panels.tiles.first(where: { $0.id == id }), let state = panels.states[id] else { return }
@@ -57,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateIcon()
         observeMenuBarPanel()
         observeErrors()
-        onboarding.onDone = { [weak self] in self?.showGlanceOnce() }
+        onboarding.onDone = { [trigger] in trigger.open() }
         if firstRun {
             onboarding.ticksStarters = true
             onboarding.show()
@@ -267,15 +274,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         onboarding.show()
     }
 
-    /// After setup: the board, without holding anything. A held trigger shows it for 3 seconds,
-    /// others until the next trigger or Esc.
-    private func showGlanceOnce() {
-        guard store.config.trigger.mode == .hold else { return trigger.open() }
-        glance.show()
-        Task { [glance] in
-            try? await Task.sleep(for: .seconds(3))
-            glance.hide()
+    // MARK: Glance
+
+    /// A clicked row: a command runs and the glance stays to show its result, a link opens and
+    /// the glance closes. A command wins over a url, as in the menu.
+    private func perform(_ action: RowAction, in tile: Tile) {
+        if let command = action.command, !command.isEmpty {
+            panels.runAction(command, id: tile.id)
+        } else if let url = action.url, let link = URL(string: url) {
+            NSWorkspace.shared.open(link)
+            trigger.dismiss()
         }
+    }
+
+    private func menu(for tile: Tile) -> TileMenu {
+        TileMenu(
+            runNow: { [panels] in panels.runNow(tile.id) },
+            openConfig: { [store, trigger] in
+                trigger.dismiss()
+                let directory = store.directory
+                let file = ConfigFiles.locate(ConfigFiles.panel(tile.panel), in: directory) ?? "\(ConfigFiles.panel(tile.panel)).jsonc"
+                NSWorkspace.shared.open(directory.appending(path: file))
+            },
+            showInFinder: { [trigger] in
+                trigger.dismiss()
+                NSWorkspace.shared.activateFileViewerSelecting([tile.directory])
+            },
+            openSettings: { [weak self] in
+                guard let self else { return }
+                trigger.dismiss()
+                openSettings()
+            }
+        )
     }
 
     @objc private func openConfig() {

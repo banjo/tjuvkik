@@ -86,6 +86,7 @@ struct TableView: View {
                 }
             }
         }
+        .clickable(RowAction(url: row.url, command: row.command), theme: theme)
     }
 
     private func cell(_ cell: TableContent.Cell, _ column: TableContent.Column) -> some View {

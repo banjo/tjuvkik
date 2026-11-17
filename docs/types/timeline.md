@@ -47,7 +47,8 @@ Each event:
 | `end` | A time. Without one, the event is a moment. |
 | `subtitle` | After the time, like a room or `Teams`. |
 | `tone` | The event's color. `accent` when not set. |
-| `url`, `command` | Kept for later: the tile doesn't open them yet. |
+| `url` | Opened when the event is clicked in the glance. Closes the glance. |
+| `command` | Run when the event is clicked in the glance, in the panel's folder. Wins over `url`. Keeps the glance open and runs the panel again, so the tile shows the result. |
 
 ## Times
 

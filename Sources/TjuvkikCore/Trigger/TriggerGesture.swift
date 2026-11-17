@@ -1,7 +1,9 @@
 /// Turns the trigger's key events into show and hide.
 ///
 /// Hold: holding the trigger alone for the hold time shows the glance, letting go hides it. Any
-/// other key or modifier while it's down cancels, so fn+arrows and ⌥+letters never flash it.
+/// other key or modifier while it's down cancels, so fn+arrows and ⌥+letters never flash it. A
+/// click or Space while it shows pins it: releasing no longer hides it, and the trigger again, Esc
+/// or a dismissal does.
 ///
 /// Toggle: tapping the trigger alone shows or hides the glance, and so does a shortcut's press.
 /// A key or another modifier during the tap cancels it. Esc hides.
@@ -22,6 +24,10 @@ public struct TriggerGesture: Sendable {
         case toggle
         /// Esc, while the glance shows.
         case dismiss
+        /// A click in the glance, or Space while it's held: keep it open after the trigger is released.
+        case pin
+        /// Open it pinned from outside the trigger, like a notification click.
+        case open
     }
 
     public enum Effect: Equatable, Sendable {
@@ -29,6 +35,7 @@ public struct TriggerGesture: Sendable {
         case cancelTimer
         case show
         case hide
+        case pinned
     }
 
     enum Press: Equatable {
@@ -44,6 +51,7 @@ public struct TriggerGesture: Sendable {
     public let mode: Trigger.Mode
     private(set) var press = Press.idle
     public private(set) var isShown = false
+    public private(set) var isPinned = false
 
     public init(mode: Trigger.Mode = .hold) {
         self.mode = mode
@@ -58,6 +66,20 @@ public struct TriggerGesture: Sendable {
     }
 
     private mutating func hold(_ event: Event) -> [Effect] {
+        if isPinned {
+            switch event {
+            case .triggerDown:
+                press = .cancelled
+                return hide()
+            case .triggerUp:
+                press = .idle
+                return []
+            case .dismiss:
+                return hide()
+            default:
+                return []
+            }
+        }
         switch (event, press) {
         case (.triggerDown(let otherModifiers), .idle):
             press = otherModifiers ? .cancelled : .pending
@@ -86,6 +108,15 @@ public struct TriggerGesture: Sendable {
         case (.triggerUp, _):
             press = .idle
             return hide()
+
+        case (.pin, .held):
+            isPinned = true
+            return [.pinned]
+        case (.pin, _):
+            return []
+        case (.open, _):
+            isPinned = true
+            return isShown ? [.pinned] : show() + [.pinned]
         }
     }
 
@@ -114,6 +145,11 @@ public struct TriggerGesture: Sendable {
             return isShown ? hide() : show()
         case (.dismiss, _):
             return hide()
+
+        case (.pin, _):
+            return []
+        case (.open, _):
+            return isShown ? [] : show()
         }
     }
 
@@ -157,12 +193,12 @@ public struct TriggerGesture: Sendable {
 
         case (.dismiss, _):
             return hide()
-        }
-    }
 
-    /// Shows without the trigger, as after setup. The next toggle or Esc hides it.
-    public mutating func open() -> [Effect] {
-        isShown ? [] : show()
+        case (.pin, _):
+            return []
+        case (.open, _):
+            return isShown ? [] : show()
+        }
     }
 
     private mutating func show() -> [Effect] {
@@ -172,6 +208,7 @@ public struct TriggerGesture: Sendable {
 
     /// Hides, if shown.
     private mutating func hide() -> [Effect] {
+        isPinned = false
         guard isShown else { return [] }
         isShown = false
         return [.hide]

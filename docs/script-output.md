@@ -79,8 +79,8 @@ Each row:
 | `tone` | Colors the row. |
 | `group` | A heading over each run of rows with the same group. |
 | `note` | A line under the row in its tone, for what needs you. |
-| `url` | Opened when the row is picked in the menu. |
-| `command` | Run when the row is picked in the menu, in the panel's folder. Wins over `url`. |
+| `url` | Opened when the row is clicked in the glance or picked in the menu. Closes the glance. |
+| `command` | Run when the row is clicked in the glance or picked in the menu, in the panel's folder. Wins over `url`. Keeps the glance open and runs the panel again, so the tile shows the result. |
 
 ## Menu bar
 

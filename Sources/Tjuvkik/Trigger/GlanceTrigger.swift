@@ -12,6 +12,7 @@ import TjuvkikCore
 final class GlanceTrigger {
     var onShow: () -> Void = {}
     var onHide: () -> Void = {}
+    var onPin: () -> Void = {}
 
     private(set) var trigger = Trigger.fn
     private var gesture = TriggerGesture()
@@ -25,6 +26,7 @@ final class GlanceTrigger {
 
     private static let shortcutID: UInt32 = 1
     private static let escapeID: UInt32 = 2
+    private static let spaceID: UInt32 = 3
 
     /// True when the trigger is watched: a key once Input Monitoring is granted, a shortcut once
     /// it's registered.
@@ -107,7 +109,13 @@ final class GlanceTrigger {
         case .flagsChanged:
             send(key.event(keyCode: keyCode, flags: flags.rawValue))
         case .keyDown:
-            send(.otherKey)
+            // Space pins a held glance. The hot key that keeps it from the app in front only
+            // swallows it after this tap has seen it.
+            if keyCode == Int64(kVK_Space), gesture.isShown, trigger.mode == .hold {
+                send(.pin)
+            } else {
+                send(.otherKey)
+            }
         default:
             break
         }
@@ -119,6 +127,8 @@ final class GlanceTrigger {
         switch id {
         case Self.escapeID:
             if pressed { send(.dismiss) }
+        case Self.spaceID:
+            if pressed { send(.pin) }
         case Self.shortcutID:
             // A held shortcut repeats its press.
             guard pressed != shortcutDown else { return }
@@ -134,17 +144,15 @@ final class GlanceTrigger {
 
     // MARK: Gesture
 
-    /// Shows the glance as a toggle would, so the next trigger or Esc hides it.
-    func open() {
-        perform(gesture.open())
-    }
+    /// A click in the glance.
+    func pin() { send(.pin) }
+    /// A click outside it, or a Space or app switch.
+    func dismiss() { send(.dismiss) }
+    /// Opens it pinned, for a notification click or after setup.
+    func open() { send(.open) }
 
     private func send(_ event: TriggerGesture.Event) {
-        perform(gesture.handle(event))
-    }
-
-    private func perform(_ effects: [TriggerGesture.Effect]) {
-        for effect in effects {
+        for effect in gesture.handle(event) {
             switch effect {
             case .startTimer:
                 timer?.cancel()
@@ -160,11 +168,30 @@ final class GlanceTrigger {
             case .show:
                 // Esc hides a toggled glance. It's only taken while the glance shows.
                 if trigger.mode != .hold { _ = hotKeys.register(Self.escapeID, keyCode: UInt32(kVK_Escape), modifiers: 0) }
+                // Space pins a held glance. If it's taken, a click still does.
+                if trigger.mode == .hold { _ = hotKeys.register(Self.spaceID, keyCode: UInt32(kVK_Space), modifiers: spaceModifiers) }
                 onShow()
+            case .pinned:
+                hotKeys.unregister(Self.spaceID)
+                _ = hotKeys.register(Self.escapeID, keyCode: UInt32(kVK_Escape), modifiers: 0)
+                onPin()
             case .hide:
                 hotKeys.unregister(Self.escapeID)
+                hotKeys.unregister(Self.spaceID)
                 onHide()
             }
+        }
+    }
+
+    /// The trigger's own modifier, held while Space is pressed.
+    private var spaceModifiers: UInt32 {
+        switch trigger.input {
+        case .key(.fn): 0
+        case .key(.rightOption): UInt32(optionKey)
+        case .key(.rightCommand): UInt32(cmdKey)
+        case .key(.rightControl): UInt32(controlKey)
+        case .key(.rightShift): UInt32(shiftKey)
+        case .shortcut(let shortcut): shortcut.carbonModifiers
         }
     }
 }

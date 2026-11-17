@@ -25,7 +25,7 @@ On first start Tjuvkik writes a default config to `~/.config/tjuvkik/` and opens
 1. **Trigger:** the key or shortcut, and hold, toggle or double tap. Try it right there.
 2. **Panels:** tick [starter panels](panels.md#starter-panels), with a miniature of your board.
 3. **Theme:** pick one from previews of your board.
-4. **Done:** launch at login, background runs and notifications. Done shows the glance once.
+4. **Done:** launch at login, background runs and notifications. Done opens the glance, pinned, until Esc, the trigger, a click outside or switching app.
 
 Each step writes to `config.jsonc` straight away, so quitting halfway leaves a working config. "Set Up…" in the menu opens it again. A config folder that's already there, say from your dotfiles, skips it.
 

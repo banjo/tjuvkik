@@ -4,6 +4,8 @@ A panel is a folder in `panels/` with a `panel.jsonc`. Add it to `panels` in [co
 
 A panel placed on the board is a tile. One panel can be placed many times, each tile with its own `id`, title and [options](#options).
 
+Right-click a tile in the glance to run it now, open its `panel.jsonc`, show its folder in Finder, or open Settings.
+
 `panels/<name>/panel.jsonc`, with every setting:
 
 ```jsonc

@@ -43,8 +43,8 @@ Each row:
 |---|---|
 | `cells` | Required. One per column, in column order. A row can also be just its cells: `["5173", "vite"]`. |
 | `highlight` | `true` tints the row in the error tone, or give a tone: `"warning"`. |
-| `url` | Opened when the row is picked. |
-| `command` | Run when the row is picked, in the panel's folder. Wins over `url`. |
+| `url` | Opened when the row is clicked in the glance. Closes the glance. |
+| `command` | Run when the row is clicked in the glance, in the panel's folder. Wins over `url`. Keeps the glance open and runs the panel again, so the tile shows the result. |
 
 Each cell is text, a number, or an object:
 

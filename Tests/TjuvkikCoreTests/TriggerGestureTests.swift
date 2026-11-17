@@ -2,15 +2,89 @@ import Testing
 @testable import TjuvkikCore
 
 struct TriggerGestureTests {
-    @Test func openShowsUntilTheNextToggleOrEsc() {
-        var g = TriggerGesture(mode: .toggle)
-        #expect(g.open() == [.show])
-        #expect(g.open() == [])
-        #expect(g.handle(.toggle) == [.hide])
+    /// Held and shown, then pinned.
+    private func pinned() -> TriggerGesture {
+        var g = TriggerGesture()
+        _ = g.handle(d)
+        #expect(g.handle(.timerFired) == [.show])
+        #expect(g.handle(.pin) == [.pinned])
+        #expect(g.isPinned)
+        return g
+    }
 
-        var d = TriggerGesture(mode: .doubleTap)
-        #expect(d.open() == [.show])
-        #expect(d.handle(.dismiss) == [.hide])
+    @Test func pinWhileHeldKeepsItOpen() {
+        var g = pinned()
+        #expect(g.handle(u) == [])
+        #expect(g.isShown)
+        #expect(g.handle(.otherKey) == [])
+        #expect(g.handle(.modifiersChanged) == [])
+        #expect(g.isShown)
+    }
+
+    @Test func triggerClosesAPinnedGlance() {
+        var g = pinned()
+        _ = g.handle(u)
+        #expect(g.handle(d) == [.hide])
+        #expect(g.handle(u) == [])
+        #expect(!g.isShown)
+        #expect(!g.isPinned)
+    }
+
+    @Test func pinBeforeItShowsDoesNothing() {
+        var g = TriggerGesture()
+        _ = g.handle(d)
+        #expect(g.handle(.pin) == [])
+        #expect(g.handle(.timerFired) == [.show])
+        #expect(g.handle(u) == [.hide])
+    }
+
+    @Test func dismissClosesAPinnedGlance() {
+        var g = pinned()
+        _ = g.handle(u)
+        #expect(g.handle(.dismiss) == [.hide])
+        #expect(!g.isPinned)
+    }
+
+    @Test func pinResetsOnHide() {
+        var g = pinned()
+        _ = g.handle(u)
+        _ = g.handle(d)
+        _ = g.handle(u)
+        _ = g.handle(d)
+        #expect(g.handle(.timerFired) == [.show])
+        #expect(g.handle(u) == [.hide])
+    }
+
+    @Test func openFromOutsideWhileHidden() {
+        var g = TriggerGesture()
+        #expect(g.handle(.open) == [.show, .pinned])
+        #expect(g.isPinned)
+        #expect(g.handle(d) == [.hide])
+        #expect(g.handle(u) == [])
+    }
+
+    @Test func openFromOutsideWhilePeeking() {
+        var g = TriggerGesture()
+        _ = g.handle(d)
+        _ = g.handle(.timerFired)
+        #expect(g.handle(.open) == [.pinned])
+        #expect(g.handle(u) == [])
+        #expect(g.isShown)
+    }
+
+    @Test func toggleOpensButNeverPins() {
+        var g = TriggerGesture(mode: .toggle)
+        #expect(g.handle(.pin) == [])
+        #expect(g.handle(.open) == [.show])
+        #expect(g.handle(.open) == [])
+        #expect(g.handle(.toggle) == [.hide])
+    }
+
+    @Test func doubleTapOpensButNeverPins() {
+        var g = TriggerGesture(mode: .doubleTap)
+        #expect(g.handle(.pin) == [])
+        #expect(g.handle(.open) == [.show])
+        #expect(g.handle(.dismiss) == [.hide])
     }
 
     @Test func holdShowsAndReleaseHides() {
