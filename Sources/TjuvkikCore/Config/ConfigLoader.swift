@@ -48,10 +48,11 @@ public enum ConfigLoader {
         var tiles = refs.enumerated().compactMap { index, ref in
             tile(ref, path: "panels[\(index)]", config: file, files: &files)
         }
-        let slots = BentoPacking.pack(tiles.map(\.size))
-        for index in tiles.indices {
-            tiles[index].slot = slots[index]
-            if slots[index] == nil {
+        let shown = tiles.indices.filter { tiles[$0].show }
+        let slots = BentoPacking.pack(shown.map { tiles[$0].size })
+        for (position, index) in shown.enumerated() {
+            tiles[index].slot = slots[position]
+            if slots[position] == nil {
                 files.warning(file, "panels[\(index)]", "\"\(tiles[index].panel)\" doesn't fit on the 4×3 grid and is left out")
             }
         }
@@ -61,16 +62,18 @@ public enum ConfigLoader {
             let path = raw.menuBar.map { $0.values.count == 1 ? "menuBar" : "menuBar[\(index)]" } ?? "menuBar"
             if !refs.contains(where: { $0.panel == name }) {
                 files.error(file, path, "\"\(name)\" isn't in panels")
-            } else if let tile = tiles.first(where: { $0.panel == name }), tile.slot == nil {
+            } else if let tile = tiles.first(where: { $0.panel == name }), tile.show, tile.slot == nil {
                 files.warning(file, path, "\"\(name)\" doesn't fit on the grid, so it doesn't run")
             }
         }
 
+        let pause = Config.Pause(whenLocked: raw.pause?.whenLocked ?? true, onLowPower: raw.pause?.onLowPower ?? true)
         let errors = files.issues.filter { $0.severity == .error }
         guard errors.isEmpty, let theme else { return .failure(ConfigErrors(issues: errors)) }
         let config = Config(
             view: view, layout: layout, themeName: themeName, theme: theme,
-            trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar
+            trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
+            pause: pause
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }
@@ -226,22 +229,47 @@ public enum ConfigLoader {
         let every = interval(raw.every, default: 60, minimum: minimumInterval, file: file, path: "every", files: &files)
         let timeout = interval(raw.timeout, default: 10, minimum: 0.1, file: file, path: "timeout", files: &files)
 
+        var background = Tile.Background.same
+        if let value = raw.background, let parsed = Self.background(value, file: file, path: "background", files: &files) { background = parsed }
+        if let value = ref.background, let parsed = Self.background(value, file: config, path: at("background"), files: &files) { background = parsed }
+        if mode == .stream || source != nil {
+            if ref.background != nil {
+                files.warning(config, at("background"), "only applies to interval panels that run a command")
+            } else if raw.background != nil {
+                files.warning(file, "background", "only applies to interval panels that run a command")
+            }
+        }
+        let show = ref.show ?? true
+        if !show, background == .off {
+            files.warning(config, at("show"), "\"\(name)\" is hidden and doesn't run in the background, so it never runs")
+        }
+
         let requires = raw.requires ?? []
         for (index, tool) in requires.enumerated() where tool.isEmpty || tool.contains("/") {
             files.error(file, "requires[\(index)]", "\"\(tool)\" isn't a command name")
         }
 
-        guard files.issues.count == start, let kind, let every, let timeout else { return nil }
+        guard !files.issues[start...].contains(where: { $0.severity == .error }), let kind, let every, let timeout else { return nil }
         return Tile(
             panel: name, kind: kind, mode: mode, command: command, title: raw.title ?? name,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
             directory: files.directory.appending(path: "panels/\(name)"), content: content,
-            history: history, file: source
+            history: history, file: source, background: background, show: show
         )
     }
 
     private static func sizeMessage(_ value: String) -> String {
         "unknown size \"\(value)\", expected \"s\", \"m\", \"l\" or \"xl\""
+    }
+
+    /// A `background` value, or nil when it's broken (with an error).
+    private static func background(_ raw: RawBackground, file: String, path: String, files: inout ConfigFiles) -> Tile.Background? {
+        switch raw {
+        case .flag(true): .same
+        case .flag(false): .off
+        case .duration(let text):
+            interval(text, default: 0, minimum: minimumInterval, file: file, path: path, files: &files).map { .every($0) }
+        }
     }
 
     private static func interval(_ text: String?, default value: Double, minimum: Double, file: String, path: String, files: inout ConfigFiles) -> Double? {

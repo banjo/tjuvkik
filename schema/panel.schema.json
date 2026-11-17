@@ -92,6 +92,23 @@
       "default": "10s",
       "description": "How long an interval panel's command may run."
     },
+    "background": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$"
+        }
+      ],
+      "default": true,
+      "examples": [
+        "5m",
+        false
+      ],
+      "description": "How often an interval panel runs while the glance is closed. true: every `every`. false: only while you glance. At least 5s."
+    },
     "size": {
       "enum": [
         "s",

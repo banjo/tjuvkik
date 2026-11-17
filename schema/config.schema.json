@@ -107,6 +107,23 @@
         ]
       ]
     },
+    "pause": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "When panels stop running in the background. The glance always runs them.",
+      "properties": {
+        "whenLocked": {
+          "type": "boolean",
+          "default": true,
+          "description": "While the screen is locked or the displays sleep."
+        },
+        "onLowPower": {
+          "type": "boolean",
+          "default": true,
+          "description": "While Low Power Mode is on."
+        }
+      }
+    },
     "panels": {
       "type": "array",
       "description": "Panels fill a 4×3 grid in order.",
@@ -129,6 +146,28 @@
               "xl"
             ],
             "description": "Size here; overrides the panel's own. s 1×1, m 2×1, l 2×2, xl 2×3"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\s*[0-9.]+\\s*(ms|s|m|h)\\s*$"
+              }
+            ],
+            "default": true,
+            "examples": [
+              "5m",
+              false
+            ],
+            "description": "How often an interval panel runs while the glance is closed. true: every `every`. false: only while you glance. At least 5s. Overrides the panel's own."
+          },
+          "show": {
+            "type": "boolean",
+            "default": true,
+            "description": "false: the panel runs, for the menu bar, but has no spot on the grid."
           }
         }
       }
