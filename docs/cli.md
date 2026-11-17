@@ -28,7 +28,7 @@ Exits 1 on errors, so it works in CI for a dotfiles repo. Warnings don't fail it
 tjuvkik run <panel> [--raw]
 ```
 
-Runs the panel as the app does: in its folder, with your login shell's `PATH`, `TJUVKIK_PANEL` set and its `timeout`. Then it says what the tile shows, or why it shows an error:
+Runs the panel as the app does: in its folder, with your login shell's `PATH`, with `TJUVKIK_PANEL` and `TJUVKIK_RUN=cli` set and its `timeout`. Then it says what the tile shows, or why it shows an error:
 
 ```
 prs: table, ran in 0.84s
