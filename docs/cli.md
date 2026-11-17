@@ -25,10 +25,17 @@ Exits 1 on errors, so it works in CI for a dotfiles repo. Warnings don't fail it
 ## run
 
 ```sh
-tjuvkik run <panel> [--raw]
+tjuvkik run <tile|panel> [--raw] [--option key=value]...
 ```
 
-Runs the panel as the app does: in its folder, with your login shell's `PATH`, with `TJUVKIK_PANEL` and `TJUVKIK_RUN=cli` set and its `timeout`. Then it says what the tile shows, or why it shows an error:
+Takes a tile's id from `config.jsonc` or a panel's folder name. A tile on the board runs with its [options](panels.md#options); anything else is a panel with its option defaults. `--option key=value` sets an option and wins over both; repeat it for more.
+
+```sh
+tjuvkik run ci-app                               # the tile's options
+tjuvkik run ci --option repo=banjo/tjuvkik       # the folder, with an option
+```
+
+Runs the panel as the app does: in its folder, with your login shell's `PATH`, with `TJUVKIK_PANEL`, `TJUVKIK_ID`, the option variables and `TJUVKIK_RUN=cli` set and its `timeout`. Then it says what the tile shows, or why it shows an error:
 
 ```
 prs: table, ran in 0.84s
@@ -40,10 +47,14 @@ prs: table, ran in 0.84s
 ## preview
 
 ```sh
-tjuvkik preview <panel> [--size s|m|l|xl] [--theme <name>] [-o <file>] [--scale <1-4>]
+tjuvkik preview <tile|panel> [--size s|m|l|xl] [--theme <name>] [-o <file>] [--scale <1-4>] [--option key=value]...
 ```
 
-Runs the panel and renders its tile to a PNG, at its size on the largest board, with a transparent background. The size defaults to the one `config.jsonc` gives the panel, else the panel's own; the theme to the one in `config.jsonc`. The file defaults to `<panel>-<size>.png` in the current folder. Blur isn't rendered, so the tile's background is drawn solid.
+```sh
+tjuvkik preview ci-dots --option limit=3
+```
+
+Runs the panel and renders its tile to a PNG, at its size on the largest board, with a transparent background. Like `run`, it takes a tile's id or a panel's name, and `--option`. The size defaults to the one `config.jsonc` gives the tile, else the panel's own; the theme to the one in `config.jsonc`. The file defaults to `<panel>-<size>.png` in the current folder. Blur isn't rendered, so the tile's background is drawn solid.
 
 A failed run renders the tile with its error, and exits 1.
 

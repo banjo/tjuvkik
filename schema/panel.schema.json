@@ -168,6 +168,56 @@
       "examples": [
         "~/notes/today.md"
       ]
+    },
+    "options": {
+      "type": "object",
+      "description": "Settings the panel takes from config.jsonc. The command gets each as TJUVKIK_OPTION_<NAME> and all of them as JSON in TJUVKIK_OPTIONS.",
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "A label for forms. Default: the option's name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "default": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Every tile of this panel must set it."
+          },
+          "enum": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "The allowed values of a string option."
+          }
+        }
+      }
     }
   },
   "if": {

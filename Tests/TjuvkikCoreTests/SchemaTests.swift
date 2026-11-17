@@ -51,6 +51,9 @@ struct SchemaTests {
         #expect(enumValues(panel["type"]) == Set(Tile.Kind.allCases.map(\.rawValue) + ContentType.allCases.map(\.rawValue)))
         #expect(enumValues(panel["mode"]) == Set(Tile.Mode.allCases.map(\.rawValue)))
         #expect(enumValues(panel["size"]) == Set(TileSize.allCases.map(\.rawValue)))
+        let option = panel["options"]?["additionalProperties"]
+        #expect(Set(properties(option).keys) == keys(RawOption()))
+        #expect(enumValues(properties(option)["type"]) == Set(PanelOption.Kind.allCases.map(\.rawValue)))
     }
 
     @Test func themeSchema() throws {

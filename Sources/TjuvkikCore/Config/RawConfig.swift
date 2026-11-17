@@ -89,10 +89,13 @@ struct RawNotifySettings: Decodable {
 /// An entry in `config.jsonc`'s `panels`: which panel, and optionally its size here.
 struct RawPanelRef: Decodable {
     var panel: String?
+    var id: String?
+    var title: String?
     var size: String?
     var background: RawBackground?
     var show: Bool?
     var notify: RawNotify?
+    var options: [String: RawOptionValue]?
 }
 
 /// `panels/<name>/panel.jsonc`
@@ -112,6 +115,36 @@ struct RawPanel: Decodable {
     var file: String?
     var background: RawBackground?
     var notify: RawNotify?
+    var options: [String: RawOption]?
+}
+
+/// An option's value as written: anything, so a wrong type gets a message with its path.
+enum RawOptionValue: Decodable {
+    case value(OptionValue)
+    /// "null", "an array" or "an object".
+    case other(String)
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() { self = .other("null") }
+        else if let value = try? container.decode(Bool.self) { self = .value(.bool(value)) }
+        else if let value = try? container.decode(Double.self) { self = .value(.number(value)) }
+        else if let value = try? container.decode(String.self) { self = .value(.string(value)) }
+        else if (try? container.decode([Ignored].self)) != nil { self = .other("an array") }
+        else { self = .other("an object") }
+    }
+
+    private struct Ignored: Decodable { init(from decoder: any Decoder) throws {} }
+}
+
+/// One of `options` in panel.jsonc.
+struct RawOption: Decodable {
+    var type: String?
+    var title: String?
+    var description: String?
+    var `default`: RawOptionValue?
+    var required: Bool?
+    var `enum`: [String]?
 }
 
 /// `themes/<name>.jsonc`

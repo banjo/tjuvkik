@@ -6,10 +6,10 @@ public enum CLICommand: Equatable, Sendable {
     case version
     /// Check the config folder.
     case validate
-    /// Run a panel once and say what its tile shows. `raw` prints the output as is instead.
-    case run(panel: String, raw: Bool)
-    /// Render a panel's tile to a PNG.
-    case preview(panel: String, size: TileSize?, theme: String?, output: String?, scale: Double)
+    /// Run a tile or a panel once and say what its tile shows. `raw` prints the output as is instead.
+    case run(panel: String, raw: Bool, options: [String: String] = [:])
+    /// Render a tile or a panel's tile to a PNG.
+    case preview(panel: String, size: TileSize?, theme: String?, output: String?, scale: Double, options: [String: String] = [:])
     /// Make a panel folder: `script`, `cli` or a content type.
     case new(name: String, type: String)
     /// Print a JSON schema, or list them.
@@ -49,11 +49,31 @@ public enum CLIArguments {
         var positional: [String] = []
         var options: [String: String] = [:]
         var flags: Set<String> = []
+        var given: [String: String] = [:]
         let valued = ["--config", "--size", "--theme", "--out", "-o", "--scale", "--type"]
         let known = ["--raw", "--cli", "--script", "-h", "--help", "-v", "--version"]
         var index = 0
         while index < arguments.count {
             let argument = arguments[index]
+            if argument == "--option" || argument.hasPrefix("--option=") {
+                let value: String
+                if argument == "--option" {
+                    guard index + 1 < arguments.count else { throw CLIUsageError(message: "--option needs a value") }
+                    value = arguments[index + 1]
+                    index += 2
+                } else {
+                    value = String(argument.dropFirst("--option=".count))
+                    index += 1
+                }
+                guard let equals = value.firstIndex(of: "="), equals != value.startIndex else {
+                    throw CLIUsageError(message: "--option needs key=value, got \"\(value)\"")
+                }
+                let key = String(value[..<equals])
+                guard given[key] == nil else { throw CLIUsageError(message: "--option \(key) is given twice") }
+                given[key] = String(value[value.index(after: equals)...])
+                flags.insert("--option")
+                continue
+            }
             if valued.contains(argument) {
                 guard index + 1 < arguments.count else { throw CLIUsageError(message: "\(argument) needs a value") }
                 options[argument == "-o" ? "--out" : argument] = arguments[index + 1]
@@ -101,10 +121,10 @@ public enum CLIArguments {
             guard rest.isEmpty else { throw CLIUsageError(message: "validate takes no arguments") }
             command = .validate
         case "run":
-            try allow(["--raw"])
-            command = .run(panel: try one("panel name"), raw: flags.contains("--raw"))
+            try allow(["--raw", "--option"])
+            command = .run(panel: try one("panel name"), raw: flags.contains("--raw"), options: given)
         case "preview":
-            try allow(["--size", "--theme", "--out", "--scale"])
+            try allow(["--size", "--theme", "--out", "--scale", "--option"])
             var size: TileSize?
             if let value = options["--size"] {
                 size = TileSize(rawValue: value)
@@ -117,7 +137,7 @@ public enum CLIArguments {
                 }
                 scale = parsed
             }
-            command = .preview(panel: try one("panel name"), size: size, theme: options["--theme"], output: options["--out"], scale: scale)
+            command = .preview(panel: try one("panel name"), size: size, theme: options["--theme"], output: options["--out"], scale: scale, options: given)
         case "new":
             try allow(["--type", "--cli", "--script"])
             let choices = [options["--type"], flags.contains("--cli") ? "cli" : nil, flags.contains("--script") ? "script" : nil].compactMap { $0 }
@@ -149,9 +169,12 @@ public enum CLIArguments {
 
     Commands:
       validate                 Check the config folder: config.jsonc, every panel and theme.
-      run <panel>              Run a panel once, as the app does, and say what its tile shows.
+      run <tile|panel>         Run a panel once, as the app does, and say what its tile shows.
+                               A tile's id uses its options from config.jsonc; a panel's name uses its defaults.
           --raw                Print the command's output as is.
-      preview <panel>          Run a panel and render its tile to a PNG.
+          --option key=value   Set an option. Repeat for more.
+      preview <tile|panel>     Run a panel and render its tile to a PNG.
+          --option key=value   Set an option. Repeat for more.
           --size s|m|l|xl      The tile's size. Default: the panel's size.
           --theme <name>       Default: the theme in config.jsonc.
           -o, --out <file>     Default: <panel>-<size>.png in this folder.

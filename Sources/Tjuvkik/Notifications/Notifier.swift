@@ -8,11 +8,11 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     enum Permission { case unknown, granted, denied }
 
     private(set) var permission = Permission.unknown
-    /// Runs a clicked notification's command: `(command, panel)`.
+    /// Runs a clicked notification's command: `(command, tile id)`.
     var onCommand: (String, String) -> Void = { _, _ in }
 
     private let center: UNUserNotificationCenter?
-    // Per panel, replaced on each update and removed with the panel.
+    // Per tile, by id, replaced on each update and removed with the tile.
     private var planners: [String: NotificationPlanner] = [:]
     private var signatures: [String: String] = [:]
     private var tiles: [String: Tile] = [:]
@@ -36,10 +36,10 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    /// Forgets the panels that no longer run, and withdraws what they delivered.
-    func keep(_ panels: Set<String>) {
-        for panel in Set(planners.keys).union(tiles.keys).union(signatures.keys) where !panels.contains(panel) {
-            forget(panel)
+    /// Forgets the tiles that no longer run, and withdraws what they delivered.
+    func keep(_ ids: Set<String>) {
+        for id in Set(planners.keys).union(tiles.keys).union(signatures.keys) where !ids.contains(id) {
+            forget(id)
         }
     }
 
@@ -57,72 +57,72 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    /// Called when a panel's content or error changes.
-    func update(panel: String, tile: Tile, state: PanelStore.State, config: Config, glanceOpen: Bool) {
+    /// Called when a tile's content or error changes.
+    func update(id: String, tile: Tile, state: PanelStore.State, config: Config, glanceOpen: Bool) {
         settings = config.notifications
         guard config.notifications.enabled, let notify = tile.notify else {
-            forget(panel)
+            forget(id)
             return
         }
         let signature = "\(tile.command)|\(tile.directory.path)"
-        if signatures[panel] != signature {
-            withdraw(planners[panel]?.deliveredIDs ?? [], panel: panel)
-            planners[panel] = NotificationPlanner()
-            signatures[panel] = signature
+        if signatures[id] != signature {
+            withdraw(planners[id]?.deliveredIDs ?? [], from: id)
+            planners[id] = NotificationPlanner()
+            signatures[id] = signature
         }
-        tiles[panel] = tile
+        tiles[id] = tile
 
         let wanted = PanelNotifications.collect(content: state.content, error: state.error, title: tile.title, on: notify.on)
         let muted = (config.notifications.quietHours?.contains(Date()) ?? false) || (glanceOpen && !config.notifications.whileOpen)
-        guard var planner = planners[panel] else { return }
+        guard var planner = planners[id] else { return }
         let actions = planner.update(wanted, now: Date(), muted: muted, minInterval: notify.minInterval, panelTitle: tile.title)
-        planners[panel] = planner
-        perform(actions, panel: panel, tile: tile)
+        planners[id] = planner
+        perform(actions, id: id, tile: tile)
     }
 
     private func flushAll() {
         let now = Date()
-        for (panel, var planner) in planners {
-            guard let tile = tiles[panel], let notify = tile.notify else { continue }
+        for (id, var planner) in planners {
+            guard let tile = tiles[id], let notify = tile.notify else { continue }
             let actions = planner.flush(now: now, minInterval: notify.minInterval, panelTitle: tile.title)
             guard !actions.isEmpty else { continue }
-            planners[panel] = planner
-            perform(actions, panel: panel, tile: tile)
+            planners[id] = planner
+            perform(actions, id: id, tile: tile)
         }
     }
 
-    private func forget(_ panel: String) {
-        withdraw(planners[panel]?.deliveredIDs ?? [], panel: panel)
-        planners[panel] = nil
-        signatures[panel] = nil
-        tiles[panel] = nil
+    private func forget(_ id: String) {
+        withdraw(planners[id]?.deliveredIDs ?? [], from: id)
+        planners[id] = nil
+        signatures[id] = nil
+        tiles[id] = nil
     }
 
     // MARK: Delivering
 
-    private func perform(_ actions: [NotificationPlanner.Action], panel: String, tile: Tile) {
+    private func perform(_ actions: [NotificationPlanner.Action], id: String, tile: Tile) {
         for action in actions {
             switch action {
-            case .deliver(let notification): deliver(notification, panel: panel, tile: tile)
-            case .withdraw(let id): withdraw([id], panel: panel)
+            case .deliver(let notification): deliver(notification, id: id, tile: tile)
+            case .withdraw(let notification): withdraw([notification], from: id)
             }
         }
     }
 
-    private func deliver(_ notification: PanelNotification, panel: String, tile: Tile) {
+    private func deliver(_ notification: PanelNotification, id: String, tile: Tile) {
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.subtitle = notification.subtitle ?? ""
         content.body = notification.body ?? ""
-        content.threadIdentifier = panel
+        content.threadIdentifier = id
         content.sound = (tile.notify?.sound ?? settings.sound) ? .default : nil
-        content.userInfo = ["panel": panel, "url": notification.url ?? "", "command": notification.command ?? ""]
-        add(UNNotificationRequest(identifier: "\(panel)/\(notification.id)", content: content, trigger: nil))
+        content.userInfo = ["id": id, "url": notification.url ?? "", "command": notification.command ?? ""]
+        add(UNNotificationRequest(identifier: "\(id)/\(notification.id)", content: content, trigger: nil))
     }
 
-    private func withdraw(_ ids: [String], panel: String) {
+    private func withdraw(_ ids: [String], from id: String) {
         guard !ids.isEmpty else { return }
-        center?.removeDeliveredNotifications(withIdentifiers: ids.map { "\(panel)/\($0)" })
+        center?.removeDeliveredNotifications(withIdentifiers: ids.map { "\(id)/\($0)" })
     }
 
     /// Adds a request once Tjuvkik may notify. The first one asks macOS, once.
@@ -167,12 +167,12 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let info = response.notification.request.content.userInfo
-        let panel = info["panel"] as? String ?? ""
+        let id = info["id"] as? String ?? ""
         let url = info["url"] as? String ?? ""
         let command = info["command"] as? String ?? ""
         Task { @MainActor [weak self] in
             if !command.isEmpty {
-                self?.onCommand(command, panel)
+                self?.onCommand(command, id)
             } else if !url.isEmpty, let link = URL(string: url) {
                 NSWorkspace.shared.open(link)
             }

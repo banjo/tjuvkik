@@ -50,8 +50,14 @@ public struct Tile: Equatable, Sendable {
         case stream
     }
 
+    /// The tile's name on the board: `id` in config.jsonc, or the panel's name. Unique.
+    public var id: String
     /// The panel's name: its folder in `panels/`.
     public var panel: String
+    /// The options the panel declares, sorted by name.
+    public var declaredOptions: [PanelOption] = []
+    /// Each option's value: the tile's, else the default. Unset ones without a default are missing.
+    public var options: [String: OptionValue] = [:]
     public var kind: Kind
     public var mode: Mode
     public var command: String

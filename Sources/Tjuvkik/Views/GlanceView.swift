@@ -16,7 +16,7 @@ struct GlanceView: View {
             ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
                 if let slot = tile.slot {
                     let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell)
-                    TileView(tile: tile, state: panels.states[tile.panel], theme: config.theme, index: index, isVisible: model.isVisible)
+                    TileView(tile: tile, state: panels.states[tile.id], theme: config.theme, index: index, isVisible: model.isVisible)
                         .frame(width: size.width, height: size.height)
                         .position(
                             x: BentoGeometry.inset + (cell.width + gap) * CGFloat(slot.column) + size.width / 2,

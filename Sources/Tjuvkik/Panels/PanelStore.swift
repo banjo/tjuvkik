@@ -35,8 +35,8 @@ final class PanelStore {
     @ObservationIgnored var glanceOpen = false
     /// Set by the app while the screen is locked or Low Power Mode is on.
     @ObservationIgnored var paused = false
-    /// Called after a panel's content or error changes.
-    @ObservationIgnored var onChange: (_ panel: String) -> Void = { _ in }
+    /// Called after a tile's content or error changes, with its id.
+    @ObservationIgnored var onChange: (_ id: String) -> Void = { _ in }
     @ObservationIgnored private(set) var tiles: [Tile] = []
     @ObservationIgnored private var environment: [String: String]?
     @ObservationIgnored private var timer: Timer?
@@ -56,17 +56,17 @@ final class PanelStore {
         for state in states.values { state.stream?.stop() }
     }
 
-    /// Takes the tiles from a new config. A panel whose command changed starts over.
+    /// Takes the tiles from a new config. A tile whose command or options changed starts over.
     func update(_ tiles: [Tile]) {
         self.tiles = tiles.filter { $0.slot != nil || !$0.show }
-        let names = Set(self.tiles.map(\.panel))
-        for (name, state) in states where !names.contains(name) {
+        let ids = Set(self.tiles.map(\.id))
+        for (id, state) in states where !ids.contains(id) {
             state.stream?.stop()
-            states[name] = nil
+            states[id] = nil
         }
-        for tile in self.tiles where states[tile.panel]?.signature != Self.signature(tile) {
-            states[tile.panel]?.stream?.stop()
-            states[tile.panel] = State(signature: Self.signature(tile))
+        for tile in self.tiles where states[tile.id]?.signature != Self.signature(tile) {
+            states[tile.id]?.stream?.stop()
+            states[tile.id] = State(signature: Self.signature(tile))
         }
         checkRequirements()
         refreshDue()
@@ -78,7 +78,7 @@ final class PanelStore {
         guard let environment else { return }
         let now = Date()
         for tile in tiles {
-            guard let state = states[tile.panel], !state.running, !isBlocked(tile) else { continue }
+            guard let state = states[tile.id], !state.running, !isBlocked(tile) else { continue }
             if let file = tile.file {
                 read(file, for: tile)
                 continue
@@ -100,7 +100,7 @@ final class PanelStore {
     @ObservationIgnored private var missing: [String: [String]] = [:]
 
     private func isBlocked(_ tile: Tile) -> Bool {
-        !(missing[tile.panel] ?? []).isEmpty
+        !(missing[tile.id] ?? []).isEmpty
     }
 
     /// A panel that needs a tool you don't have says so instead of failing on every run.
@@ -108,21 +108,21 @@ final class PanelStore {
         guard let path = environment?["PATH"] else { return }
         for tile in tiles {
             let tools = RequiredTools.missing(tile.requires, path: path)
-            missing[tile.panel] = tools
-            let error = states[tile.panel]?.error
+            missing[tile.id] = tools
+            let error = states[tile.id]?.error
             if !tools.isEmpty {
-                states[tile.panel]?.error = "needs \(tools.joined(separator: ", ")), not found on PATH"
+                states[tile.id]?.error = "needs \(tools.joined(separator: ", ")), not found on PATH"
             } else if error?.hasPrefix("needs ") == true {
-                states[tile.panel]?.error = nil
+                states[tile.id]?.error = nil
             }
-            if states[tile.panel]?.error != error { onChange(tile.panel) }
+            if states[tile.id]?.error != error { onChange(tile.id) }
         }
     }
 
     // MARK: Interval panels
 
     private func run(_ tile: Tile, environment: [String: String]) {
-        let key = tile.panel
+        let key = tile.id
         let signature = Self.signature(tile)
         states[key]?.running = true
         states[key]?.lastRun = Date()
@@ -143,7 +143,7 @@ final class PanelStore {
     // MARK: Stream panels
 
     private func stream(_ tile: Tile, environment: [String: String]) {
-        let key = tile.panel
+        let key = tile.id
         let signature = Self.signature(tile)
         states[key]?.running = true
         states[key]?.streamStarted = Date()
@@ -199,7 +199,7 @@ final class PanelStore {
 
     /// Reads a markdown panel's file when its modification date changes. Checked every second.
     private func read(_ file: URL, for tile: Tile) {
-        let key = tile.panel
+        let key = tile.id
         let path = (file.path as NSString).abbreviatingWithTildeInPath
         guard let date = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date else {
             let error = "can't read \(path)"
@@ -226,13 +226,13 @@ final class PanelStore {
 
     /// Runs a row's command, like the menu's. A failure shows on the panel's tile until it next
     /// updates.
-    func runAction(_ command: String, panel: String) {
-        guard let environment, let tile = tiles.first(where: { $0.panel == panel }) else { return }
+    func runAction(_ command: String, id: String) {
+        guard let environment, let tile = tiles.first(where: { $0.id == id }) else { return }
         Task {
             let result = await CommandRunner.launch(command, in: tile.directory, environment: Self.environment(environment, tile, run: "action"))
             if !result.succeeded {
-                states[panel]?.error = "\(command): \(result.failureSummary(timeout: 30))"
-                onChange(panel)
+                states[id]?.error = "\(command): \(result.failureSummary(timeout: 30))"
+                onChange(id)
             }
         }
     }
@@ -254,14 +254,13 @@ final class PanelStore {
     }
 
     private static func environment(_ base: [String: String], _ tile: Tile, run: String) -> [String: String] {
-        var environment = base
-        environment["TJUVKIK_PANEL"] = tile.panel
+        var environment = PanelOptions.environment(base, for: tile)
         environment["TJUVKIK_RUN"] = run
         return environment
     }
 
     private static func signature(_ tile: Tile) -> String {
-        "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)|\(tile.file?.path ?? "")"
+        "\(tile.kind)|\(tile.content?.rawValue ?? "")|\(tile.mode)|\(tile.command)|\(tile.timeout)|\(tile.directory.path)|\(tile.file?.path ?? "")|\(tile.id)|\(PanelOptions.json(tile.options))"
     }
 }
 

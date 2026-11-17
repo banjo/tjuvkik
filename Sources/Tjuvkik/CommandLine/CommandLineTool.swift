@@ -46,10 +46,10 @@ enum CommandLineTool {
             let validation = ConfigValidation.check(directory)
             print(validation.report)
             return validation.isValid ? .ok : .failed
-        case .run(let panel, let raw):
-            return await runPanel(panel, raw: raw, directory: directory)
-        case .preview(let panel, let size, let theme, let output, let scale):
-            return await preview(panel, size: size, themeName: theme, output: output, scale: scale, directory: directory)
+        case .run(let panel, let raw, let options):
+            return await runPanel(panel, raw: raw, options: options, directory: directory)
+        case .preview(let panel, let size, let theme, let output, let scale, let options):
+            return await preview(panel, size: size, themeName: theme, output: output, scale: scale, options: options, directory: directory)
         case .new(let name, let type):
             return makePanel(name, type: type, directory: directory)
         case .schema(let name):
@@ -59,8 +59,8 @@ enum CommandLineTool {
 
     // MARK: run
 
-    private static func runPanel(_ name: String, raw: Bool, directory: URL) async -> Exit {
-        guard let tile = loadPanel(name, directory: directory) else { return .failed }
+    private static func runPanel(_ name: String, raw: Bool, options: [String: String], directory: URL) async -> Exit {
+        guard let tile = loadPanel(name, options: options, directory: directory) else { return .failed }
         guard let environment = await environment(for: tile) else { return .failed }
 
         if tile.mode == .stream {
@@ -116,8 +116,8 @@ enum CommandLineTool {
 
     // MARK: preview
 
-    private static func preview(_ panel: String, size: TileSize?, themeName: String?, output: String?, scale: Double, directory: URL) async -> Exit {
-        guard var tile = loadPanel(panel, directory: directory) else { return .failed }
+    private static func preview(_ panel: String, size: TileSize?, themeName: String?, output: String?, scale: Double, options: [String: String], directory: URL) async -> Exit {
+        guard var tile = loadPanel(panel, options: options, directory: directory) else { return .failed }
         let config = try? ConfigLoader.load(from: directory).get().config
         let name = themeName ?? config?.themeName ?? "dark-glass"
         let theme: Theme
@@ -127,12 +127,7 @@ enum CommandLineTool {
             failure.issues.forEach { printError("\($0)") }
             return .failed
         }
-        // On the board, a panel takes the size config.jsonc gives it.
-        if let size {
-            tile.size = size
-        } else if let placed = config?.tiles.first(where: { $0.panel == tile.panel }) {
-            tile.size = placed.size
-        }
+        if let size { tile.size = size }
         guard let environment = await environment(for: tile) else { return .failed }
 
         var state: PanelStore.State
@@ -248,8 +243,8 @@ enum CommandLineTool {
 
     // MARK: Running a panel
 
-    private static func loadPanel(_ name: String, directory: URL) -> Tile? {
-        switch ConfigLoader.panel(name, in: directory) {
+    private static func loadPanel(_ name: String, options: [String: String], directory: URL) -> Tile? {
+        switch ConfigLoader.runnable(name, options: options, in: directory) {
         case .success(let tile):
             return tile
         case .failure(let failure):
@@ -264,8 +259,7 @@ enum CommandLineTool {
     /// The login shell's environment, as the app runs commands with. Nil when a required tool is
     /// missing, after saying so.
     private static func environment(for tile: Tile) async -> [String: String]? {
-        var environment = await LoginEnvironment.load()
-        environment["TJUVKIK_PANEL"] = tile.panel
+        var environment = PanelOptions.environment(await LoginEnvironment.load(), for: tile)
         environment["TJUVKIK_RUN"] = "cli"
         let missing = RequiredTools.missing(tile.requires, path: environment["PATH"] ?? "")
         guard missing.isEmpty else {
