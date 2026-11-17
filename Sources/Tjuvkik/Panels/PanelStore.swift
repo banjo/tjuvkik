@@ -13,8 +13,8 @@ final class PanelStore {
         var error: String?
         var updated: Date?
         fileprivate var signature = ""
-        fileprivate var running = false
-        fileprivate var lastRun: Date?
+        fileprivate(set) var running = false
+        fileprivate(set) var lastRun: Date?
         fileprivate var stream: CommandStream?
         fileprivate var streamStarted: Date?
         fileprivate var restartDelay: Double = 1
@@ -31,7 +31,11 @@ final class PanelStore {
     private static let streamLines = 300
 
     private(set) var states: [String: State] = [:]
-    @ObservationIgnored private var tiles: [Tile] = []
+    /// Set by the app: interval panels use `every` while the glance is open, and `background` while it's closed.
+    @ObservationIgnored var glanceOpen = false
+    /// Set by the app while the screen is locked or Low Power Mode is on.
+    @ObservationIgnored var paused = false
+    @ObservationIgnored private(set) var tiles: [Tile] = []
     @ObservationIgnored private var environment: [String: String]?
     @ObservationIgnored private var timer: Timer?
 
@@ -52,7 +56,7 @@ final class PanelStore {
 
     /// Takes the tiles from a new config. A panel whose command changed starts over.
     func update(_ tiles: [Tile]) {
-        self.tiles = tiles.filter { $0.slot != nil }
+        self.tiles = tiles.filter { $0.slot != nil || !$0.show }
         let names = Set(self.tiles.map(\.panel))
         for (name, state) in states where !names.contains(name) {
             state.stream?.stop()
@@ -79,7 +83,8 @@ final class PanelStore {
             }
             switch tile.mode {
             case .interval:
-                if let lastRun = state.lastRun, now.timeIntervalSince(lastRun) < tile.every { continue }
+                let interval = RunSchedule.interval(for: tile, glanceOpen: glanceOpen, paused: paused)
+                guard RunSchedule.isDue(lastRun: state.lastRun, now: now, interval: interval) else { continue }
                 run(tile, environment: environment)
             case .stream:
                 if let restartAt = state.restartAt, now < restartAt { continue }
@@ -118,7 +123,7 @@ final class PanelStore {
         states[key]?.running = true
         states[key]?.lastRun = Date()
         Task {
-            let result = await CommandRunner.run(tile.command, in: tile.directory, environment: Self.environment(environment, tile), timeout: tile.timeout)
+            let result = await CommandRunner.run(tile.command, in: tile.directory, environment: Self.environment(environment, tile, run: glanceOpen ? "glance" : "background"), timeout: tile.timeout)
             // The config may have changed while it ran.
             guard states[key]?.signature == signature else { return }
             states[key]?.running = false
@@ -139,7 +144,7 @@ final class PanelStore {
         states[key]?.streamStarted = Date()
         states[key]?.restartAt = nil
         states[key]?.stream = CommandStream(
-            tile.command, in: tile.directory, environment: Self.environment(environment, tile),
+            tile.command, in: tile.directory, environment: Self.environment(environment, tile, run: "stream"),
             onLine: { line in
                 Task { @MainActor [weak self] in
                     guard let self, self.states[key]?.signature == signature else { return }
@@ -212,7 +217,7 @@ final class PanelStore {
     func runAction(_ command: String, panel: String) {
         guard let environment, let tile = tiles.first(where: { $0.panel == panel }) else { return }
         Task {
-            let result = await CommandRunner.launch(command, in: tile.directory, environment: Self.environment(environment, tile))
+            let result = await CommandRunner.launch(command, in: tile.directory, environment: Self.environment(environment, tile, run: "action"))
             if !result.succeeded {
                 states[panel]?.error = "\(command): \(result.failureSummary(timeout: 30))"
             }
@@ -234,9 +239,10 @@ final class PanelStore {
         }
     }
 
-    private static func environment(_ base: [String: String], _ tile: Tile) -> [String: String] {
+    private static func environment(_ base: [String: String], _ tile: Tile, run: String) -> [String: String] {
         var environment = base
         environment["TJUVKIK_PANEL"] = tile.panel
+        environment["TJUVKIK_RUN"] = run
         return environment
     }
 

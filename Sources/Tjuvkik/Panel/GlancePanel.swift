@@ -35,6 +35,7 @@ final class GlanceController {
     private var hideGeneration = 0
 
     var onShow: () -> Void = {}
+    var onHide: () -> Void = {}
 
     init(store: ConfigStore, panels: PanelStore) {
         panel.contentView = NSHostingView(rootView: GlanceView(model: model, store: store, panels: panels))
@@ -52,6 +53,7 @@ final class GlanceController {
 
     func hide() {
         hideGeneration += 1
+        onHide()
         let generation = hideGeneration
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12
