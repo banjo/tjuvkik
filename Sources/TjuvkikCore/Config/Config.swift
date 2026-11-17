@@ -14,6 +14,21 @@ public struct Config: Equatable, Sendable {
     public var tiles: [Tile]
     /// The panels shown in the menu bar, in order.
     public var menuBar: [String] = []
+    /// When background runs stop.
+    public var pause = Pause()
+
+    /// When background runs stop.
+    public struct Pause: Equatable, Sendable {
+        /// While the screen is locked or the displays sleep.
+        public var whenLocked: Bool
+        /// While Low Power Mode is on.
+        public var onLowPower: Bool
+
+        public init(whenLocked: Bool = true, onLowPower: Bool = true) {
+            self.whenLocked = whenLocked
+            self.onLowPower = onLowPower
+        }
+    }
 }
 
 /// A panel placed on the board.
@@ -57,6 +72,20 @@ public struct Tile: Equatable, Sendable {
     public var history: Int?
     /// A markdown panel's file, read instead of running a command and reloaded when it changes.
     public var file: URL?
+    /// When an interval panel runs while the glance is closed.
+    public var background: Background = .same
+    /// False: the panel runs, for the menu bar, but has no spot on the grid.
+    public var show = true
+
+    /// When an interval panel runs while the glance is closed.
+    public enum Background: Equatable, Sendable {
+        /// On `every`, as while glancing. The default.
+        case same
+        /// This many seconds apart.
+        case every(Double)
+        /// Not at all: only while the glance is open.
+        case off
+    }
 
     /// What the tile's header calls it: "script", "cli", or the content type.
     public var typeName: String { content?.rawValue ?? kind.rawValue }
