@@ -5,6 +5,10 @@
 ///
 /// Toggle: tapping the trigger alone shows or hides the glance, and so does a shortcut's press.
 /// A key or another modifier during the tap cancels it. Esc hides.
+///
+/// Double tap: pressing the trigger alone twice within the double-tap time shows or hides the
+/// glance, on the second press. A single tap does nothing. Holding the first press too long,
+/// another key or another modifier cancels. Esc hides.
 public struct TriggerGesture: Sendable {
     public enum Event: Sendable, Equatable {
         case triggerDown(otherModifiers: Bool)
@@ -30,6 +34,8 @@ public struct TriggerGesture: Sendable {
     enum Press: Equatable {
         case idle
         case pending
+        /// Double tap: the first tap is done, waiting for the second.
+        case tapped
         case held
         /// The trigger is still down, but this press can no longer do anything.
         case cancelled
@@ -47,6 +53,7 @@ public struct TriggerGesture: Sendable {
         switch mode {
         case .hold: hold(event)
         case .toggle: toggle(event)
+        case .doubleTap: doubleTap(event)
         }
     }
 
@@ -105,6 +112,49 @@ public struct TriggerGesture: Sendable {
 
         case (.toggle, _):
             return isShown ? hide() : show()
+        case (.dismiss, _):
+            return hide()
+        }
+    }
+
+    private mutating func doubleTap(_ event: Event) -> [Effect] {
+        switch (event, press) {
+        case (.triggerDown(let otherModifiers), .idle):
+            press = otherModifiers ? .cancelled : .pending
+            return otherModifiers ? [] : [.startTimer]
+        case (.triggerDown(let otherModifiers), .tapped):
+            press = .cancelled
+            if otherModifiers { return [.cancelTimer] }
+            return [.cancelTimer] + (isShown ? hide() : show())
+        case (.triggerDown, _):
+            return []
+
+        case (.triggerUp, .pending):
+            press = .tapped
+            return []
+        case (.triggerUp, _):
+            if press != .tapped { press = .idle }
+            return []
+
+        case (.timerFired, .pending):
+            // Held too long to be a tap.
+            press = .cancelled
+            return []
+        case (.timerFired, .tapped):
+            press = .idle
+            return []
+        case (.timerFired, _):
+            return []
+
+        case (.otherKey, .pending), (.modifiersChanged, .pending):
+            press = .cancelled
+            return [.cancelTimer]
+        case (.otherKey, .tapped), (.modifiersChanged, .tapped):
+            press = .idle
+            return [.cancelTimer]
+        case (.otherKey, _), (.modifiersChanged, _), (.toggle, _):
+            return []
+
         case (.dismiss, _):
             return hide()
         }

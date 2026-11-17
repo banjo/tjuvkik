@@ -10,6 +10,8 @@ public struct Trigger: Equatable, Sendable {
         case hold
         /// A press shows, the next press or Esc hides.
         case toggle
+        /// Two taps in a row show, two more or Esc hide. A single tap does nothing.
+        case doubleTap
     }
 
     public enum Input: Equatable, Sendable {
@@ -21,11 +23,14 @@ public struct Trigger: Equatable, Sendable {
     public var mode: Mode
     /// How long a hold takes before the glance shows.
     public var holdMilliseconds: Int
+    /// How soon the second tap of a double tap must follow the first.
+    public var doubleTapMilliseconds: Int
 
-    public init(input: Input, mode: Mode, holdMilliseconds: Int = 250) {
+    public init(input: Input, mode: Mode, holdMilliseconds: Int = 250, doubleTapMilliseconds: Int = 300) {
         self.input = input
         self.mode = mode
         self.holdMilliseconds = holdMilliseconds
+        self.doubleTapMilliseconds = doubleTapMilliseconds
     }
 
     public static let fn = Trigger(input: .key(.fn), mode: .hold)
@@ -35,8 +40,10 @@ public struct Trigger: Equatable, Sendable {
         switch (input, mode) {
         case (.key(let key), .hold): "Hold \(key.name)"
         case (.key(let key), .toggle): "Tap \(key.name)"
+        case (.key(let key), .doubleTap): "Double-tap \(key.name)"
         case (.shortcut(let shortcut), .hold): "Hold \(shortcut)"
         case (.shortcut(let shortcut), .toggle): "Press \(shortcut)"
+        case (.shortcut(let shortcut), .doubleTap): "Press \(shortcut)"
         }
     }
 }

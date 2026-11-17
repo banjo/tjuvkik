@@ -65,9 +65,10 @@
           "type": "string",
           "enum": [
             "hold",
-            "toggle"
+            "toggle",
+            "doubleTap"
           ],
-          "description": "hold: shows while held. toggle: a tap or press shows, the next one or Esc hides. Default: hold for a key, toggle for a shortcut."
+          "description": "hold: shows while held. toggle: a tap or press shows, the next one or Esc hides. doubleTap: two taps of the key show, two more or Esc hide; keys only. Default: hold for a key, toggle for a shortcut."
         },
         "holdMs": {
           "type": "integer",
@@ -75,6 +76,13 @@
           "maximum": 2000,
           "default": 250,
           "description": "How long to hold before the glance shows. Only with \"mode\": \"hold\"."
+        },
+        "doubleTapMs": {
+          "type": "integer",
+          "minimum": 150,
+          "maximum": 600,
+          "default": 300,
+          "description": "How soon the second tap must follow the first. Only with \"mode\": \"doubleTap\"."
         }
       }
     },
