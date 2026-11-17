@@ -266,6 +266,7 @@ enum CommandLineTool {
     private static func environment(for tile: Tile) async -> [String: String]? {
         var environment = await LoginEnvironment.load()
         environment["TJUVKIK_PANEL"] = tile.panel
+        environment["TJUVKIK_RUN"] = "cli"
         let missing = RequiredTools.missing(tile.requires, path: environment["PATH"] ?? "")
         guard missing.isEmpty else {
             printError("\(tile.panel): needs \(missing.joined(separator: ", ")), not found on PATH")

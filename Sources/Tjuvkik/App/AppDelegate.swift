@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let store = ConfigStore()
     private let panels = PanelStore()
+    private let pause = PauseMonitor()
     private let trigger = GlanceTrigger()
     private lazy var glance = GlanceController(store: store, panels: panels)
     private var permissionPoll: Timer?
@@ -23,10 +24,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trigger.onShow = { [glance] in glance.show() }
         trigger.onHide = { [glance] in glance.hide() }
         store.onChange = { [weak self] config in self?.apply(config) }
+        pause.onChange = { [weak self] in
+            guard let self else { return }
+            panels.paused = pause.reason != nil
+            // Coming back runs whatever is overdue.
+            panels.refreshDue()
+        }
+        pause.start()
         store.start()
         panels.start()
         apply(store.config)
-        glance.onShow = { [panels] in panels.refreshDue() }
+        glance.onShow = { [panels] in
+            panels.glanceOpen = true
+            panels.refreshDue()
+        }
+        glance.onHide = { [panels] in panels.glanceOpen = false }
         updateIcon()
         observeMenuBarPanel()
         observeErrors()
@@ -50,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trigger.configure(config.trigger)
         startTrigger()
         panels.update(config.tiles)
+        pause.configure(config.pause)
         launchAtLoginError = LaunchAtLogin.apply(config.launchAtLogin)
         updateIcon()
     }
@@ -126,6 +139,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             menu.addItem(disabled: "\(trigger.trigger.instruction) to glance")
         }
+        if let reason = pause.reason {
+            menu.addItem(disabled: "Background runs paused: \(reason.rawValue)", symbol: "pause.circle")
+        }
 
         if !store.errors.isEmpty {
             menu.addItem(.separator())
@@ -146,6 +162,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(disabled: launchAtLoginError, symbol: "exclamationmark.triangle")
         }
 
+        if let submenu = panelMenu() {
+            menu.addItem(.separator())
+            menu.addItem(submenu)
+        }
+
         menu.addItem(.separator())
         menu.addItem(action: "Open Config", target: self, #selector(openConfig), key: ",")
         menu.addItem(action: "Show Config Folder", target: self, #selector(showConfigFolder))
@@ -159,6 +180,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openInputMonitoring() {
         InputMonitoring.openSettings()
+    }
+
+    /// Each panel and what it last did, for the menu. Left out when there are no panels.
+    private func panelMenu() -> NSMenuItem? {
+        guard !panels.tiles.isEmpty else { return nil }
+        let item = NSMenuItem(title: "Panels", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        item.submenu = submenu
+        for tile in panels.tiles {
+            submenu.addItem(disabled: "\(tile.title): \(status(of: tile))")
+        }
+        return item
+    }
+
+    private func status(of tile: Tile) -> String {
+        if tile.mode == .stream { return "live" }
+        if let file = tile.file { return "watches \(file.lastPathComponent)" }
+        guard let lastRun = panels.states[tile.panel]?.lastRun else {
+            return tile.background == .off ? "runs when you glance" : "not run yet"
+        }
+        var status = "ran \(lastRun.formatted(.relative(presentation: .named)))"
+        if tile.background == .off { status += ", only when you glance" }
+        if !tile.show { status += ", not on the board" }
+        return status
     }
 
     @objc private func performRow(_ item: NSMenuItem) {
