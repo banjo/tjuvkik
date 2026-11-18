@@ -1,21 +1,10 @@
 #!/bin/sh
-# Builds a release Tjuvkik.app, signs it with "Tjuvkik Dev" and installs it to ~/Applications.
+# Builds a release Tjuvkik.app, signs it with "Tjuvkik" and installs it to ~/Applications.
 set -eu
 cd "$(dirname "$0")/.."
 
-swift build -c release
-bin=$(swift build -c release --show-bin-path)
-
+scripts/build-app.sh
 app=build/Tjuvkik.app
-rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp Resources/Info.plist "$app/Contents/"
-cp Resources/AppIcon.icns "$app/Contents/Resources/"
-cp -R schema "$app/Contents/Resources/schemas"
-cp -R starters "$app/Contents/Resources/starters"
-cp "$bin/Tjuvkik" "$app/Contents/MacOS/"
-
-codesign --force --options runtime --sign "Tjuvkik Dev" "$app"
 
 dest="$HOME/Applications/Tjuvkik.app"
 pkill -x Tjuvkik 2>/dev/null || true
