@@ -6,7 +6,8 @@
 /// or a dismissal does.
 ///
 /// Toggle: tapping the trigger alone shows or hides the glance, and so does a shortcut's press.
-/// A key or another modifier during the tap cancels it. Esc hides.
+/// A key or another modifier during the tap cancels it, and so does holding it past the timer, so
+/// a key also used as a modifier (fn+volume) doesn't toggle. Esc hides.
 ///
 /// Double tap: pressing the trigger alone twice within the double-tap time shows or hides the
 /// glance, on the second press. A single tap does nothing. Holding the first press too long,
@@ -124,11 +125,15 @@ public struct TriggerGesture: Sendable {
         switch (event, press) {
         case (.triggerDown(let otherModifiers), .idle):
             press = otherModifiers ? .cancelled : .pending
-            return []
+            return otherModifiers ? [] : [.startTimer]
         case (.triggerDown, _):
             return []
 
         case (.otherKey, .pending), (.modifiersChanged, .pending):
+            press = .cancelled
+            return [.cancelTimer]
+        case (.timerFired, .pending):
+            // Held too long to be a tap.
             press = .cancelled
             return []
         case (.otherKey, _), (.modifiersChanged, _), (.timerFired, _):
@@ -136,7 +141,7 @@ public struct TriggerGesture: Sendable {
 
         case (.triggerUp, .pending):
             press = .idle
-            return isShown ? hide() : show()
+            return [.cancelTimer] + (isShown ? hide() : show())
         case (.triggerUp, _):
             press = .idle
             return []

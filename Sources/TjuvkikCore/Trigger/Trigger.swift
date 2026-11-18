@@ -38,6 +38,9 @@ public struct Trigger: Equatable, Sendable {
 
     public static let fn = Trigger(input: .key(.fn), mode: .hold)
 
+    /// In toggle mode, a press held longer than this isn't a tap.
+    public static let tapMilliseconds = 400
+
     /// "Hold fn", "Tap right ⌥", "Press ⌃⌥Space".
     public var instruction: String {
         switch (input, mode) {

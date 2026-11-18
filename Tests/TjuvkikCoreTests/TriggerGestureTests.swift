@@ -159,12 +159,20 @@ struct TriggerGestureTests {
 
     @Test func tapToggles() {
         var g = TriggerGesture(mode: .toggle)
-        #expect(g.handle(.triggerDown(otherModifiers: false)) == [])
-        #expect(g.handle(.triggerUp) == [.show])
+        #expect(g.handle(.triggerDown(otherModifiers: false)) == [.startTimer])
+        #expect(g.handle(.triggerUp) == [.cancelTimer, .show])
         #expect(g.handle(.otherKey) == [])
         #expect(g.isShown)
         _ = g.handle(.triggerDown(otherModifiers: false))
-        #expect(g.handle(.triggerUp) == [.hide])
+        #expect(g.handle(.triggerUp) == [.cancelTimer, .hide])
+    }
+
+    @Test func longPressDoesNotToggle() {
+        var g = TriggerGesture(mode: .toggle)
+        _ = g.handle(.triggerDown(otherModifiers: false))
+        #expect(g.handle(.timerFired) == [])
+        #expect(g.handle(.triggerUp) == [])
+        #expect(!g.isShown)
     }
 
     @Test func tapWithAKeyDoesNothing() {

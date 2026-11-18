@@ -27,6 +27,8 @@ final class GlanceTrigger {
     private static let shortcutID: UInt32 = 1
     private static let escapeID: UInt32 = 2
     private static let spaceID: UInt32 = 3
+    /// `NX_SYSDEFINED`, which `CGEventType` has no case for.
+    private static let systemDefined: UInt32 = 14
 
     /// True when the trigger is watched: a key once Input Monitoring is granted, a shortcut once
     /// it's registered.
@@ -83,7 +85,7 @@ final class GlanceTrigger {
 
     private func startTap() -> Bool {
         guard tap == nil else { return true }
-        let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
+        let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue) | (1 << Self.systemDefined)
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
@@ -108,6 +110,9 @@ final class GlanceTrigger {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
         case .flagsChanged:
             send(key.event(keyCode: keyCode, flags: flags.rawValue))
+        case _ where type.rawValue == Self.systemDefined:
+            // Media keys (volume, brightness, play) come as system-defined events, not key downs.
+            send(.otherKey)
         case .keyDown:
             // Space pins a held glance. The hot key that keeps it from the app in front only
             // swallows it after this tap has seen it.
@@ -156,7 +161,11 @@ final class GlanceTrigger {
             switch effect {
             case .startTimer:
                 timer?.cancel()
-                let milliseconds = trigger.mode == .doubleTap ? trigger.doubleTapMilliseconds : trigger.holdMilliseconds
+                let milliseconds = switch trigger.mode {
+                case .hold: trigger.holdMilliseconds
+                case .toggle: Trigger.tapMilliseconds
+                case .doubleTap: trigger.doubleTapMilliseconds
+                }
                 timer = Task { [weak self] in
                     try? await Task.sleep(for: .milliseconds(milliseconds))
                     guard !Task.isCancelled else { return }
