@@ -9,7 +9,14 @@ scripts/create-cert.sh   # once: a self-signed "Tjuvkik" signing certificate
 scripts/bundle.sh --open # build, sign, install to ~/Applications and start
 ```
 
-Releases are signed with the same certificate, so it must never change: macOS ties Input Monitoring to it, and a new one makes every user grant it again. `create-cert.sh` writes a backup to `~/Downloads/Tjuvkik.p12` and prints its password; keep both in Bitwarden. On a new machine, download the backup and import it with `scripts/create-cert.sh Tjuvkik.p12`.
+Releases are signed with the same certificate, so it must never change: macOS ties Input Monitoring to it, and a new one makes every user grant it again. `create-cert.sh` writes a backup to `~/Downloads/Tjuvkik.p12` and prints its password; keep both in Bitwarden. They're in the secure note "Tjuvkik signing certificate": the backup base64 encoded as the note, the password as its `password` field. On a new machine:
+
+```sh
+bw get notes "Tjuvkik signing certificate" | base64 -d > Tjuvkik.p12
+bw get item "Tjuvkik signing certificate" | jq -r '.fields[] | select(.name == "password") | .value'
+scripts/create-cert.sh Tjuvkik.p12   # asks for that password
+rm Tjuvkik.p12
+```
 
 Needs macOS 15 and the Xcode Command Line Tools. `bundle.sh` builds a release `Tjuvkik.app`, installs it to `~/Applications` and links the command line tool, the app's own binary, to `~/.local/bin/tjuvkik`. Every build is signed with the same certificate, so macOS keeps the permissions, like Input Monitoring, across rebuilds.
 
