@@ -1,11 +1,12 @@
 ---
 import { prActions } from "../data/panels";
+import { site } from "../data/site";
 import CodeBlock from "./CodeBlock.astro";
 import Tile from "./Tile.astro";
 
 const panelJson = `
 {
-  "$schema": "../../schemas/panel.schema.json",
+  "$schema": "${site.schema("panel")}",
   "type": "script",
   "title": "Pull requests",
   "command": "./prs.sh",

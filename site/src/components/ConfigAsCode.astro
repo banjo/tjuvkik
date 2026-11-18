@@ -1,9 +1,10 @@
 ---
+import { site } from "../data/site";
 import CodeBlock from "./CodeBlock.astro";
 
 const config = `
 {
-  "$schema": "./schemas/config.schema.json",
+  "$schema": "${site.schema("config")}",
   "theme": { "dark": "dark-glass", "light": "light-glass" },
   "trigger": { "key": "fn", "mode": "hold" },
   "menuBar": ["agents", "prs"],

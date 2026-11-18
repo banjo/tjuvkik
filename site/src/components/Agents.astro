@@ -1,10 +1,12 @@
 ---
 import { agents } from "../data/panels";
+import { site } from "../data/site";
 import CodeBlock from "./CodeBlock.astro";
 import Tile from "./Tile.astro";
 
 const panelJson = `
 {
+  "$schema": "${site.schema("panel")}",
   "type": "script",
   "mode": "stream",
   "title": "Agents",

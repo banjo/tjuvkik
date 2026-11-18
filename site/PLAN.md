@@ -117,3 +117,4 @@ Cloudflare Pages: root directory `site`, build `pnpm build`, output `dist`, `NOD
 
 - Make `banjo/tjuvkik` public and add an MIT `LICENSE`.
 - Check every CTA link, and that `llms.txt` links resolve once the repo is public.
+- TODO: the examples use `https://tjuvkik.banjoanton.com/schema/<name>.schema.json` as `$schema` (`site.schema()` in `src/data/site.ts`). Check they resolve once deployed, then decide whether the app's default config and starter panels point there too instead of `schemas/`.
