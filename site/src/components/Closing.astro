@@ -1,0 +1,142 @@
+---
+import { site } from "../data/site";
+import GitHubIcon from "./GitHubIcon.astro";
+
+const badges = [
+  "Native Swift",
+  "No dependencies",
+  "No Dock icon",
+  "Never takes focus",
+  "Pauses when locked or on Low Power",
+  "Light and dark glass, Dracula, your own themes",
+  "Launch at login",
+];
+---
+
+<section class="section native" aria-labelledby="native-title">
+  <div class="container">
+    <h2 class="visually-hidden" id="native-title">Native and light</h2>
+    <ul class="badges">
+      {badges.map((b) => <li>{b}</li>)}
+    </ul>
+  </div>
+</section>
+
+<section class="section cta" aria-labelledby="cta-title">
+  <div class="container cta-inner">
+    <img src="/icon.svg" alt="" width="112" height="112" />
+    <h2 class="section-title" id="cta-title">Take a peek.</h2>
+    <p class="section-lead">Free and open source, for macOS 15 or later. Homebrew is on the way.</p>
+    <div class="buttons">
+      <a class="button button-primary" href={site.repo}><GitHubIcon />View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>
+      <b>Why the name?</b> <i lang="sv">Tjuvkik</i> is Swedish for a sneak peek. Say it “shoov-sheek”.
+    </p>
+    <p class="right">
+      © {new Date().getFullYear()} Anton Ödman · <a href={site.repo}>GitHub</a> · <a href="/llms.txt">llms.txt</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .native {
+    padding-block: 0 24px;
+  }
+
+  .badges {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .badges li {
+    padding: 8px 15px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.045);
+    box-shadow: 0 0 0 1px var(--border) inset;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .cta {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(500px 300px at 35% 60%, rgba(107, 63, 160, 0.35), transparent 70%),
+      radial-gradient(500px 300px at 65% 40%, rgba(180, 70, 107, 0.25), transparent 70%);
+  }
+
+  .cta-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .cta-inner img {
+    margin-bottom: 8px;
+  }
+
+  .cta-inner .section-title {
+    max-width: none;
+  }
+
+  .buttons {
+    margin-top: 32px;
+  }
+
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0 40px;
+    font-size: 14px;
+    color: var(--text-faint);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 32px;
+  }
+
+  .footer p {
+    margin: 0;
+  }
+
+  .footer b {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .footer i {
+    color: var(--text);
+  }
+
+  .footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  @media (hover: hover) {
+    .footer a:hover {
+      color: var(--text);
+    }
+  }
+</style>

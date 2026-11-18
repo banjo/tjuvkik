@@ -1,0 +1,25 @@
+---
+import AgentFriendly from "../components/AgentFriendly.astro";
+import Agents from "../components/Agents.astro";
+import Closing from "../components/Closing.astro";
+import ConfigAsCode from "../components/ConfigAsCode.astro";
+import Gallery from "../components/Gallery.astro";
+import Hero from "../components/Hero.astro";
+import HowItWorks from "../components/HowItWorks.astro";
+import Scriptable from "../components/Scriptable.astro";
+import { site } from "../data/site";
+import Base from "../layouts/Base.astro";
+---
+
+<Base title={site.title} description={site.description}>
+  <main>
+    <Hero />
+    <HowItWorks />
+    <Scriptable />
+    <Gallery />
+    <Agents />
+    <AgentFriendly />
+    <ConfigAsCode />
+    <Closing />
+  </main>
+</Base>

@@ -1,0 +1,45 @@
+---
+import { Code } from "astro:components";
+
+interface Props {
+  code: string;
+  lang: "jsonc" | "json" | "sh" | "shellsession" | "text";
+  file?: string;
+}
+
+const { code, lang, file } = Astro.props;
+---
+
+<figure class="code">
+  {file && <figcaption>{file}</figcaption>}
+  <Code code={code.trim()} lang={lang} theme="dracula" />
+</figure>
+
+<style>
+  .code {
+    margin: 0;
+    min-width: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #1f2029;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 24px 60px -24px rgba(0, 0, 0, 0.6);
+  }
+
+  figcaption {
+    padding: 11px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font: 500 12.5px/1 var(--mono);
+    color: var(--text-faint);
+  }
+
+  .code :global(pre) {
+    margin: 0;
+    padding: 16px 18px 18px;
+    background: transparent !important;
+    font-size: 13px;
+    line-height: 1.65;
+    overflow-x: auto;
+  }
+</style>

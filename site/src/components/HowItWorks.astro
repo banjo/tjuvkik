@@ -1,0 +1,104 @@
+---
+const steps = [
+  {
+    key: "Hold",
+    title: "Hold fn",
+    text: "The board opens over whatever you're doing, on the screen you're working on, over every Space and full-screen app.",
+  },
+  {
+    key: "Glance",
+    title: "Glance",
+    text: "Panels refresh in the background on their own interval, so what you see is already fresh. A stale one catches up the moment you look.",
+  },
+  {
+    key: "Let go",
+    title: "Let go",
+    text: "It's gone. The glance never takes focus, so your terminal keeps the cursor and you keep typing.",
+  },
+];
+---
+
+<section class="section how" aria-labelledby="how-title">
+  <div class="container">
+    <p class="eyebrow">How it works</p>
+    <h2 class="section-title" id="how-title">A dashboard that's only there when you look.</h2>
+    <p class="section-lead">
+      No window to find, no tab to switch to, no widget eating screen space. Tjuvkik lives in the menu bar and shows
+      up for exactly as long as you hold the key.
+    </p>
+
+    <ol class="steps">
+      {
+        steps.map((s, i) => (
+          <li class="step">
+            <span class="step-n">{i + 1}</span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="aside">
+      No fn key, or using it for something else? Pick right <kbd class="keycap">⌥</kbd>, right
+      <kbd class="keycap">⌘</kbd> or a shortcut like <kbd class="keycap">⌃⌥Space</kbd>. Hold it, tap to toggle, or
+      double tap. Pin the glance to click rows and move around with the keyboard.
+    </p>
+  </div>
+</section>
+
+<style>
+  .steps {
+    list-style: none;
+    margin: 56px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 820px) {
+    .steps {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .step {
+    position: relative;
+    padding: 28px 26px 26px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    box-shadow: 0 0 0 1px var(--border) inset;
+  }
+
+  .step-n {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(189, 147, 249, 0.16);
+    color: var(--accent);
+    font: 600 14px/1 var(--mono);
+  }
+
+  .step h3 {
+    margin: 20px 0 8px;
+    font-size: 21px;
+    letter-spacing: -0.02em;
+  }
+
+  .step p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 15.5px;
+  }
+
+  .aside {
+    margin: 28px 0 0;
+    max-width: 70ch;
+    font-size: 15px;
+    color: var(--text-faint);
+    line-height: 1.8;
+  }
+</style>

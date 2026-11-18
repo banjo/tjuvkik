@@ -1,0 +1,352 @@
+---
+import type { Cell, Panel } from "../data/types";
+import { inline, linePath, markdown } from "../lib/text";
+
+interface Props {
+  panel: Panel;
+  class?: string;
+  style?: string;
+  headingLevel?: "h3" | "div";
+}
+
+const { panel, class: className, style, headingLevel = "div" } = Astro.props;
+const c = panel.content;
+const Heading = headingLevel;
+const every = panel.every === "live" ? "live" : panel.every === "file" ? "on change" : `every ${panel.every}`;
+
+const cell = (v: Cell) => (typeof v === "object" ? v : { text: String(v) });
+
+let chart: { line: string; area: string; lastY: number; id: string } | undefined;
+if (c.type === "chart") {
+  const w = 300;
+  const h = 100;
+  const min = c.min ?? Math.min(...c.series);
+  const max = c.max ?? Math.max(...c.series);
+  const pad = (max - min) * 0.08 || 1;
+  const lo = min - pad;
+  const hi = max + pad;
+  const line = linePath(c.series, w, h, lo, hi);
+  const last = c.series[c.series.length - 1];
+  chart = {
+    line,
+    area: `${line} L${w} ${h} L0 ${h} Z`,
+    lastY: h - ((last - lo) / (hi - lo)) * h,
+    id: `g-${panel.title.replace(/\W+/g, "-").toLowerCase()}`,
+  };
+}
+
+const pct = (v: number, from: number, to: number) => ((v - from) / (to - from)) * 100;
+---
+
+<section class:list={["tile", className]} style={style} aria-label={`${panel.title}, a ${panel.kind} panel`}>
+  <header class="tile-h">
+    <Heading class="title">{panel.title}</Heading>
+    <span class="kind">{panel.kind}</span>
+    <span class="every">{every}</span>
+  </header>
+  <div class="tile-body">
+    {
+      c.type === "rows" && (
+        <>
+          {c.hero && (
+            <div class="p-hero" data-tone={c.hero.tone}>
+              <b class="num">{c.hero.value}</b>
+              <span>{c.hero.label}</span>
+            </div>
+          )}
+          {c.summary && (
+            <div class="p-summary">
+              {c.summary.map((s) => (
+                <span data-tone={s.tone}>
+                  <b>{s.value}</b>
+                  {s.label}
+                </span>
+              ))}
+            </div>
+          )}
+          {c.rows.map((r) => (
+            <>
+              {r.group && <div class="p-group">{r.group}</div>}
+              <div class="p-row" data-tone={r.tone} data-selected={r.selected ? "" : undefined}>
+                {r.icon && <span class="ic" aria-hidden="true">{r.icon}</span>}
+                <span class="tx">
+                  <div class="t">{r.title}</div>
+                  {r.subtitle && <div class="m">{r.subtitle}</div>}
+                </span>
+                {r.trailing && <span class="r">{r.trailing}</span>}
+              </div>
+              {r.note && (
+                <div class="p-note" data-tone={r.tone}>
+                  {r.note}
+                </div>
+              )}
+            </>
+          ))}
+        </>
+      )
+    }
+
+    {c.type === "cli" && <pre class="p-cli">{c.text}</pre>}
+
+    {
+      c.type === "stats" && (
+        <div class="p-stats" style={`grid-template-columns: repeat(${c.columns ?? 3}, 1fr)`}>
+          {c.stats.map((s) => (
+            <div class="p-stat">
+              <span class="p-label">{s.label}</span>
+              <span class="v num">
+                {s.value}
+                {s.unit && <small>{s.unit}</small>}
+              </span>
+              <span class="bottom">
+                <span class="delta" data-tone={s.tone}>
+                  {s.delta}
+                </span>
+                <span class="vs">{s.vs}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      c.type === "chart" && chart && (
+        <div class="p-chart">
+          <div class="p-chart-top">
+            <span class="p-chart-val num">
+              {c.value}
+              {c.unit && <small>{c.unit}</small>}
+            </span>
+            {c.delta && (
+              <span class="delta" data-tone={c.delta.tone}>
+                {c.delta.text}
+              </span>
+            )}
+          </div>
+          {c.label && <span class="p-label">{c.label}</span>}
+          <div class="p-plot" data-tone={c.tone}>
+            <svg viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id={chart.id} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="var(--tone)" stop-opacity=".32" />
+                  <stop offset="1" stop-color="var(--tone)" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={chart.area} fill={`url(#${chart.id})`} />
+              <path
+                d={chart.line}
+                fill="none"
+                stroke="var(--tone)"
+                stroke-width="1.75"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      c.type === "meters" && (
+        <>
+          <div class="p-meters">
+            {c.meters.map((m) => (
+              <div class="p-meter" data-tone={m.tone}>
+                <span class="n">{m.label}</span>
+                <span class="v">
+                  <b>{m.text}</b>
+                  {m.of && ` / ${m.of}`}
+                </span>
+                <span class="track">
+                  <i style={`width: ${(m.value / m.max) * 100}%`} />
+                  {m.mark != null && <s style={`left: ${m.mark}%`} />}
+                </span>
+              </div>
+            ))}
+          </div>
+          {c.footer && <div class="p-foot">{c.footer}</div>}
+        </>
+      )
+    }
+
+    {
+      c.type === "table" && (
+        <table class="p-table">
+          <thead>
+            <tr>
+              {c.columns.map((col) => (
+                <th data-align={col.align} style={col.width ? `width: ${col.width}` : undefined}>
+                  {col.title}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {c.rows.map((r) => (
+              <tr data-highlight={r.highlight ? "" : undefined}>
+                {r.cells.map((v, i) => {
+                  const x = cell(v);
+                  return (
+                    <td
+                      data-align={c.columns[i]?.align}
+                      data-tone={x.tone}
+                      class:list={{ mono: c.columns[i]?.mono, dim: x.dim, dot: x.dot }}
+                    >
+                      {x.text}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+
+    {
+      c.type === "timeline" && (
+        <>
+          {c.countdown && (
+            <div class="p-countdown" data-tone={c.countdown.tone}>
+              <span class="p-label">{c.countdown.label}</span>
+              <b class="num t-tone">{c.countdown.when}</b>
+              <span class="what">{c.countdown.what}</span>
+            </div>
+          )}
+          <div class="p-strip">
+            {c.events.map((e) => (
+              <div
+                class="p-ev"
+                data-tone={e.tone}
+                data-past={e.end <= c.now ? "" : undefined}
+                style={`left: ${pct(e.start, c.from, c.to)}%; width: calc(${pct(e.end, c.from, c.to) - pct(e.start, c.from, c.to)}% - 2px)`}
+              >
+                {e.title}
+              </div>
+            ))}
+            <div class="p-now" style={`left: ${pct(c.now, c.from, c.to)}%`} />
+          </div>
+          <div class="p-axis">
+            {c.ticks.map(([at, label]) => (
+              <span style={`left: ${pct(at, c.from, c.to)}%`}>{label}</span>
+            ))}
+          </div>
+          <div class="p-next">
+            {c.notes.map((n) => (
+              <div>
+                <div class="k">{n.k}</div>
+                <b>{n.title}</b> <span>{n.sub}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+    }
+
+    {
+      c.type === "feed" && (
+        <div class="p-feed">
+          {c.items.map((it) => (
+            <div class="p-item">
+              {it.icon ? (
+                <span class="p-avatar" data-icon aria-hidden="true">
+                  {it.icon}
+                </span>
+              ) : (
+                <span class="p-avatar" data-tone={it.tone} aria-hidden="true">
+                  {it.initials}
+                </span>
+              )}
+              <div>
+                <div class="who">
+                  {it.unread && <i aria-label="unread" />}
+                  <b>{it.author}</b> {it.where && <span>{it.where}</span>}
+                </div>
+                <div class="say" set:html={inline(it.text)} />
+              </div>
+              <span class="when">{it.time}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      c.type === "grid" && (
+        <div class="p-chips">
+          {c.items.map((it) => (
+            <div class="p-chip" data-tone={it.tone}>
+              <i class="dot" />
+              <span class="n">{it.label}</span>
+              <span class="r">{it.value}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      c.type === "keyvalue" && (
+        <div class="p-kv">
+          {c.pairs.map((p) =>
+            "section" in p ? (
+              <div class="sec">{p.section}</div>
+            ) : (
+              <div class="pair">
+                <span class="k">{p.key}</span>
+                <span class="v" data-tone={p.tone} data-pill={p.pill ? "" : undefined}>
+                  {p.value}
+                </span>
+              </div>
+            ),
+          )}
+        </div>
+      )
+    }
+
+    {
+      c.type === "checklist" &&
+        (() => {
+          const tasks = c.items.filter((t) => "title" in t);
+          const done = tasks.filter((t) => "state" in t && t.state === "done").length;
+          const doing = tasks.filter((t) => "state" in t && t.state === "doing").length;
+          return (
+            <div class="p-check">
+              <div class="p-check-head">
+                <b class="num">
+                  {done}/{tasks.length}
+                </b>
+                <span>{c.caption}</span>
+              </div>
+              <div class="p-bar">
+                <i data-tone="success" style={`width: ${(done / tasks.length) * 100}%`} />
+                <i data-tone="accent" style={`width: ${(doing / tasks.length) * 100}%`} />
+              </div>
+              {c.items.map((t) =>
+                "section" in t ? (
+                  <div class="p-group">{t.section}</div>
+                ) : (
+                  <div class="p-task" data-state={t.state}>
+                    <span class="box" aria-hidden="true">
+                      {t.state === "done" ? "✓" : t.state === "blocked" ? "!" : ""}
+                    </span>
+                    <span class="tt">
+                      {t.title}
+                      {t.note && <span class="note">{t.note}</span>}
+                    </span>
+                    <span class="who">{t.who}</span>
+                  </div>
+                ),
+              )}
+            </div>
+          );
+        })()
+    }
+
+    {c.type === "markdown" && <div class="p-md" set:html={markdown(c.markdown)} />}
+  </div>
+  <slot />
+</section>

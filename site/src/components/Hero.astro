@@ -1,0 +1,187 @@
+---
+import { site } from "../data/site";
+import Glance from "./Glance.astro";
+import GitHubIcon from "./GitHubIcon.astro";
+---
+
+<header class="nav container">
+  <a class="brand" href="/" aria-label="Tjuvkik home">
+    <img src="/icon.svg" alt="" width="34" height="34" />
+    <span>Tjuvkik</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#panels">Panels</a>
+    <a href="#agents">Agents</a>
+    <a href="#config">Config</a>
+    <a class="nav-gh" href={site.repo}><GitHubIcon /><span>GitHub</span></a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container hero-copy">
+    <p class="badge"><span>macOS</span> Free and open source</p>
+    <h1>Hold fn.<br />See everything.</h1>
+    <p class="lead">
+      A glanceable dashboard for your Mac. Anything you can script becomes a panel, and it disappears when you let
+      go.
+    </p>
+    <div class="cta">
+      <a class="button button-primary" href={site.repo}><GitHubIcon />View on GitHub</a>
+      <a class="button button-ghost" href="#panels">See what it shows</a>
+    </div>
+    <p class="meta">macOS 15 or later · MIT · Homebrew coming soon</p>
+  </div>
+  <div class="container hero-demo">
+    <Glance />
+  </div>
+</section>
+
+<style>
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 650;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .brand img {
+    margin: -4px;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 2.4vw, 28px);
+    font-size: 14.5px;
+  }
+
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease-out;
+  }
+
+  @media (hover: hover) {
+    nav a:hover {
+      color: var(--text);
+    }
+  }
+
+  .nav-gh {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 1px var(--border) inset;
+    color: var(--text) !important;
+  }
+
+  .nav-gh :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 560px) {
+    nav a:not(.nav-gh) {
+      display: none;
+    }
+  }
+
+  .hero {
+    position: relative;
+    padding: clamp(32px, 5vw, 64px) 0 clamp(48px, 7vw, 96px);
+    isolation: isolate;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -76px 0 30%;
+    z-index: -1;
+    background:
+      radial-gradient(700px 420px at 20% 30%, rgba(107, 63, 160, 0.38), transparent 70%),
+      radial-gradient(600px 380px at 82% 12%, rgba(31, 111, 139, 0.32), transparent 70%),
+      radial-gradient(700px 500px at 60% 85%, rgba(180, 70, 107, 0.22), transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 26px;
+    padding: 5px 13px 5px 5px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 1px var(--border) inset;
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  .badge span {
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: rgba(189, 147, 249, 0.18);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(48px, 8vw, 92px);
+    line-height: 0.98;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    background: linear-gradient(180deg, #fff 30%, rgba(255, 255, 255, 0.62));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lead {
+    margin: 26px 0 0;
+    max-width: 34em;
+    font-size: clamp(17px, 2vw, 20.5px);
+    line-height: 1.5;
+    color: var(--text-muted);
+    text-wrap: balance;
+  }
+
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 34px;
+  }
+
+  .meta {
+    margin: 18px 0 0;
+    font-size: 13.5px;
+    color: var(--text-faint);
+  }
+
+  .hero-demo {
+    margin-top: clamp(40px, 5vw, 64px);
+  }
+</style>

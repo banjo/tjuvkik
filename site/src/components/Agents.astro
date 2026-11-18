@@ -1,0 +1,162 @@
+---
+import { agents } from "../data/panels";
+import CodeBlock from "./CodeBlock.astro";
+import Tile from "./Tile.astro";
+
+const panelJson = `
+{
+  "type": "script",
+  "mode": "stream",
+  "title": "Agents",
+  // Anything that prints one JSON line per change
+  "command": "agent-watcher --watch | jq -c -f rows.jq",
+  "size": "l",
+  "notify": { "on": ["warning", "error"] }
+}`;
+
+const points = [
+  ["Which one needs you", "Blocked, failed, working and done, with what it's waiting for right under it."],
+  ["A notification when it matters", "Sent when an agent starts waiting, withdrawn when it stops. Quiet hours included."],
+  ["The count in the menu bar", "✋ 2, without opening anything."],
+  ["Jump straight to it", "A row's command focuses the session. Click it, or press ↵."],
+];
+---
+
+<section class="section" id="agents" aria-labelledby="agents-title">
+  <div class="container split">
+    <div class="copy">
+      <p class="eyebrow">Working with AI agents</p>
+      <h2 class="section-title" id="agents-title">Tjuvkik doesn't know about agents. Your script does.</h2>
+      <p class="section-lead">
+        Running Claude Code, Codex and opencode in five terminals? Point a stream panel at whatever tracks them and
+        see, in one glance, which agent has been waiting on you for twenty minutes. No plugin per tool, no waiting
+        for support.
+      </p>
+      <ul class="points">
+        {
+          points.map(([t, d]) => (
+            <li>
+              <b>{t}</b>
+              <span>{d}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <CodeBlock file="panels/agents/panel.jsonc" lang="jsonc" code={panelJson} />
+    </div>
+
+    <div class="wallpaper visual">
+      <div class="notification" role="img" aria-label="A macOS notification: Fix flaky login test, Allow npm run test:e2e?">
+        <img src="/icon.svg" alt="" width="40" height="40" />
+        <div>
+          <div class="n-top"><b>Fix flaky login test</b><span>now</span></div>
+          <div class="n-sub">Agents</div>
+          <div class="n-body">Allow: npm run test:e2e?</div>
+        </div>
+      </div>
+      <Tile panel={agents} class="agents-tile" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .copy {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .points {
+    list-style: none;
+    margin: 32px 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+  }
+
+  .points li {
+    display: grid;
+    gap: 2px;
+    padding-left: 18px;
+    border-left: 2px solid rgba(189, 147, 249, 0.35);
+  }
+
+  .points b {
+    font-size: 15.5px;
+  }
+
+  .points span {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+
+  .visual {
+    display: grid;
+    gap: 18px;
+    padding: clamp(18px, 3.4vw, 40px);
+    min-width: 0;
+  }
+
+  .visual :global(.agents-tile) {
+    --u: 1.15px;
+    height: 430px;
+  }
+
+  .notification {
+    position: relative;
+    z-index: 1;
+    justify-self: end;
+    display: flex;
+    gap: 10px;
+    width: min(100%, 360px);
+    padding: 12px 14px 12px 8px;
+    border-radius: 18px;
+    background: rgba(48, 46, 62, 0.72);
+    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+    backdrop-filter: blur(30px) saturate(1.8);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 16px 40px rgba(0, 0, 0, 0.4);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .notification img {
+    flex: none;
+    margin: -2px -2px 0;
+  }
+
+  .notification > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .n-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .n-top span,
+  .n-sub {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 12px;
+  }
+
+  .n-body {
+    color: rgba(255, 255, 255, 0.85);
+  }
+</style>

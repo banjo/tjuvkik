@@ -1,0 +1,530 @@
+---
+import { heroBoard } from "../data/panels";
+import Tile from "./Tile.astro";
+---
+
+<div class="glance-demo" data-glance-demo>
+  <div class="screen" data-state="closed" data-screen>
+    <div class="desk" aria-hidden="true">
+      <div class="menubar">
+        <span class="apple"></span>
+        <b>Ghostty</b>
+        <span>Shell</span>
+        <span>Edit</span>
+        <span>View</span>
+        <span>Window</span>
+        <span class="spacer"></span>
+        <span class="mb-chip">✋ 2</span>
+        <span>
+          <svg viewBox="0 0 16 12" width="16" height="12" fill="currentColor"
+            ><path
+              d="M8 2.2c2.3 0 4.4.9 6 2.4l1-1.1A10 10 0 0 0 8 .7 10 10 0 0 0 1 3.5l1 1.1a8.7 8.7 0 0 1 6-2.4Zm0 3.1c1.5 0 2.9.6 4 1.6l1-1.1A7.3 7.3 0 0 0 8 3.8c-1.9 0-3.6.7-5 1.9l1 1.1a5.8 5.8 0 0 1 4-1.5Zm0 3.1c.7 0 1.4.3 1.9.7L8 11.3 6.1 9.1c.5-.4 1.2-.7 1.9-.7Z"
+            ></path></svg
+          >
+        </span>
+        <span class="batt"></span>
+        <span>Wed 18 Nov 14:52</span>
+      </div>
+      <div class="notch"></div>
+
+      <div class="term">
+        <div class="term-bar">
+          <span class="lights"><i></i><i></i><i></i></span>
+          ~/code/web — claude
+        </div>
+        <div class="term-body">
+          <div class="tl dim">~/code/web on feat/login-flake</div>
+          <div class="tl user">Fix the flaky login test in e2e/login.spec.ts</div>
+          <div class="tl">⏺ Reading <b>e2e/login.spec.ts</b></div>
+          <div class="tl">
+            ⏺ The test races the redirect. It should wait for the session cookie, not a fixed timeout.
+          </div>
+          <div class="tl">⏺ Edited <b>e2e/login.spec.ts</b> <span class="add">+6</span> <span class="del">−2</span></div>
+          <div class="tl ask">
+            Allow Bash: <code>npm run test:e2e -- login</code>?
+            <span class="opts"><b>1</b> Yes <b>2</b> Always <b>3</b> No</span>
+          </div>
+          <div class="term-input">›</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glance" data-glance>
+      <div class="backdrop"></div>
+      <div class="board">
+        {
+          heroBoard.map(({ panel, area }, i) => (
+            <Tile panel={panel} class="board-tile" style={`grid-area: ${area}; --i: ${i}`} />
+          ))
+        }
+      </div>
+      <div class="hints" aria-hidden="true">
+        <span><kbd>↵</kbd> Jump to session</span>
+        <span><kbd>⌘A</kbd> Approve</span>
+        <span><kbd>⌘K</kbd> Actions</span>
+        <span><kbd>esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="fnkey" type="button" data-fn aria-label="Hold to glance" aria-pressed="false">
+      <span>fn</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"
+        ><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9M12 3c-2.5 2.6-3.7 5.6-3.7 9s1.2 6.4 3.7 9"
+        ></path></svg
+      >
+    </button>
+    <p class="controls-text">
+      <span class="when-key">Hold <kbd class="keycap">Space</kbd> or the fn key to glance. Let go to close.</span>
+      <span class="when-touch">Press and hold fn to glance. Let go to close.</span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .glance-demo {
+    display: grid;
+    gap: 22px;
+    justify-items: center;
+  }
+
+  .screen {
+    --u: calc(100cqw / 1280);
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1280 / 800;
+    border-radius: clamp(10px, 1.6vw, 18px);
+    overflow: hidden;
+    background: #1b1530;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 0 0 clamp(5px, 0.9vw, 10px) #0a0812,
+      0 0 0 calc(clamp(5px, 0.9vw, 10px) + 1px) rgba(255, 255, 255, 0.08),
+      0 50px 120px -30px rgba(107, 63, 160, 0.55),
+      0 30px 80px -20px rgba(0, 0, 0, 0.8);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .desk {
+    position: absolute;
+    inset: 0;
+    background: var(--wallpaper);
+    font-size: calc(var(--u) * 13);
+  }
+
+  .menubar {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(var(--u) * 30);
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 17);
+    padding: 0 calc(var(--u) * 16);
+    font-size: calc(var(--u) * 13);
+    color: #fff;
+    background: rgba(20, 16, 36, 0.35);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    white-space: nowrap;
+  }
+
+  .menubar .apple {
+    font-size: calc(var(--u) * 15);
+  }
+
+  .menubar b {
+    font-weight: 600;
+  }
+
+  .menubar .spacer {
+    flex: 1;
+  }
+
+  .menubar svg {
+    width: calc(var(--u) * 16);
+    height: auto;
+  }
+
+  .mb-chip {
+    padding: calc(var(--u) * 2) calc(var(--u) * 7);
+    border-radius: calc(var(--u) * 5);
+    font-variant-numeric: tabular-nums;
+    background: rgba(255, 184, 108, 0.22);
+  }
+
+  .batt {
+    position: relative;
+    width: calc(var(--u) * 24);
+    height: calc(var(--u) * 12);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: calc(var(--u) * 3);
+    padding: 1px;
+  }
+
+  .batt::before {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 78%;
+    background: #fff;
+    border-radius: 1px;
+  }
+
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: calc(var(--u) * 190);
+    height: calc(var(--u) * 30);
+    margin-left: calc(var(--u) * -95);
+    background: #000;
+    border-radius: 0 0 calc(var(--u) * 12) calc(var(--u) * 12);
+  }
+
+  .term {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--u) * 70);
+    width: calc(var(--u) * 980);
+    height: calc(var(--u) * 640);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #282a36;
+    border-radius: calc(var(--u) * 12);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 0 0 0.5px #000,
+      0 30px 80px rgba(0, 0, 0, 0.5);
+    font: calc(var(--u) * 13) / 1.65 var(--mono);
+    color: #f8f8f2;
+  }
+
+  .term-bar {
+    position: relative;
+    height: calc(var(--u) * 34);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: calc(var(--u) * 12.5) var(--sans);
+    color: rgba(248, 248, 242, 0.55);
+  }
+
+  .lights {
+    position: absolute;
+    left: calc(var(--u) * 14);
+    display: flex;
+    gap: calc(var(--u) * 8);
+  }
+
+  .lights i {
+    width: calc(var(--u) * 12);
+    height: calc(var(--u) * 12);
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  .lights i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .lights i:nth-child(3) {
+    background: #28c840;
+  }
+
+  .term-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 8);
+    padding: calc(var(--u) * 10) calc(var(--u) * 24) calc(var(--u) * 20);
+  }
+
+  .tl b {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .tl.dim {
+    color: #6272a4;
+  }
+
+  .tl.user {
+    margin: calc(var(--u) * 6) 0;
+    padding: calc(var(--u) * 7) calc(var(--u) * 12);
+    border-left: 2px solid #bd93f9;
+    background: rgba(189, 147, 249, 0.08);
+  }
+
+  .tl .add {
+    color: #50fa7b;
+  }
+
+  .tl .del {
+    color: #ff5555;
+  }
+
+  .tl.ask {
+    margin-top: calc(var(--u) * 8);
+    padding: calc(var(--u) * 10) calc(var(--u) * 14);
+    border: 1px solid rgba(255, 184, 108, 0.5);
+    border-radius: calc(var(--u) * 5);
+    color: #ffb86c;
+  }
+
+  .tl.ask code {
+    color: #f1fa8c;
+  }
+
+  .tl.ask .opts {
+    display: block;
+    margin-top: calc(var(--u) * 4);
+    color: rgba(248, 248, 242, 0.6);
+  }
+
+  .tl.ask .opts b {
+    color: #ffb86c;
+    margin-left: calc(var(--u) * 10);
+  }
+
+  .tl.ask .opts b:first-child {
+    margin-left: 0;
+  }
+
+  .term-input {
+    margin-top: auto;
+    padding: calc(var(--u) * 8) calc(var(--u) * 12);
+    border: 1px solid #44475a;
+    border-radius: calc(var(--u) * 5);
+    color: #6272a4;
+  }
+
+  /* The glance */
+  .glance {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+    transition: visibility 0s linear 160ms;
+  }
+
+  .screen[data-state="open"] .glance {
+    visibility: visible;
+    transition: visibility 0s;
+  }
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 10, 24, 0.42);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+  }
+
+  .screen[data-state="open"] .backdrop {
+    opacity: 1;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .board {
+    position: absolute;
+    top: calc(var(--u) * 96);
+    left: 50%;
+    width: calc(var(--u) * 1080);
+    height: calc(var(--u) * 560);
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: calc(var(--u) * 10);
+  }
+
+  .board :global(.board-tile) {
+    opacity: 0;
+    transform: scale(0.97) translateY(calc(var(--u) * 6));
+    transition:
+      opacity 120ms ease-out,
+      transform 0s linear 160ms;
+  }
+
+  .screen[data-state="open"] .board :global(.board-tile) {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 200ms var(--ease-out) calc(var(--i) * 30ms),
+      transform 260ms var(--ease-out) calc(var(--i) * 30ms);
+  }
+
+  .hints {
+    position: absolute;
+    top: calc(var(--u) * 670);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: calc(var(--u) * 18);
+    font-size: calc(var(--u) * 11.5);
+    color: rgba(255, 255, 255, 0.62);
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+  }
+
+  .screen[data-state="open"] .hints {
+    opacity: 1;
+    transition: opacity 200ms var(--ease-out) 120ms;
+  }
+
+  .hints span {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--u) * 6);
+  }
+
+  .hints kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(var(--u) * 20);
+    height: calc(var(--u) * 19);
+    padding: 0 calc(var(--u) * 5);
+    border-radius: calc(var(--u) * 5);
+    background: rgba(255, 255, 255, 0.1);
+    font: 500 calc(var(--u) * 10.5) / 1 var(--mono);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .board :global(.board-tile),
+    .screen[data-state="open"] .board :global(.board-tile) {
+      transform: none;
+    }
+  }
+
+  /* Controls under the screen */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .controls-text {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  .when-touch {
+    display: none;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .when-key {
+      display: none;
+    }
+    .when-touch {
+      display: inline;
+    }
+  }
+
+  .fnkey {
+    flex: none;
+    width: 54px;
+    height: 50px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 9px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(#3b3b40, #2c2c31);
+    color: #ddd;
+    font: 500 12px/1 var(--sans);
+    cursor: pointer;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 2px 0 #0d0d0f,
+      0 3px 8px rgba(0, 0, 0, 0.45);
+    transition:
+      transform 80ms ease-out,
+      box-shadow 80ms ease-out;
+  }
+
+  .fnkey[aria-pressed="true"] {
+    transform: translateY(2px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 0 0 #0d0d0f,
+      0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+</style>
+
+<script>
+  const demo = document.querySelector<HTMLElement>("[data-glance-demo]");
+  const screen = demo?.querySelector<HTMLElement>("[data-screen]");
+  const fn = demo?.querySelector<HTMLButtonElement>("[data-fn]");
+
+  if (demo && screen && fn) {
+    let held = false;
+    let touched = false;
+
+    const set = (open: boolean) => {
+      screen.dataset.state = open ? "open" : "closed";
+      fn.setAttribute("aria-pressed", String(open));
+    };
+    const press = () => {
+      touched = true;
+      held = true;
+      set(true);
+    };
+    const release = () => {
+      if (!held) return;
+      held = false;
+      set(false);
+    };
+
+    // Space only opens the glance while a good part of the screen is visible; elsewhere it scrolls.
+    const inView = () => {
+      const r = screen.getBoundingClientRect();
+      const visible = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+      return visible > Math.min(r.height, innerHeight) * 0.35;
+    };
+
+    const typing = (t: EventTarget | null) =>
+      t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code !== "Space" || !inView() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target instanceof HTMLElement && e.target !== fn && e.target.closest("a, button")) return;
+      e.preventDefault();
+      if (!e.repeat) press();
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "Space") release();
+    });
+    window.addEventListener("blur", release);
+
+    fn.addEventListener("pointerdown", (e) => {
+      fn.setPointerCapture(e.pointerId);
+      press();
+    });
+    fn.addEventListener("pointerup", release);
+    fn.addEventListener("pointercancel", release);
+    fn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    const params = new URLSearchParams(location.search);
+    if (params.get("glance") === "open") set(true);
+    else
+      setTimeout(() => {
+        if (!touched) set(true);
+      }, 1500);
+  }
+</script>
