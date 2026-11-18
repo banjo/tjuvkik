@@ -32,6 +32,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trigger.onHide = { [glance] in glance.hide() }
         trigger.onPin = { [glance] in glance.stick() }
         trigger.onKey = { [glance] key in glance.handle(key) }
+        trigger.onEscape = { [glance] in glance.escape() }
+        glance.onRowKeys = { [trigger] keys in trigger.setRowKeys(keys) }
+        glance.onCommand = { [weak self] tile, row, kind in self?.perform(kind, row: row, in: tile) }
         glance.onMouseDown = { [trigger] in trigger.pin() }
         // Hiding always goes through the gesture, so its state stays right.
         glance.onDismiss = { [trigger] in trigger.dismiss() }
@@ -281,12 +284,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// A clicked row runs its command or opens its link, and the glance closes. A command wins
     /// over a url, as in the menu. A failed command shows on the tile next time.
     private func perform(_ action: RowAction, in tile: Tile) {
+        guard action.clicks else { return }
         if let command = action.command, !command.isEmpty {
             panels.runAction(command, id: tile.id)
         } else if let url = action.url, let link = URL(string: url) {
             NSWorkspace.shared.open(link)
         }
         trigger.dismiss()
+    }
+
+    /// A keyboard command. Refresh keeps the glance open to show the result; the rest close it.
+    private func perform(_ kind: GlanceCommand.Kind, row: RowAction?, in tile: Tile) {
+        switch kind {
+        case .click:
+            if let row { perform(row, in: tile) }
+        case .openURL:
+            if let link = row?.url.flatMap(URL.init(string:)) { NSWorkspace.shared.open(link) }
+            trigger.dismiss()
+        case .action(let action):
+            if let command = action.command, !command.isEmpty {
+                panels.runAction(command, id: tile.id)
+            } else if let link = action.url.flatMap(URL.init(string:)) {
+                NSWorkspace.shared.open(link)
+            } else if let text = action.copy {
+                copy(text)
+            }
+            trigger.dismiss()
+        case .copy:
+            guard let row else { return }
+            copy(row.hasURL ? row.url ?? "" : row.title)
+            trigger.dismiss()
+        case .refresh:
+            panels.runNow(tile.id)
+        case .openConfig:
+            menu(for: tile).openConfig()
+        case .showInFinder:
+            menu(for: tile).showInFinder()
+        case .menu:
+            break
+        }
+    }
+
+    private func copy(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 
     private func menu(for tile: Tile) -> TileMenu {

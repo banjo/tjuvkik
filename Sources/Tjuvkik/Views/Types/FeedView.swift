@@ -146,7 +146,7 @@ private struct FeedRow: View {
             .padding(.top, isFirst ? 0 : 7)
             .padding(.bottom, 7)
         }
-        .clickable(RowAction(url: item.url), theme: theme)
+        .clickable(RowAction(url: item.url, title: item.text, actions: item.actions), theme: theme)
     }
 
     /// "Sara Lind #dsp-spark": the author bold, where after it, dimmer.

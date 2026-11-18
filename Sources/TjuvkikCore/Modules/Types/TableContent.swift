@@ -111,6 +111,8 @@ public struct TableContent: Equatable, Sendable, Decodable {
         public var url: String?
         /// Run when the row is picked, in the panel's folder. Wins over `url`.
         public var command: String?
+        /// `actionTitle` and `actions`, for the glance's keyboard.
+        public var actions = RowActions()
 
         public init(cells: [Cell], highlight: Tone? = nil, url: String? = nil, command: String? = nil) {
             self.cells = cells
@@ -141,6 +143,7 @@ public struct TableContent: Equatable, Sendable, Decodable {
                 url: try container.decodeIfPresent(String.self, forKey: .url),
                 command: try container.decodeIfPresent(String.self, forKey: .command)
             )
+            actions = try RowActions(from: decoder)
         }
 
         /// The cell in a column, or an empty one when the row is short.

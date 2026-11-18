@@ -124,7 +124,7 @@ private struct RowView: View {
             }
         }
         .padding(.vertical, 4)
-        .clickable(RowAction(url: row.url, command: row.command), theme: theme, tone: row.tone)
+        .clickable(RowAction(url: row.url, command: row.command, title: row.title, actions: row.actions), theme: theme, tone: row.tone)
     }
 }
 

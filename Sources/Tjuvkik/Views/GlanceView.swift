@@ -13,11 +13,41 @@ struct GlanceView: View {
     let onAction: (Tile, RowAction) -> Void
     let menu: (Tile) -> TileMenu
 
+    /// The hint bar's height and its gap to the board, added below the board.
+    static let hintSpace: CGFloat = 38
+
     var body: some View {
         let config = store.config
-        BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible,
-                  onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
-                  focus: model.showsFocus ? model.focused : nil, onFocusEntries: onFocusEntries)
+        let theme = config.theme(dark: model.systemIsDark)
+        let focus = model.showsFocus ? model.focused : nil
+        VStack(spacing: 10) {
+            BoardView(config: config, theme: theme, states: panels.states, isVisible: model.isVisible,
+                      onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
+                      focus: focus, onFocusEntries: onFocusEntries)
+                .overlay(alignment: .topLeading) {
+                    if let actions = model.menu, let focus {
+                        GeometryReader { geometry in
+                            ActionMenuView(menu: actions, theme: theme)
+                                .fixedSize()
+                                .offset(Self.menuOffset(below: focus.frame, rows: actions.commands.count, in: geometry.size))
+                        }
+                    }
+                }
+            HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), theme: theme)
+                .opacity(focus != nil && model.isVisible ? 1 : 0)
+                .frame(height: Self.hintSpace - 10)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onBackgroundClick)
+        }
+    }
+
+    /// Under the row's right end, or above it when there's no room, kept on the board.
+    private static func menuOffset(below row: CGRect, rows: Int, in board: CGSize) -> CGSize {
+        let width: CGFloat = 240, height = CGFloat(rows) * 27 + 10
+        let x = min(max(row.maxX - width, 0), board.width - width)
+        let y = row.maxY + 4 + height <= board.height ? row.maxY + 4 : max(row.minY - 4 - height, 0)
+        return CGSize(width: x, height: y)
     }
 }
 

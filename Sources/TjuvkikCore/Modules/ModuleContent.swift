@@ -112,9 +112,11 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         public var url: String?
         /// Run when the row is picked in the menu, in the panel's folder. Wins over `url`.
         public var command: String?
+        /// `actionTitle` and `actions`, for the glance's keyboard.
+        public var actions: RowActions
 
         public init(icon: String? = nil, title: String, subtitle: String? = nil, trailing: String? = nil, tone: Tone? = nil,
-                    group: String? = nil, note: String? = nil, url: String? = nil, command: String? = nil) {
+                    group: String? = nil, note: String? = nil, url: String? = nil, command: String? = nil, actions: RowActions = RowActions()) {
             self.command = command
             self.icon = icon
             self.title = title
@@ -124,6 +126,23 @@ public struct RowsContent: Equatable, Sendable, Decodable {
             self.group = group
             self.note = note
             self.url = url
+            self.actions = actions
+        }
+
+        private enum CodingKeys: String, CodingKey { case icon, title, subtitle, trailing, tone, group, note, url, command }
+
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            icon = try container.decodeIfPresent(String.self, forKey: .icon)
+            title = try container.decode(String.self, forKey: .title)
+            subtitle = try container.decodeIfPresent(String.self, forKey: .subtitle)
+            trailing = try container.decodeIfPresent(String.self, forKey: .trailing)
+            tone = try container.decodeIfPresent(Tone.self, forKey: .tone)
+            group = try container.decodeIfPresent(String.self, forKey: .group)
+            note = try container.decodeIfPresent(String.self, forKey: .note)
+            url = try container.decodeIfPresent(String.self, forKey: .url)
+            command = try container.decodeIfPresent(String.self, forKey: .command)
+            actions = try RowActions(from: decoder)
         }
     }
 

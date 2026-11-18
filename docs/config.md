@@ -84,9 +84,15 @@ While the glance stays open (toggled, or pinned), a row is outlined, and you can
 |---|---|
 | ← → ↑ ↓ | The nearest row in that direction, across tiles. A tile without clickable rows is picked as a whole. |
 | Enter or Space | What clicking the row does. |
-| 1–9 | The first row of that tile, in `panels` order. |
-| ⌘R | Run the row's panel now. |
+| ⌥Enter | Open the row's `url`, when it also has a `command`. |
+| ⌘K | List everything you can do with the row, including its [actions](script-output.md#row-actions). Arrows and Enter pick; Esc closes the list. |
+| ⌘ and a key | The row's action with that `key`. |
+| ⌘C | Copy the row's `url`, or its title. |
+| ⌘R | Run the row's panel now. The glance stays open, so you see the result. |
 | ⌘O | Open its `panel.jsonc`. |
+| 1–9 | The first row of that tile, in `panels` order. |
+
+A bar under the board shows the keys for the picked row.
 
 When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. The keys are taken from the app in front only while the glance is open.
 

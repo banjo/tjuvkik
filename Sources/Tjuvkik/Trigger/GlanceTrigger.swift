@@ -15,6 +15,8 @@ final class GlanceTrigger {
     var onPin: () -> Void = {}
     /// A key for moving around the glance, while it stays open.
     var onKey: (GlanceKey) -> Void = { _ in }
+    /// Esc, before it closes the glance: true when it was used, like closing the ⌘K list.
+    var onEscape: () -> Bool = { false }
 
     private(set) var trigger = Trigger.fn
     private var gesture = TriggerGesture()
@@ -31,11 +33,17 @@ final class GlanceTrigger {
     private static let spaceID: UInt32 = 3
     /// Keys taken while the glance stays open, from this ID up.
     private static let navigationID: UInt32 = 100
+    /// The focused row's action keys, from this ID up.
+    private static let rowKeyID: UInt32 = 200
+    private var rowKeys: [String] = []
+    private var takesNavigationKeys = false
     private static let navigationKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = [
         (kVK_LeftArrow, 0, .move(.left)), (kVK_RightArrow, 0, .move(.right)),
         (kVK_UpArrow, 0, .move(.up)), (kVK_DownArrow, 0, .move(.down)),
         (kVK_Return, 0, .activate), (kVK_ANSI_KeypadEnter, 0, .activate), (kVK_Space, 0, .activate),
         (kVK_ANSI_R, cmdKey, .runNow), (kVK_ANSI_O, cmdKey, .openConfig),
+        (kVK_ANSI_K, cmdKey, .menu), (kVK_ANSI_C, cmdKey, .copy),
+        (kVK_Return, optionKey, .openURL), (kVK_ANSI_KeypadEnter, optionKey, .openURL),
     ] + [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
         .enumerated().map { ($1, 0, .tile($0 + 1)) }
     /// `NX_SYSDEFINED`, which `CGEventType` has no case for.
@@ -142,7 +150,7 @@ final class GlanceTrigger {
     private func hotKey(_ id: UInt32, pressed: Bool) {
         switch id {
         case Self.escapeID:
-            if pressed { send(.dismiss) }
+            if pressed, !onEscape() { send(.dismiss) }
         case Self.spaceID:
             if pressed { send(.pin) }
         case Self.shortcutID:
@@ -155,6 +163,8 @@ final class GlanceTrigger {
             }
         case Self.navigationID..<Self.navigationID + UInt32(Self.navigationKeys.count):
             if pressed { onKey(Self.navigationKeys[Int(id - Self.navigationID)].key) }
+        case Self.rowKeyID..<Self.rowKeyID + UInt32(rowKeys.count):
+            if pressed { onKey(.action(rowKeys[Int(id - Self.rowKeyID)])) }
         default:
             break
         }
@@ -163,13 +173,36 @@ final class GlanceTrigger {
     /// Arrows, Enter, Space, ⌘R, ⌘O and 1–9 move around the glance while it stays open. They're
     /// taken from the app in front only then.
     private func takeNavigationKeys() {
+        takesNavigationKeys = true
         for (offset, entry) in Self.navigationKeys.enumerated() {
             _ = hotKeys.register(Self.navigationID + UInt32(offset), keyCode: UInt32(entry.keyCode), modifiers: UInt32(entry.modifiers))
         }
+        takeRowKeys()
     }
 
     private func releaseNavigationKeys() {
+        takesNavigationKeys = false
         for offset in Self.navigationKeys.indices { hotKeys.unregister(Self.navigationID + UInt32(offset)) }
+        releaseRowKeys()
+    }
+
+    /// ⌘ and each key, for the focused row's actions, while the navigation keys are taken.
+    func setRowKeys(_ keys: [String]) {
+        guard keys != rowKeys else { return }
+        releaseRowKeys()
+        rowKeys = keys
+        if takesNavigationKeys { takeRowKeys() }
+    }
+
+    private func takeRowKeys() {
+        for (offset, key) in rowKeys.enumerated() {
+            guard case .success(let shortcut) = Shortcut.parse("cmd+\(key)") else { continue }
+            _ = hotKeys.register(Self.rowKeyID + UInt32(offset), keyCode: shortcut.keyCode, modifiers: shortcut.carbonModifiers)
+        }
+    }
+
+    private func releaseRowKeys() {
+        for offset in rowKeys.indices { hotKeys.unregister(Self.rowKeyID + UInt32(offset)) }
     }
 
     // MARK: Gesture

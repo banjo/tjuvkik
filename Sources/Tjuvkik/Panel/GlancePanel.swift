@@ -57,6 +57,8 @@ final class GlanceModel {
     /// What the keyboard has focused, and whether it shows: only while the glance stays open.
     var focused: FocusEntry?
     var showsFocus = false
+    /// The ⌘K list, while it's open.
+    var menu: ActionMenu?
 }
 
 /// A key pressed while the glance stays open.
@@ -68,6 +70,13 @@ enum GlanceKey {
     case openConfig
     /// 1–9: the first row of that tile on the board.
     case tile(Int)
+    /// ⌘K: the focused row's commands.
+    case menu
+    case copy
+    /// ⌥↵: the row's url, though it has a command.
+    case openURL
+    /// ⌘ and a letter or digit: the row's action with that `key`.
+    case action(String)
 }
 
 @MainActor
@@ -100,6 +109,10 @@ final class GlanceController {
     var onDismiss: () -> Void = {}
     /// A click on a row with a `url` or `command`.
     var onRowAction: (Tile, RowAction) -> Void = { _, _ in }
+    /// A keyboard command on the focused row, or its tile when the row is nil.
+    var onCommand: (Tile, RowAction?, GlanceCommand.Kind) -> Void = { _, _, _ in }
+    /// The `key`s of the focused row's actions, to take with ⌘ while it's focused.
+    var onRowKeys: ([String]) -> Void = { _ in }
     /// A tile's right-click menu.
     var tileMenu: (Tile) -> TileMenu = { _ in TileMenu() }
 
@@ -156,7 +169,10 @@ final class GlanceController {
         guard let screen = FocusedScreen.current() else { return }
         hideGeneration += 1
         isShown = true
-        panel.setFrame(GlancePlacement.framedRect(in: screen.visibleFrame), display: false)
+        var frame = GlancePlacement.framedRect(in: screen.visibleFrame)
+        frame.origin.y -= GlanceView.hintSpace
+        frame.size.height += GlanceView.hintSpace
+        panel.setFrame(frame, display: false)
         panel.alphaValue = 1
         panel.ignoresMouseEvents = false
         panel.orderFrontRegardless()
@@ -187,6 +203,7 @@ final class GlanceController {
         isShown = false
         isSticky = false
         model.showsFocus = false
+        model.menu = nil
         stuckWhileActive = false
         panel.ignoresMouseEvents = true
         if let outsideClicks { NSEvent.removeMonitor(outsideClicks) }
@@ -212,22 +229,55 @@ final class GlanceController {
 
     func handle(_ key: GlanceKey) {
         guard isSticky else { return }
+        if var menu = model.menu {
+            switch key {
+            case .move(.up): menu.selected = max(menu.selected - 1, 0)
+            case .move(.down): menu.selected = min(menu.selected + 1, menu.commands.count - 1)
+            case .activate:
+                model.menu = nil
+                perform(menu.commands[menu.selected].kind)
+                return
+            case .menu:
+                model.menu = nil
+                return
+            default: return
+            }
+            model.menu = menu
+            return
+        }
         switch key {
         case .move(let direction):
             guard let current = focusedIndex else { return focusFirst() }
             if let next = FocusNavigation.move(from: current, direction, in: targets.map(Self.target)) { focus(next) }
         case .activate:
-            guard let focused = model.focused, let action = focused.action, let tile = tile(focused.tile) else { return }
-            onRowAction(tile, action)
-        case .runNow:
-            if let tile = model.focused.flatMap({ tile($0.tile) }) { tileMenu(tile).runNow() }
-        case .openConfig:
-            if let tile = model.focused.flatMap({ tile($0.tile) }) { tileMenu(tile).openConfig() }
+            if model.focused?.action?.clicks == true { perform(.click) }
+        case .runNow: perform(.refresh)
+        case .openConfig: perform(.openConfig)
+        case .copy: perform(.copy)
+        case .openURL:
+            if model.focused?.action?.hasURL == true { perform(.openURL) }
+        case .action(let key):
+            if let action = model.focused?.action?.actions.actions.first(where: { $0.key == key }) { perform(.action(action)) }
+        case .menu:
+            guard let focused = model.focused else { return }
+            model.menu = ActionMenu(commands: GlanceCommand.all(for: focused.action))
         case .tile(let number):
             let order = tileOrder
             guard order.indices.contains(number - 1), let index = targets.firstIndex(where: { $0.tile == order[number - 1] }) else { return }
             focus(index)
         }
+    }
+
+    /// Esc closes the ⌘K list first. True when it did.
+    func escape() -> Bool {
+        guard model.menu != nil else { return false }
+        model.menu = nil
+        return true
+    }
+
+    private func perform(_ kind: GlanceCommand.Kind) {
+        guard let focused = model.focused, let tile = tile(focused.tile) else { return }
+        onCommand(tile, focused.action, kind)
     }
 
     private func tile(_ id: String) -> Tile? {
@@ -245,13 +295,22 @@ final class GlanceController {
 
     private func focusFirst() {
         let focusTiles = store.config.tiles.filter(\.focus).map(\.id)
-        if let index = FocusNavigation.initial(targets.map(Self.target), focusTiles: focusTiles) { focus(index) } else { model.focused = nil }
+        if let index = FocusNavigation.initial(targets.map(Self.target), focusTiles: focusTiles) { focus(index) } else { focusedEntry = nil }
     }
 
     private func focus(_ index: Int) {
         let entry = targets[index]
         focusOrdinal = targets[..<index].count { $0.tile == entry.tile && $0.action == entry.action }
-        model.focused = entry
+        focusedEntry = entry
+    }
+
+    private var focusedEntry: FocusEntry? {
+        get { model.focused }
+        set {
+            if newValue?.tile != model.focused?.tile || newValue?.action != model.focused?.action { model.menu = nil }
+            model.focused = newValue
+            onRowKeys(newValue?.action?.actions.actions.compactMap(\.key) ?? [])
+        }
     }
 
     private var focusedIndex: Int? {
@@ -276,7 +335,7 @@ final class GlanceController {
         targets = ordered
         guard let previous else { return isShown ? focusFirst() : () }
         if let index = focusedIndex {
-            model.focused = targets[index]
+            focusedEntry = targets[index]
         } else if let index = targets.indices.filter({ targets[$0].tile == previous.tile }).min(by: {
             abs(targets[$0].frame.midY - previous.frame.midY) < abs(targets[$1].frame.midY - previous.frame.midY)
         }) {

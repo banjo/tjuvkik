@@ -21,6 +21,8 @@ public struct FeedContent: Equatable, Sendable, Decodable {
         public var unread: Bool
         /// Opened when the item is picked.
         public var url: String?
+        /// `actionTitle` and `actions`, for the glance's keyboard.
+        public var actions = RowActions()
 
         public init(author: String? = nil, avatar: String? = nil, icon: String? = nil, place: String? = nil, text: String,
                     time: Date? = nil, timeText: String? = nil, unread: Bool = false, url: String? = nil) {
@@ -55,6 +57,7 @@ public struct FeedContent: Equatable, Sendable, Decodable {
             }
             unread = container.decodeFlag(forKey: .unread)
             url = try container.decodeIfPresent(String.self, forKey: .url)
+            actions = try RowActions(from: decoder)
         }
 
         /// The time to show next to the item: relative, or the script's own text.

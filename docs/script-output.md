@@ -81,6 +81,8 @@ Each row:
 | `note` | A line under the row in its tone, for what needs you. |
 | `url` | Opened when the row is clicked in the glance or picked in the menu. Closes the glance. |
 | `command` | Run when the row is clicked in the glance or picked in the menu, in the panel's folder. Wins over `url`. Closes the glance and runs the panel again, so the tile shows the result next time. |
+| `actionTitle` | What the glance's hint bar calls a click, like `"Jump to session"`. Default: Run or Open. |
+| `actions` | More things to do with the row from the keyboard. See [Row actions](#row-actions). |
 
 ## Menu bar
 
@@ -94,6 +96,29 @@ Shown when the panel is in `menuBar` in [config.jsonc](config.md#menu-bar).
 
 - Leave `menuBar` out to show the first `summary` chip, with the whole summary in the menu.
 - Set `"menuBar": null` to show nothing, like when nothing needs you.
+
+## Row actions
+
+Rows in rows, table, timeline and feed panels can offer more than a click. With the row picked in the glance, ⌘K lists them, and ⌘ and an action's `key` runs it directly. The hint bar under the board shows the keyed ones.
+
+```json
+{ "title": "feat: export filters", "url": "https://github.com/…/1284", "actionTitle": "Open PR",
+  "actions": [
+    { "title": "Approve", "command": "gh pr review 1284 --approve", "key": "a" },
+    { "title": "Check Out", "command": "gh pr checkout 1284" },
+    { "title": "Copy Branch", "copy": "feat/export-filters" }
+  ] }
+```
+
+| Field | |
+|---|---|
+| `title` | Required. |
+| `command` | Run in the panel's folder, like a row's. Wins over `url` and `copy`. |
+| `url` | Opened. Wins over `copy`. |
+| `copy` | Put on the clipboard. |
+| `key` | A letter or digit, used with ⌘. Not `c`, `k`, `o` or `r`, which the glance uses. |
+
+Running an action closes the glance.
 
 A row's `command` runs like the panel's, with your login shell's PATH. What it starts in the background keeps running, so it can open apps or focus windows. If it fails, the error shows on the tile.
 

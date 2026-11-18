@@ -1,11 +1,19 @@
 import SwiftUI
 import TjuvkikCore
 
-/// What clicking a row does.
+/// What clicking a row does, and what else the keyboard can do with it.
 struct RowAction: Equatable {
     var url: String?
     var command: String?
-    var isEmpty: Bool { (url ?? "").isEmpty && (command ?? "").isEmpty }
+    /// What ⌘C copies when there's no url.
+    var title = ""
+    var actions = RowActions()
+
+    var hasCommand: Bool { !(command ?? "").isEmpty }
+    var hasURL: Bool { !(url ?? "").isEmpty }
+    /// A click does something.
+    var clicks: Bool { hasCommand || hasURL }
+    var isEmpty: Bool { !clicks && actions.actions.isEmpty }
 }
 
 extension EnvironmentValues {
@@ -85,7 +93,7 @@ private struct ClickableRow: ViewModifier {
     @State private var hovering = false
 
     func body(content: Content) -> some View {
-        if let perform, !action.isEmpty {
+        if let perform, action.clicks {
             content
                 .contentShape(Rectangle())
                 .background(hovering ? Color(theme.well) : .clear, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
@@ -93,6 +101,9 @@ private struct ClickableRow: ViewModifier {
                 .onTapGesture { perform(action) }
                 .pointerStyle(.link)
                 .focusEntry(tile: tile ?? "", tone: tone, action: action, radius: radius)
+        } else if perform != nil, !action.isEmpty {
+            // Only actions: the keyboard can pick it for ⌘K, but a click does nothing.
+            content.focusEntry(tile: tile ?? "", tone: tone, action: action, radius: radius)
         } else {
             content
         }

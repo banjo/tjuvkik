@@ -13,10 +13,12 @@ public struct TimelineContent: Equatable, Sendable, Decodable {
         /// After the time, like a room or "Teams".
         public var subtitle: String?
         public var tone: Tone?
-        /// Kept for opening from the menu later; not used yet.
+        /// Opened when the event is clicked in the glance.
         public var url: String?
-        /// Kept for running from the menu later; not used yet.
+        /// Run when the event is clicked in the glance. Wins over `url`.
         public var command: String?
+        /// `actionTitle` and `actions`, for the glance's keyboard.
+        public var actions = RowActions()
 
         public init(title: String, start: Moment, end: Moment? = nil, subtitle: String? = nil, tone: Tone? = nil,
                     url: String? = nil, command: String? = nil) {
@@ -40,6 +42,7 @@ public struct TimelineContent: Equatable, Sendable, Decodable {
             tone = try container.decodeIfPresent(Tone.self, forKey: .tone)
             url = try container.decodeIfPresent(String.self, forKey: .url)
             command = try container.decodeIfPresent(String.self, forKey: .command)
+            actions = try RowActions(from: decoder)
         }
     }
 
