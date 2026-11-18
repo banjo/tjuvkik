@@ -1,11 +1,12 @@
 # Install
 
 ```sh
-scripts/create-cert.sh   # once: a self-signed "Tjuvkik Dev" signing certificate
-scripts/bundle.sh --open # build, sign, install to ~/Applications and start
+brew install --cask banjo/tap/tjuvkik
 ```
 
-Needs macOS 15 and the Xcode Command Line Tools. It also links the [command line tool](cli.md) to `~/.local/bin/tjuvkik`. Every build is signed with the same certificate, so macOS keeps the permissions across rebuilds.
+Needs macOS 15 or later. Homebrew also puts the [command line tool](cli.md) on your PATH as `tjuvkik`.
+
+Open Tjuvkik from Applications. It lives in the menu bar, with no Dock icon.
 
 ## Once
 
@@ -28,5 +29,14 @@ On first start Tjuvkik writes a default config to `~/.config/tjuvkik/` and opens
 4. **Done:** launch at login, background runs and notifications. Done opens the glance, pinned, until Esc, the trigger, a click outside or switching app.
 
 Each step writes to `config.jsonc` straight away, so quitting halfway leaves a working config. "Set Up…" in the menu opens it again. A config folder that's already there, say from your dotfiles, skips it.
+
+## Update and uninstall
+
+```sh
+brew upgrade --cask tjuvkik
+brew uninstall --cask tjuvkik
+```
+
+Uninstalling leaves your config in `~/.config/tjuvkik/`. Delete it too to start over.
 
 Next: [Config](config.md).

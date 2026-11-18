@@ -15,6 +15,8 @@ Exact facts, grouped: a label on the left, its value on the right.
 }
 ```
 
+![Key-value at s](images/keyvalue-s.png) ![Key-value at m](images/keyvalue-m.png) ![Key-value at l](images/keyvalue-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | Label above value, for the first pairs that fit. No headings. |

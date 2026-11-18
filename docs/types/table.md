@@ -17,6 +17,8 @@ The same fields for every row, in columns.
 }
 ```
 
+![Table at s](images/table-s.png) ![Table at m](images/table-m.png) ![Table at l](images/table-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | Up to two columns. |

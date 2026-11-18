@@ -8,6 +8,8 @@ Notes, runbooks and answers, written in Markdown.
 }
 ```
 
+![Markdown at s](images/markdown-s.png) ![Markdown at m](images/markdown-m.png) ![Markdown at l](images/markdown-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The heading and the first lines. Paragraphs stop after four lines. |

@@ -12,6 +12,8 @@ Who said what, and when: mentions, notifications, commits, posts.
 }
 ```
 
+![Feed at s](images/feed-s.png) ![Feed at m](images/feed-m.png) ![Feed at l](images/feed-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The newest message, large, with who and when under it, and how many more are unread. |

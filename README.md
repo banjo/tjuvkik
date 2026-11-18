@@ -5,8 +5,7 @@ Hold fn to glance at your coding agents and anything else you plug in. Let go to
 ## Quick start
 
 ```sh
-scripts/create-cert.sh   # once
-scripts/bundle.sh --open # build, install and start
+brew install --cask banjo/tap/tjuvkik
 ```
 
 A short setup picks your trigger, [starter panels](starters/panels) and theme. Turn on Input Monitoring when asked, then hold fn. Config lives in `~/.config/tjuvkik/`.
@@ -24,10 +23,9 @@ A short setup picks your trigger, [starter panels](starters/panels) and theme. T
 ## Development
 
 ```sh
-swift build
+scripts/create-cert.sh   # once
+scripts/bundle.sh --open # build, install and start
 swift test
 ```
 
-The app icon is drawn in `Resources/AppIcon.svg`. After changing it, run `scripts/make-icon.sh` (needs `brew install librsvg`) to write `Resources/AppIcon.icns`.
-
-See [PLAN.md](PLAN.md) for the v1 plan and [design/prototype.html](design/prototype.html) for the design.
+See [internal/building.md](internal/building.md).

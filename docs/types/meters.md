@@ -13,6 +13,8 @@ How full, how far, how close to a limit.
 }
 ```
 
+![Meters at s](images/meters-s.png) ![Meters at m](images/meters-m.png) ![Meters at l](images/meters-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The first meter as a ring, with its value and label inside. |

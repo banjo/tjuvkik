@@ -15,6 +15,8 @@ One number and where it's heading.
 }
 ```
 
+![Chart at s](images/chart-s.png) ![Chart at m](images/chart-m.png) ![Chart at l](images/chart-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The value and change, a sparkline below them. |

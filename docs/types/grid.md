@@ -17,6 +17,8 @@ Many things at once, a colored cell each: services, CI jobs, pull requests, upti
 }
 ```
 
+![Grid at s](images/grid-s.png) ![Grid at m](images/grid-m.png) ![Grid at l](images/grid-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The worst count, like `1 down`, the rest below it (`1 degraded, 10 up`), then a dot per row. |

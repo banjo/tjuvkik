@@ -12,6 +12,8 @@ A few numbers, each against its last period.
 }
 ```
 
+![Stats at s](images/stats-s.png) ![Stats at m](images/stats-m.png) ![Stats at l](images/stats-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The first stat, big: label, value, change. |

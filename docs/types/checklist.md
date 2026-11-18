@@ -17,6 +17,8 @@ Steps, and what's done, next and stuck. The tile is read-only: your script owns 
 }
 ```
 
+![Checklist at s](images/checklist-s.png) ![Checklist at m](images/checklist-m.png) ![Checklist at l](images/checklist-l.png)
+
 | Size | Shows |
 |---|---|
 | `s` | The count, a bar, and the next step: the first one in progress, else the first one to do. |

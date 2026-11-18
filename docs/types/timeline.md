@@ -18,6 +18,8 @@ What's now, what's next, and how long until.
 }
 ```
 
+![Timeline at s](images/timeline-s.png) ![Timeline at m](images/timeline-m.png) ![Timeline at l](images/timeline-l.png)
+
 Tjuvkik draws now and counts down itself, every 30 seconds, so the tile stays right between runs. Your script only has to run when the events change.
 
 | Size | Shows |

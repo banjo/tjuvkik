@@ -1,6 +1,6 @@
 # Command line
 
-`scripts/bundle.sh` links `tjuvkik` into `~/.local/bin`. It's the app's own binary: with a command it runs the command and exits, without one it starts the app.
+Homebrew puts `tjuvkik` on your PATH. It's the app's own binary: with a command it runs the command and exits, without one it starts the app.
 
 ```sh
 tjuvkik new prs --type table   # make panels/prs/ from a template
