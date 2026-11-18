@@ -47,6 +47,7 @@ struct RawTrigger: Decodable {
     var mode: String?
     var holdMs: Int?
     var doubleTapMs: Int?
+    var closeOnClickOutside: Bool?
 }
 
 struct RawPause: Decodable {

@@ -30,6 +30,7 @@ public struct ConfigEditor {
         try update(["trigger", "holdMs"], hold ? .number(Double(trigger.holdMilliseconds)) : nil)
         let doubleTap = trigger.mode == .doubleTap && trigger.doubleTapMilliseconds != 300
         try update(["trigger", "doubleTapMs"], doubleTap ? .number(Double(trigger.doubleTapMilliseconds)) : nil)
+        try update(["trigger", "closeOnClickOutside"], trigger.closeOnClickOutside ? nil : .bool(false))
         try removeIfEmpty(["trigger"])
     }
 

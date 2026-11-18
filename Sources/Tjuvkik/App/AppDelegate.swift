@@ -87,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func apply(_ config: Config) {
         trigger.configure(config.trigger)
+        glance.closesOnClickOutside = config.trigger.closeOnClickOutside
         startTrigger()
         panels.update(config.tiles)
         notifier.keep(Set(config.tiles.filter { $0.slot != nil || !$0.show }.map(\.id)))

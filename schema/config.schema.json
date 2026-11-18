@@ -103,6 +103,11 @@
           "maximum": 600,
           "default": 300,
           "description": "How soon the second tap must follow the first. Only with \"mode\": \"doubleTap\"."
+        },
+        "closeOnClickOutside": {
+          "type": "boolean",
+          "default": true,
+          "description": "A click outside the open glance, or between its tiles, closes it."
         }
       }
     },

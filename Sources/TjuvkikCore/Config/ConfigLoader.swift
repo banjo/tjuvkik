@@ -209,6 +209,7 @@ public enum ConfigLoader {
                 trigger.doubleTapMilliseconds = value
             }
         }
+        if let value = raw.closeOnClickOutside { trigger.closeOnClickOutside = value }
         return trigger
     }
 

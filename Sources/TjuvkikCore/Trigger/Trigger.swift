@@ -25,12 +25,15 @@ public struct Trigger: Equatable, Sendable {
     public var holdMilliseconds: Int
     /// How soon the second tap of a double tap must follow the first.
     public var doubleTapMilliseconds: Int
+    /// A click outside an open glance, or between its tiles, closes it.
+    public var closeOnClickOutside: Bool
 
-    public init(input: Input, mode: Mode, holdMilliseconds: Int = 250, doubleTapMilliseconds: Int = 300) {
+    public init(input: Input, mode: Mode, holdMilliseconds: Int = 250, doubleTapMilliseconds: Int = 300, closeOnClickOutside: Bool = true) {
         self.input = input
         self.mode = mode
         self.holdMilliseconds = holdMilliseconds
         self.doubleTapMilliseconds = doubleTapMilliseconds
+        self.closeOnClickOutside = closeOnClickOutside
     }
 
     public static let fn = Trigger(input: .key(.fn), mode: .hold)

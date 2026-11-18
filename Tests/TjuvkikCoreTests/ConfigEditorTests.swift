@@ -88,6 +88,11 @@ struct ConfigEditorTests {
         """)
     }
 
+    @Test func triggerCloseOnClickOutside() throws {
+        let text = #"{ "trigger": { "mode": "toggle" } }"#
+        #expect(try edit(text) { try $0.setTrigger(Trigger(input: .key(.fn), mode: .toggle, closeOnClickOutside: false)) } == #"{ "trigger": { "mode": "toggle", "closeOnClickOutside": false } }"#)
+    }
+
     @Test func triggerShortcut() throws {
         let text = #"{ "trigger": { "key": "fn", "holdMs": 250 } }"#
         #expect(try edit(text) { try $0.setTrigger(Trigger(input: .shortcut(shortcut("⌃⌥Space")), mode: .toggle)) } == #"{ "trigger": { "shortcut": "⌃⌥Space" } }"#)

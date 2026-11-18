@@ -70,6 +70,8 @@ struct TriggerPicker: View {
             .onAppear { doubleTap = Double(trigger.doubleTapMilliseconds) }
             .onChange(of: trigger.doubleTapMilliseconds) { doubleTap = Double(trigger.doubleTapMilliseconds) }
         }
+
+        Toggle("Close on click outside", isOn: Binding(get: { trigger.closeOnClickOutside }, set: { on in changed { $0.closeOnClickOutside = on } }))
     }
 
     private var shortcut: Shortcut? {
@@ -83,7 +85,7 @@ struct TriggerPicker: View {
             switch kind {
             case .key:
                 wantsShortcut = false
-                if shortcut != nil { onChange(Trigger(input: .key(.fn), mode: .hold)) }
+                if shortcut != nil { onChange(Trigger(input: .key(.fn), mode: .hold, closeOnClickOutside: trigger.closeOnClickOutside)) }
             case .shortcut:
                 if shortcut == nil { wantsShortcut = true }
             }

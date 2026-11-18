@@ -67,6 +67,8 @@ final class GlanceController {
     private var isShown = false
     /// True while the glance stays open on its own: toggled, or pinned.
     private(set) var isSticky = false
+    /// A click outside, or between the tiles, dismisses a sticky glance.
+    var closesOnClickOutside = true
     /// Tjuvkik was the active app when the glance stuck, as after setup: leaving it doesn't
     /// count as switching apps.
     private var stuckWhileActive = false
@@ -84,6 +86,10 @@ final class GlanceController {
     init(store: ConfigStore, panels: PanelStore) {
         panel.contentView = GlanceHostingView(rootView: GlanceView(
             model: model, store: store, panels: panels,
+            onBackgroundClick: { [weak self] in
+                guard let self, self.isSticky, self.closesOnClickOutside else { return }
+                self.onDismiss()
+            },
             onAction: { [weak self] tile, action in self?.onRowAction(tile, action) },
             menu: { [weak self] tile in self?.tileMenu(tile) ?? TileMenu() }
         ))
@@ -141,7 +147,7 @@ final class GlanceController {
         guard isShown, !isSticky else { return }
         isSticky = true
         stuckWhileActive = NSApp.isActive
-        guard outsideClicks == nil else { return }
+        guard closesOnClickOutside, outsideClicks == nil else { return }
         // Only clicks that go to other apps reach a global monitor: exactly the ones outside.
         outsideClicks = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { @Sendable [weak self] _ in
             Task { @MainActor in

@@ -7,13 +7,15 @@ struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
     let panels: PanelStore
+    /// A click between the tiles.
+    let onBackgroundClick: () -> Void
     let onAction: (Tile, RowAction) -> Void
     let menu: (Tile) -> TileMenu
 
     var body: some View {
         let config = store.config
         BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible,
-                  onAction: onAction, menu: menu)
+                  onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick)
     }
 }
 

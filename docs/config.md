@@ -10,7 +10,7 @@ The settings window (Settings…, ⌘,) writes this file for you. It changes onl
   "view": "bento",
   "layout": "framed",
   "theme": "dark-glass",
-  "trigger": { "key": "fn", "mode": "hold", "holdMs": 250 },
+  "trigger": { "key": "fn", "mode": "hold", "holdMs": 250, "closeOnClickOutside": true },
   "launchAtLogin": true,
   "menuBar": null,
   "pause": { "whenLocked": true, "onLowPower": true },
@@ -55,6 +55,7 @@ Or press a shortcut:
 - `mode`: `hold` shows the glance while you hold, `toggle` shows it on a tap or press and hides it on the next one or Esc. `doubleTap`: two taps of the key, the second within `doubleTapMs`, show the glance; two more or Esc hide it. A single tap does nothing. Keys only. A key holds by default, a shortcut toggles.
 - `holdMs`: how long to hold before the glance shows, 50–2000. Default 250. Only with `hold`.
 - `doubleTapMs`: how soon the second tap must follow the first, 150–600. Default 300. Only with `doubleTap`.
+- `closeOnClickOutside`: a click outside the open glance, or between its tiles, closes it. Default `true`.
 
 Or double-tap a key:
 
@@ -70,7 +71,7 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 
 - In `hold` mode, click the glance or press Space while you hold to keep it open after you let go.
 - `toggle` and `doubleTap` stay open on their own.
-- Esc, the trigger again, a click outside, or switching Space or app closes it.
+- Esc, the trigger again, a click outside (unless `closeOnClickOutside` is `false`), or switching Space or app closes it.
 - With right ⌘, ⌘Space may belong to Spotlight, so click instead.
 
 The glance takes clicks whenever it's open, but never takes keyboard focus from the app in front.

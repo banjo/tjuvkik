@@ -16,9 +16,16 @@ struct BoardView: View {
     /// Set by the glance: what a row's click does, and each tile's right-click menu.
     var onAction: ((Tile, RowAction) -> Void)?
     var menu: ((Tile) -> TileMenu)?
+    /// A click on the board but not on a tile.
+    var onBackgroundClick: (() -> Void)?
 
     var body: some View {
         GeometryReader { geometry in
+            if let onBackgroundClick {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: onBackgroundClick)
+            }
             let board = theme.board
             let cell = BentoGeometry.cell(in: geometry.size, board: board)
             let gap = CGFloat(board.gap), inset = CGFloat(board.inset)
