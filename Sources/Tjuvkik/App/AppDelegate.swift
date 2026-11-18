@@ -278,15 +278,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Glance
 
-    /// A clicked row: a command runs and the glance stays to show its result, a link opens and
-    /// the glance closes. A command wins over a url, as in the menu.
+    /// A clicked row runs its command or opens its link, and the glance closes. A command wins
+    /// over a url, as in the menu. A failed command shows on the tile next time.
     private func perform(_ action: RowAction, in tile: Tile) {
         if let command = action.command, !command.isEmpty {
             panels.runAction(command, id: tile.id)
         } else if let url = action.url, let link = URL(string: url) {
             NSWorkspace.shared.open(link)
-            trigger.dismiss()
         }
+        trigger.dismiss()
     }
 
     private func menu(for tile: Tile) -> TileMenu {
