@@ -1,0 +1,54 @@
+---
+import { site } from "../data/site";
+---
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>
+      <b>Why the name?</b> <i lang="sv">Tjuvkik</i> is Swedish for a sneak peek. Say it “shoov-sheek”.
+    </p>
+    <p class="right">
+      © {new Date().getFullYear()} Anton Ödman · <a href="/docs/">Docs</a> · <a href={site.repo}>GitHub</a> · <a href="/llms.txt">llms.txt</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0 40px;
+    font-size: 14px;
+    color: var(--text-faint);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 32px;
+  }
+
+  .footer p {
+    margin: 0;
+  }
+
+  .footer b {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .footer i {
+    color: var(--text);
+  }
+
+  .footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  @media (hover: hover) {
+    .footer a:hover {
+      color: var(--text);
+    }
+  }
+</style>

@@ -19,7 +19,7 @@ $ tjuvkik validate
 ✓ config.jsonc and 7 panels are valid, 6 on the board`;
 
 const prompt =
-  "Make a Tjuvkik panel that shows this week's deploys from `gh run list` as a timeline. Start with `tjuvkik new deploys --type timeline`, check the output with `tjuvkik run deploys`, look at `tjuvkik preview deploys` and fix it until it reads well, then run `tjuvkik validate`. The docs are at https://tjuvkik.banjoanton.com/llms-full.txt.";
+  "Make a Tjuvkik panel that shows this week's deploys from `gh run list` as a timeline. Start with `tjuvkik new deploys --type timeline`, check the output with `tjuvkik run deploys`, look at `tjuvkik preview deploys` and fix it until it reads well, then run `tjuvkik validate`. The docs are at https://tjuvkik.banjoanton.com/llms.txt.";
 ---
 
 <section class="section" aria-labelledby="build-title">
@@ -53,6 +53,7 @@ const prompt =
     <ul class="links">
       <li><a href="/llms.txt"><code>/llms.txt</code></a> what Tjuvkik is, for a model</li>
       <li><a href="/llms-full.txt"><code>/llms-full.txt</code></a> every doc, as one Markdown file</li>
+      <li><a href="/docs/config.md"><code>/docs/*.md</code></a> any docs page, as Markdown</li>
       <li>
         <a href="/schema/panel.schema.json"><code>/schema/*.schema.json</code></a> config, panel and theme schemas, for{" "}
         <code>$schema</code>

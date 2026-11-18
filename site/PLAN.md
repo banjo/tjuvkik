@@ -87,12 +87,15 @@ site/
     layouts/Base.astro    head, meta, Open Graph, JSON-LD
     pages/index.astro     the page, one component per section
     pages/og.astro        the Open Graph image, 1200×630, noindex
-    pages/llms.txt.ts     built from docs/
+    pages/docs/[...slug].astro    a page per file in ../docs, with sidebar, search and "on this page"
+    pages/docs/[...slug].md.ts    the same page as Markdown, with absolute links
+    pages/llms.txt.ts     built from docs/, links to the .md pages
     pages/llms-full.txt.ts
+    content.config.ts     the docs collection, read from ../docs
     pages/schema/[name].json.ts   copied from schema/
     components/           Hero, Glance (the live demo), Tile (draws every panel type), sections
     data/                 sample output for every tile, close to the shape a script prints
-    lib/                  reading docs/ and schema/, small Markdown and chart helpers
+    lib/                  docs order and links, reading schema/, small Markdown and chart helpers
     styles/global.css     tokens from the prototype and the tile styles
 ```
 
@@ -107,6 +110,12 @@ pnpm check      # vp check (format, lint) and astro check (types)
 pnpm build      # dist/
 ```
 
+## Docs
+
+`/docs` renders `../docs/*.md` as they are, so the repo stays the only source. The order comes from the links in `docs/README.md` (the guide) and `docs/script-output.md` (panel types); a page's description is its line in `docs/README.md`, or its first paragraph. Links between docs are rewritten to site pages (`src/lib/doc-links.ts`); links out of `docs/` go to the repo.
+
+For agents: every page is also at its path plus `.md` (`/docs/config.md`, `/docs/index.md`), announced with `<link rel="alternate" type="text/markdown">`, and has Copy and View as Markdown buttons. Search is Pagefind, built after Astro by `pnpm build`; it only works on a build (`pnpm build && pnpm preview`), not in `pnpm dev`.
+
 To update `public/og.png`, open `/og` at 1200×630 and screenshot it.
 
 ## Deploy
@@ -116,5 +125,6 @@ Cloudflare Pages: root directory `site`, build `pnpm build`, output `dist`, `NOD
 ## Before launch
 
 - Make `banjo/tjuvkik` public and add an MIT `LICENSE`.
-- Check every CTA link, and that `llms.txt` links resolve once the repo is public.
+- TODO: `docs/install.md` and the README say `brew install --cask banjo/tap/tjuvkik`, which doesn't exist yet. Make the tap and cask (with a `binary` stanza for `tjuvkik`), and sign and notarize the app with a Developer ID so Gatekeeper lets it open. Building from source is in `internal/building.md`.
+- Check every CTA link, and that the repo links (Edit on GitHub, links out of docs/) resolve once the repo is public.
 - TODO: the examples use `https://tjuvkik.banjoanton.com/schema/<name>.schema.json` as `$schema` (`site.schema()` in `src/data/site.ts`). Check they resolve once deployed, then decide whether the app's default config and starter panels point there too instead of `schemas/`.

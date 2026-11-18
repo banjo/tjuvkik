@@ -4,13 +4,15 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description: string;
+  /** JSON-LD for the page. Defaults to the app itself. */
+  structured?: object;
 }
 
-const { title, description } = Astro.props;
+const { title, description, structured } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL("/og.png", Astro.site);
 
-const jsonLd = {
+const app = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Tjuvkik",
@@ -57,7 +59,8 @@ const jsonLd = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(structured ?? app)} />
+    <slot name="head" />
   </head>
   <body>
     <slot />

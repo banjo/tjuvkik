@@ -2,20 +2,10 @@
 import { site } from "../data/site";
 import Glance from "./Glance.astro";
 import GitHubIcon from "./GitHubIcon.astro";
+import Nav from "./Nav.astro";
 ---
 
-<header class="nav container">
-  <a class="brand" href="/" aria-label="Tjuvkik home">
-    <img src="/icon.svg" alt="" width="34" height="34" />
-    <span>Tjuvkik</span>
-  </a>
-  <nav aria-label="Sections">
-    <a href="#panels">Panels</a>
-    <a href="#agents">Agents</a>
-    <a href="#config">Config</a>
-    <a class="nav-gh" href={site.repo}><GitHubIcon /><span>GitHub</span></a>
-  </nav>
-</header>
+<Nav />
 
 <section class="hero">
   <div class="container hero-copy">
@@ -37,68 +27,6 @@ import GitHubIcon from "./GitHubIcon.astro";
 </section>
 
 <style>
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 76px;
-  }
-
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 650;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-    text-decoration: none;
-  }
-
-  .brand img {
-    margin: -4px;
-  }
-
-  nav {
-    display: flex;
-    align-items: center;
-    gap: clamp(14px, 2.4vw, 28px);
-    font-size: 14.5px;
-  }
-
-  nav a {
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color 150ms ease-out;
-  }
-
-  @media (hover: hover) {
-    nav a:hover {
-      color: var(--text);
-    }
-  }
-
-  .nav-gh {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 13px;
-    border-radius: 99px;
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 0 1px var(--border) inset;
-    color: var(--text) !important;
-  }
-
-  .nav-gh :global(svg) {
-    width: 16px;
-    height: 16px;
-  }
-
-  @media (max-width: 560px) {
-    nav a:not(.nav-gh) {
-      display: none;
-    }
-  }
-
   .hero {
     position: relative;
     padding: clamp(32px, 5vw, 64px) 0 clamp(48px, 7vw, 96px);

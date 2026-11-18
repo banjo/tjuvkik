@@ -1,0 +1,97 @@
+---
+import { site } from "../data/site";
+import GitHubIcon from "./GitHubIcon.astro";
+
+interface Props {
+  /** Where the page is, for aria-current and the width of the bar. */
+  current?: "home" | "docs";
+}
+
+const { current = "home" } = Astro.props;
+const home = current === "home" ? "" : "/";
+---
+
+<header class:list={["nav", current === "docs" ? "nav-wide" : "container"]}>
+  <a class="brand" href="/" aria-label="Tjuvkik home">
+    <img src="/icon.svg" alt="" width="34" height="34" />
+    <span>Tjuvkik</span>
+  </a>
+  <nav aria-label="Site">
+    <a class="section-link" href={`${home}#panels`}>Panels</a>
+    <a class="section-link" href={`${home}#agents`}>Agents</a>
+    <a href="/docs/" aria-current={current === "docs" ? "page" : undefined}>Docs</a>
+    <a class="nav-gh" href={site.repo}><GitHubIcon /><span>GitHub</span></a>
+  </nav>
+</header>
+
+<style>
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+  }
+
+  .nav-wide {
+    padding-inline: clamp(16px, 3vw, 32px);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 650;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .brand img {
+    margin: -4px;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 2.4vw, 28px);
+    font-size: 14.5px;
+  }
+
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease-out;
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--text);
+  }
+
+  @media (hover: hover) {
+    nav a:hover {
+      color: var(--text);
+    }
+  }
+
+  .nav-gh {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 1px var(--border) inset;
+    color: var(--text) !important;
+  }
+
+  .nav-gh :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 560px) {
+    .section-link {
+      display: none;
+    }
+  }
+</style>
