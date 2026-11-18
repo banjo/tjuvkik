@@ -338,7 +338,7 @@ public enum ConfigLoader {
             description: raw.description, author: raw.author, version: raw.version,
             size: refSize ?? panelSize, every: every, timeout: timeout, requires: requires,
             directory: files.directory.appending(path: "panels/\(name)"), content: content,
-            history: history, file: source, background: background, show: show, notify: notify
+            history: history, file: source, background: background, show: show, focus: ref.focus ?? false, notify: notify
         )
     }
 

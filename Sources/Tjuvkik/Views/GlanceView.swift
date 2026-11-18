@@ -6,6 +6,7 @@ import TjuvkikCore
 struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
+    let onFocusEntries: ([FocusEntry]) -> Void
     let panels: PanelStore
     /// A click between the tiles.
     let onBackgroundClick: () -> Void
@@ -15,7 +16,8 @@ struct GlanceView: View {
     var body: some View {
         let config = store.config
         BoardView(config: config, theme: config.theme(dark: model.systemIsDark), states: panels.states, isVisible: model.isVisible,
-                  onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick)
+                  onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
+                  focus: model.showsFocus ? model.focused : nil, onFocusEntries: onFocusEntries)
     }
 }
 
@@ -115,6 +117,8 @@ struct TileView: View {
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)
         .animation(.easeOut(duration: 0.22).delay(Double(index) * 0.03), value: isVisible)
         .environment(\.performRow, onAction)
+        .environment(\.focusTile, tile.id)
+        .modifier(TileFocusEntry(tile: tile.id, radius: radius, active: onAction != nil))
         .tileMenu(menu)
     }
 
@@ -151,6 +155,17 @@ struct TileView: View {
                 Text("Loading…").font(theme.font(11.5)).foregroundStyle(Color(theme.tertiaryText))
             }
         }
+    }
+}
+
+/// The whole tile as a focus target, reported only in the glance.
+private struct TileFocusEntry: ViewModifier {
+    let tile: String
+    let radius: CGFloat
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        if active { content.focusEntry(tile: tile, action: nil, radius: radius) } else { content }
     }
 }
 

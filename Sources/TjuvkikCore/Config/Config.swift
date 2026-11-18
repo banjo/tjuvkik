@@ -94,6 +94,8 @@ public struct Tile: Equatable, Sendable {
     public var background: Background = .same
     /// False: the panel runs, for the menu bar, but has no spot on the grid.
     public var show = true
+    /// Picked first when the glance opens for the keyboard, after urgent rows in it.
+    public var focus = false
     /// What the panel notifies about; nil: it never notifies.
     public var notify: NotifySettings? = NotifySettings()
 

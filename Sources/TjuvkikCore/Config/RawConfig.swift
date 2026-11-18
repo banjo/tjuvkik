@@ -110,6 +110,7 @@ struct RawPanelRef: Decodable {
     var size: String?
     var background: RawBackground?
     var show: Bool?
+    var focus: Bool?
     var notify: RawNotify?
     var options: [String: RawOptionValue]?
 }

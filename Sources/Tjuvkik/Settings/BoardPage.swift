@@ -202,6 +202,10 @@ private struct TileForm: View {
                 get: { value(Bool.self, "show") ?? true },
                 set: { on in model.change { try $0.setTile(index, .show, on ? nil : .bool(false)) } }
             ))
+            Toggle("Picked first with the keyboard", isOn: Binding(
+                get: { value(Bool.self, "focus") ?? false },
+                set: { on in model.change { try $0.setTile(index, .focus, on ? .bool(true) : nil) } }
+            ))
             Toggle("In the menu bar", isOn: Binding(
                 get: { model.store.config.menuBar.contains(entry.resolvedID) },
                 set: { on in model.change { try $0.setInMenuBar(entry.resolvedID, on) } }

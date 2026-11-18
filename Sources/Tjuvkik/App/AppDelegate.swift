@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         trigger.onHide = { [glance] in glance.hide() }
         trigger.onPin = { [glance] in glance.stick() }
+        trigger.onKey = { [glance] key in glance.handle(key) }
         glance.onMouseDown = { [trigger] in trigger.pin() }
         // Hiding always goes through the gesture, so its state stays right.
         glance.onDismiss = { [trigger] in trigger.dismiss() }

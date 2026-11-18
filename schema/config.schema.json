@@ -240,6 +240,11 @@
             "default": true,
             "description": "false: the panel runs, for the menu bar, but has no spot on the grid."
           },
+          "focus": {
+            "type": "boolean",
+            "default": false,
+            "description": "Picked first when you open the glance and use the keyboard. Urgent rows (error, then warning) in it come first, then urgent rows elsewhere, then its first row."
+          },
           "notify": {
             "anyOf": [
               {

@@ -191,5 +191,5 @@ extension ConfigEditor {
         }
     }
 
-    public enum TileKey: String, Sendable { case size, title, show, background, notify }
+    public enum TileKey: String, Sendable { case size, title, show, focus, background, notify }
 }

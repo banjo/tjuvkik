@@ -5,6 +5,9 @@ import TjuvkikCore
 /// settings window draws it small. `solid` draws tiles without the blur, which doesn't work
 /// inside a scaled view.
 struct BoardView: View {
+    /// The coordinate space focus entries are reported in.
+    static let space = "board"
+
     let config: Config
     let theme: Theme
     let states: [String: PanelStore.State]
@@ -18,6 +21,10 @@ struct BoardView: View {
     var menu: ((Tile) -> TileMenu)?
     /// A click on the board but not on a tile.
     var onBackgroundClick: (() -> Void)?
+    /// What the keyboard has focused, outlined.
+    var focus: FocusEntry?
+    /// The rows and tiles the keyboard can focus, as laid out.
+    var onFocusEntries: (([FocusEntry]) -> Void)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -51,6 +58,19 @@ struct BoardView: View {
                         )
                 }
             }
+            if let focus {
+                let ring: CGFloat = focus.action == nil ? 3 : 1.5
+                RoundedRectangle(cornerRadius: focus.radius + ring, style: .continuous)
+                    .fill(focus.action == nil ? Color.clear : Color(theme.accent).opacity(0.12))
+                    .strokeBorder(Color(theme.accent), lineWidth: ring)
+                    .frame(width: focus.frame.width + ring * 2, height: focus.frame.height + ring * 2)
+                    .position(x: focus.frame.midX, y: focus.frame.midY)
+                    .allowsHitTesting(false)
+            }
+        }
+        .coordinateSpace(name: Self.space)
+        .onPreferenceChange(FocusEntriesKey.self) { entries in
+            MainActor.assumeIsolated { onFocusEntries?(entries) }
         }
         .environment(\.colorScheme, theme.appearance.colorScheme)
     }

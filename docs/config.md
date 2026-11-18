@@ -76,6 +76,20 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 
 The glance takes clicks whenever it's open, but never takes keyboard focus from the app in front.
 
+### Keyboard
+
+While the glance stays open (toggled, or pinned), a row is outlined, and you can use it without the mouse:
+
+| Key | |
+|---|---|
+| ← → ↑ ↓ | The nearest row in that direction, across tiles. A tile without clickable rows is picked as a whole. |
+| Enter or Space | What clicking the row does. |
+| 1–9 | The first row of that tile, in `panels` order. |
+| ⌘R | Run the row's panel now. |
+| ⌘O | Open its `panel.jsonc`. |
+
+When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. The keys are taken from the app in front only while the glance is open.
+
 ## Panels
 
 ```jsonc
@@ -92,6 +106,7 @@ The glance takes clicks whenever it's open, but never takes keyboard focus from 
 - `size`: overrides the panel's own size. Optional.
 - `background`: overrides the panel's own, for when it runs while the glance is closed: `true`, `false` or a duration like `"5m"`. See [Background](panels.md#background).
 - `show`: `false` runs the panel for the menu bar without giving it a spot on the grid. Optional.
+- `focus`: `true` picks this tile first when you use the keyboard. See [Keyboard](#keyboard). Optional.
 - `notify`: overrides the panel's own, key by key: `false`, `true` or an object. See [Notifications](notifications.md#a-panels-notify).
 
 The same panel can be on the board more than once; give each an `id`:

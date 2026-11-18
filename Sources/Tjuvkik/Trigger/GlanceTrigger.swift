@@ -13,6 +13,8 @@ final class GlanceTrigger {
     var onShow: () -> Void = {}
     var onHide: () -> Void = {}
     var onPin: () -> Void = {}
+    /// A key for moving around the glance, while it stays open.
+    var onKey: (GlanceKey) -> Void = { _ in }
 
     private(set) var trigger = Trigger.fn
     private var gesture = TriggerGesture()
@@ -27,6 +29,15 @@ final class GlanceTrigger {
     private static let shortcutID: UInt32 = 1
     private static let escapeID: UInt32 = 2
     private static let spaceID: UInt32 = 3
+    /// Keys taken while the glance stays open, from this ID up.
+    private static let navigationID: UInt32 = 100
+    private static let navigationKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = [
+        (kVK_LeftArrow, 0, .move(.left)), (kVK_RightArrow, 0, .move(.right)),
+        (kVK_UpArrow, 0, .move(.up)), (kVK_DownArrow, 0, .move(.down)),
+        (kVK_Return, 0, .activate), (kVK_ANSI_KeypadEnter, 0, .activate), (kVK_Space, 0, .activate),
+        (kVK_ANSI_R, cmdKey, .runNow), (kVK_ANSI_O, cmdKey, .openConfig),
+    ] + [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
+        .enumerated().map { ($1, 0, .tile($0 + 1)) }
     /// `NX_SYSDEFINED`, which `CGEventType` has no case for.
     private static let systemDefined: UInt32 = 14
 
@@ -142,9 +153,23 @@ final class GlanceTrigger {
             case .hold: send(pressed ? .triggerDown(otherModifiers: false) : .triggerUp)
             case .toggle, .doubleTap: if pressed { send(.toggle) }
             }
+        case Self.navigationID..<Self.navigationID + UInt32(Self.navigationKeys.count):
+            if pressed { onKey(Self.navigationKeys[Int(id - Self.navigationID)].key) }
         default:
             break
         }
+    }
+
+    /// Arrows, Enter, Space, ⌘R, ⌘O and 1–9 move around the glance while it stays open. They're
+    /// taken from the app in front only then.
+    private func takeNavigationKeys() {
+        for (offset, entry) in Self.navigationKeys.enumerated() {
+            _ = hotKeys.register(Self.navigationID + UInt32(offset), keyCode: UInt32(entry.keyCode), modifiers: UInt32(entry.modifiers))
+        }
+    }
+
+    private func releaseNavigationKeys() {
+        for offset in Self.navigationKeys.indices { hotKeys.unregister(Self.navigationID + UInt32(offset)) }
     }
 
     // MARK: Gesture
@@ -180,13 +205,16 @@ final class GlanceTrigger {
                 // Space pins a held glance. If it's taken, a click still does.
                 if trigger.mode == .hold { _ = hotKeys.register(Self.spaceID, keyCode: UInt32(kVK_Space), modifiers: spaceModifiers) }
                 onShow()
+                if trigger.mode != .hold { takeNavigationKeys() }
             case .pinned:
                 hotKeys.unregister(Self.spaceID)
                 _ = hotKeys.register(Self.escapeID, keyCode: UInt32(kVK_Escape), modifiers: 0)
                 onPin()
+                takeNavigationKeys()
             case .hide:
                 hotKeys.unregister(Self.escapeID)
                 hotKeys.unregister(Self.spaceID)
+                releaseNavigationKeys()
                 onHide()
             }
         }
