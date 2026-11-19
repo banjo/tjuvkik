@@ -1,6 +1,7 @@
 ---
 import { deploys } from "../data/panels";
 import CodeBlock from "./CodeBlock.astro";
+import CopyButton from "./CopyButton.astro";
 import Tile from "./Tile.astro";
 
 const session = `
@@ -45,7 +46,7 @@ const prompt =
     <div class="prompt">
       <div class="prompt-head">
         <span>A prompt to start from</span>
-        <button type="button" class="copy" data-copy={prompt}>Copy</button>
+        <CopyButton text={prompt} />
       </div>
       <p>{prompt}</p>
     </div>
@@ -130,36 +131,6 @@ const prompt =
     color: var(--text);
   }
 
-  .copy {
-    position: relative;
-    padding: 6px 13px;
-    border: 0;
-    border-radius: 99px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text);
-    font: 600 12.5px var(--sans);
-    cursor: pointer;
-    transition:
-      background-color 150ms ease-out,
-      transform 120ms var(--ease-out);
-  }
-
-  .copy::after {
-    content: "";
-    position: absolute;
-    inset: -4px;
-  }
-
-  .copy:active {
-    transform: scale(0.96);
-  }
-
-  @media (hover: hover) {
-    .copy:hover {
-      background: rgba(255, 255, 255, 0.16);
-    }
-  }
-
   .links {
     list-style: none;
     margin: 28px 0 0;
@@ -185,13 +156,3 @@ const prompt =
     color: var(--text-muted);
   }
 </style>
-
-<script>
-  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy]")) {
-    button.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(button.dataset.copy ?? "");
-      button.textContent = "Copied";
-      setTimeout(() => (button.textContent = "Copy"), 1600);
-    });
-  }
-</script>

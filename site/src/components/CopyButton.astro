@@ -1,0 +1,56 @@
+---
+interface Props {
+  text: string;
+  label?: string;
+  class?: string;
+}
+
+const { text, label = "Copy", class: className } = Astro.props;
+---
+
+<button type="button" class:list={["copy", className]} data-copy={text} data-label={label}>{label}</button>
+
+<style>
+  .copy {
+    position: relative;
+    flex: none;
+    padding: 6px 13px;
+    border: 0;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    font: 600 12.5px var(--sans);
+    cursor: pointer;
+    transition:
+      background-color 150ms ease-out,
+      transform 120ms var(--ease-out);
+  }
+
+  .copy::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+
+  .copy:active {
+    transform: scale(0.96);
+  }
+
+  @media (hover: hover) {
+    .copy:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+  }
+</style>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-copy]")) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(button.dataset.copy ?? "");
+      button.textContent = "Copied";
+      clearTimeout(timer);
+      timer = setTimeout(() => (button.textContent = button.dataset.label ?? "Copy"), 1600);
+    });
+  }
+</script>

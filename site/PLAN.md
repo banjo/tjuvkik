@@ -4,22 +4,21 @@ One page at `tjuvkik.banjoanton.com` that shows the glance and makes developers 
 
 ## Settled
 
-| Area      | Choice                                                                                                                                                          |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Audience  | Developers and coders, many working with AI agents                                                                                                              |
-| Message   | The gesture first (hold fn, let go), then "anything you can script is a panel", including the row's actions                                                     |
-| Agents    | An example of what a script can show, not a built-in feature. Say "pipe your agent watcher in", never "supports Claude Code"                                    |
-| Language  | English                                                                                                                                                         |
-| CTA       | "View on GitHub" (`github.com/banjo/tjuvkik`, public, MIT). Under it: "Free and open source · macOS 15+" and "Homebrew coming soon"                             |
-| Later CTA | `brew install --cask tjuvkik` with a copy button, replacing "Homebrew coming soon"                                                                              |
-| Stack     | Astro, static build, plain CSS with scoped styles, no UI framework, JS only for the hero                                                                        |
-| Tooling   | pnpm and Vite+ (`vp`): `vite` overridden to Vite+ core, `vp check` for format, lint and types                                                                   |
-| Folder    | `site/` in this repo                                                                                                                                            |
-| Hosting   | Cloudflare Pages, domain `tjuvkik.banjoanton.com`                                                                                                               |
-| Scope     | One page now; docs from `docs/*.md` through content collections later                                                                                           |
-| Look      | Dark only. Same colors as the app and `design/prototype.html`: the desktop gradient (purple, blue, pink), Dracula tones, dark glass tiles. App icon as the logo |
-| Fonts     | System font for text, `ui-monospace`/SF Mono/JetBrains Mono for code. No web fonts                                                                              |
-| Analytics | Cloudflare Web Analytics, no cookies, no banner                                                                                                                 |
+| Area      | Choice                                                                                                                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Audience  | Developers and coders, many working with AI agents                                                                                                                                                  |
+| Message   | The gesture first (hold fn, let go), then "anything you can script is a panel", including the row's actions                                                                                         |
+| Agents    | An example of what a script can show, not a built-in feature. Say "pipe your agent watcher in", never "supports Claude Code"                                                                        |
+| Language  | English                                                                                                                                                                                             |
+| CTA       | An install card in the hero: a prompt for your agent (install, clear quarantine if needed, start) and `brew install --cask banjo/tap/tjuvkik`, each with a copy button. GitHub in the line under it |
+| Stack     | Astro, static build, plain CSS with scoped styles, no UI framework, JS only for the hero                                                                                                            |
+| Tooling   | pnpm and Vite+ (`vp`): `vite` overridden to Vite+ core, `vp check` for format, lint and types                                                                                                       |
+| Folder    | `site/` in this repo                                                                                                                                                                                |
+| Hosting   | Cloudflare Pages, domain `tjuvkik.banjoanton.com`                                                                                                                                                   |
+| Scope     | One page now; docs from `docs/*.md` through content collections later                                                                                                                               |
+| Look      | Dark only. Same colors as the app and `design/prototype.html`: the desktop gradient (purple, blue, pink), Dracula tones, dark glass tiles. App icon as the logo                                     |
+| Fonts     | System font for text, `ui-monospace`/SF Mono/JetBrains Mono for code. No web fonts                                                                                                                  |
+| Analytics | Cloudflare Web Analytics, no cookies, no banner                                                                                                                                                     |
 
 ## Copy
 

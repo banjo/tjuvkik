@@ -1,7 +1,8 @@
 ---
 import { site } from "../data/site";
-import Glance from "./Glance.astro";
 import GitHubIcon from "./GitHubIcon.astro";
+import Glance from "./Glance.astro";
+import Install from "./Install.astro";
 import Nav from "./Nav.astro";
 ---
 
@@ -15,14 +16,18 @@ import Nav from "./Nav.astro";
       A glanceable dashboard for your Mac. Anything you can script becomes a panel, and it disappears when you let
       go.
     </p>
-    <div class="cta">
-      <a class="button button-primary" href={site.repo}><GitHubIcon />View on GitHub</a>
-      <a class="button button-ghost" href="#panels">See what it shows</a>
-    </div>
-    <p class="meta">macOS 15 or later · MIT · Homebrew coming soon</p>
   </div>
   <div class="container hero-demo">
     <Glance />
+  </div>
+  <div class="container hero-copy">
+    <div class="cta">
+      <Install />
+    </div>
+    <p class="meta">
+      macOS 15 or later on Apple silicon · MIT ·
+      <a href={site.repo}><GitHubIcon />Source on GitHub</a>
+    </p>
   </div>
 </section>
 
@@ -74,8 +79,10 @@ import Nav from "./Nav.astro";
     font-size: 12px;
   }
 
+  /* The gradient is clipped to the box, so the padding keeps descenders (the y) in it. */
   h1 {
-    margin: 0;
+    margin: 0 0 -0.12em;
+    padding-bottom: 0.12em;
     font-size: clamp(48px, 8vw, 92px);
     line-height: 0.98;
     font-weight: 700;
@@ -97,16 +104,35 @@ import Nav from "./Nav.astro";
 
   .cta {
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    margin-top: 34px;
+    width: 100%;
+    margin-top: clamp(40px, 5vw, 64px);
   }
 
   .meta {
     margin: 18px 0 0;
     font-size: 13.5px;
     color: var(--text-faint);
+  }
+
+  .meta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-muted);
+    text-decoration: none;
+    vertical-align: bottom;
+  }
+
+  .meta a :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media (hover: hover) {
+    .meta a:hover {
+      color: var(--text);
+    }
   }
 
   .hero-demo {

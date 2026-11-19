@@ -1,5 +1,6 @@
 ---
 import { site } from "../data/site";
+import CopyButton from "./CopyButton.astro";
 import Footer from "./Footer.astro";
 import GitHubIcon from "./GitHubIcon.astro";
 
@@ -27,7 +28,11 @@ const badges = [
   <div class="container cta-inner">
     <img src="/icon.svg" alt="" width="112" height="112" />
     <h2 class="section-title" id="cta-title">Take a peek.</h2>
-    <p class="section-lead">Free and open source, for macOS 15 or later. Homebrew is on the way.</p>
+    <p class="section-lead">Free and open source, for macOS 15 or later on Apple silicon.</p>
+    <div class="brew">
+      <code><span aria-hidden="true">$</span> {site.brew}</code>
+      <CopyButton text={site.brew} />
+    </div>
     <div class="buttons">
       <a class="button button-primary" href={site.repo}><GitHubIcon />View on GitHub</a>
       <a class="button button-ghost" href="/docs/">Read the docs</a>
@@ -91,12 +96,36 @@ const badges = [
     max-width: none;
   }
 
+  .brew {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 100%;
+    margin-top: 32px;
+    padding: 10px 10px 10px 20px;
+    border-radius: 99px;
+    background: rgba(22, 18, 42, 0.72);
+    box-shadow: 0 0 0 1px rgba(189, 147, 249, 0.22) inset;
+  }
+
+  .brew code {
+    min-width: 0;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .brew code span {
+    color: var(--accent);
+    user-select: none;
+  }
+
   .buttons {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
-    margin-top: 32px;
+    margin-top: 20px;
   }
 
 </style>

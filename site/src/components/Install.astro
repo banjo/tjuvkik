@@ -1,0 +1,158 @@
+---
+import { site } from "../data/site";
+import CopyButton from "./CopyButton.astro";
+
+const prompt = `Install Tjuvkik, a glanceable dashboard for macOS, and get it running on this Mac:
+
+1. Check that it runs macOS 15 or later on Apple silicon, and that Homebrew is installed.
+2. Run \`${site.brew}\`.
+3. Tjuvkik isn't notarized. The cask clears the quarantine flag, but if macOS still says it can't be opened, run \`xattr -dr com.apple.quarantine /Applications/Tjuvkik.app\`.
+4. Start it with \`open -a Tjuvkik\`. Then tell me to turn on Input Monitoring for Tjuvkik in System Settings → Privacy & Security, and to set "Press 🌐 key to" to "Do nothing" in System Settings → Keyboard.
+5. Run \`tjuvkik validate\` to check the config in ~/.config/tjuvkik/.
+
+Docs: ${site.url}/llms.txt`;
+---
+
+<div class="install" data-install>
+  <div class="head">
+    <div class="tabs" role="tablist" aria-label="How to install">
+      <button type="button" role="tab" id="tab-agent" aria-controls="panel-agent" aria-selected="true">
+        Ask your agent
+      </button>
+      <button type="button" role="tab" id="tab-brew" aria-controls="panel-brew" aria-selected="false" tabindex="-1">
+        Homebrew
+      </button>
+    </div>
+    <CopyButton text={prompt} class="install-copy" />
+  </div>
+
+  <div class="panel" role="tabpanel" id="panel-agent" aria-labelledby="tab-agent" data-text={prompt}>
+    <p class="prompt" tabindex="0">{prompt}</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="panel-brew" aria-labelledby="tab-brew" data-text={site.brew} hidden>
+    <code class="cmd"><span aria-hidden="true">$</span> {site.brew}</code>
+  </div>
+</div>
+
+<style>
+  .install {
+    width: min(640px, 100%);
+    border-radius: 18px;
+    background: rgba(22, 18, 42, 0.72);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    box-shadow:
+      0 0 0 1px rgba(189, 147, 249, 0.22) inset,
+      0 24px 60px -24px rgba(0, 0, 0, 0.6);
+    text-align: left;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 8px 6px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .tabs {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  [role="tab"] {
+    position: relative;
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-faint);
+    font: 600 13px var(--sans);
+    cursor: pointer;
+    transition:
+      color 150ms ease-out,
+      background-color 150ms ease-out;
+  }
+
+  [role="tab"][aria-selected="true"] {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+  }
+
+  @media (hover: hover) {
+    [role="tab"]:hover {
+      color: var(--text);
+    }
+  }
+
+  .panel {
+    padding: 14px 20px;
+  }
+
+  .prompt {
+    margin: 0;
+    max-height: 8.25em;
+    overflow-y: auto;
+    scrollbar-width: none;
+    font: 12.5px/1.65 var(--mono);
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent);
+  }
+
+  .cmd {
+    display: block;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .cmd span {
+    color: var(--accent);
+    user-select: none;
+  }
+
+  .install :global(.install-copy) {
+    background: var(--text);
+    color: #17132a;
+  }
+
+  @media (hover: hover) {
+    .install :global(.install-copy:hover) {
+      background: #fff;
+    }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>("[data-install]")) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const copy = root.querySelector<HTMLButtonElement>("button[data-copy]")!;
+    const select = (tab: HTMLButtonElement) => {
+      for (const t of tabs) {
+        const on = t === tab;
+        const panel = root.querySelector<HTMLElement>(`#${t.getAttribute("aria-controls")}`)!;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        panel.hidden = !on;
+        if (on) copy.dataset.copy = panel.dataset.text;
+      }
+    };
+    for (const [i, tab] of tabs.entries()) {
+      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("keydown", (e) => {
+        const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!step) return;
+        const next = tabs[(i + step + tabs.length) % tabs.length];
+        select(next);
+        next.focus();
+      });
+    }
+  }
+</script>
