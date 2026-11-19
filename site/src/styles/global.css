@@ -72,6 +72,13 @@ svg {
   max-width: 100%;
 }
 
+/* Clicks inside a link or button land on the link or button itself, never on an icon in it. */
+a svg,
+a img,
+button svg {
+  pointer-events: none;
+}
+
 code,
 kbd,
 pre {
@@ -143,6 +150,7 @@ pre {
 }
 
 .button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -153,10 +161,20 @@ pre {
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  user-select: none;
+  -webkit-user-drag: none;
   transition:
     transform 160ms var(--ease-out),
     background-color 160ms ease-out,
     box-shadow 160ms ease-out;
+}
+
+/* The press shrinks the button; this keeps its hit area full size, so a click near the edge
+   still lands on it. */
+.button::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
 }
 
 .button:active {

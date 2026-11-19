@@ -320,6 +320,7 @@ const structured = {
   }
 
   .action {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -333,10 +334,18 @@ const structured = {
     font: 500 13px var(--sans);
     text-decoration: none;
     cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
     transition:
       color 150ms ease-out,
       background-color 150ms ease-out,
       transform 120ms var(--ease-out);
+  }
+
+  .action::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
   }
 
   .action:active {
