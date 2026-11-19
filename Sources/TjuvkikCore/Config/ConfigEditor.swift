@@ -65,6 +65,15 @@ public struct ConfigEditor {
         }
     }
 
+    /// `true` for the default amount.
+    public mutating func setDim(_ dim: Double) throws(JSONCDocument.ParseError) {
+        try update(["dim"], dim == 0 ? nil : dim == Config.defaultDim ? .bool(true) : .number(dim))
+    }
+
+    public mutating func setFocusOnOpen(_ focus: Config.FocusOnOpen) throws(JSONCDocument.ParseError) {
+        try update(["focusOnOpen"], focus == .urgent ? nil : .string(focus.rawValue))
+    }
+
     // MARK: Theme
 
     public mutating func setTheme(_ name: String) throws(JSONCDocument.ParseError) {

@@ -142,6 +142,33 @@
         }
       ]
     },
+    "dim": {
+      "default": false,
+      "description": "Darkens the screen behind the glance. true for a little, or a number from 0 (not at all) to 1 (black).",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "examples": [
+        true,
+        0.5
+      ]
+    },
+    "focusOnOpen": {
+      "type": "string",
+      "enum": [
+        "urgent",
+        "last"
+      ],
+      "default": "urgent",
+      "description": "What the keyboard focus starts on when the glance opens. urgent: an error row, then a warning row, then a tile with \"focus\": true. last: the row it was on when the glance closed, while it's still there; otherwise as urgent."
+    },
     "menuBar": {
       "anyOf": [
         {

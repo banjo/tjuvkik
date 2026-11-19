@@ -99,6 +99,18 @@ struct ConfigLoaderTests {
         #expect(errors(["config.json": #"{ "zoom": "big" }"#]) == [#"config.json: zoom: expected "auto" or a number, got "big""#])
     }
 
+    @Test func dimAndFocusOnOpen() throws {
+        let plain = try load(["config.json": "{}"]).config
+        #expect(plain.dim == 0)
+        #expect(plain.focusOnOpen == .urgent)
+        #expect(try load(["config.json": #"{ "dim": true }"#]).config.dim == Config.defaultDim)
+        #expect(try load(["config.json": #"{ "dim": false }"#]).config.dim == 0)
+        #expect(try load(["config.json": #"{ "dim": 0.6 }"#]).config.dim == 0.6)
+        #expect(try load(["config.json": #"{ "focusOnOpen": "last" }"#]).config.focusOnOpen == .last)
+        #expect(errors(["config.json": #"{ "dim": 2 }"#]) == ["config.json: dim: must be between 0 and 1"])
+        #expect(errors(["config.json": #"{ "focusOnOpen": "mouse" }"#]) == [#"config.json: focusOnOpen: unknown value "mouse", expected "urgent" or "last""#])
+    }
+
     @Test func missingConfigIsAnError() {
         #expect(errors([:]) == ["config.jsonc: can't read the file"])
     }

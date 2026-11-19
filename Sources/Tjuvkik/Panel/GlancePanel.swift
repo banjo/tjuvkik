@@ -33,6 +33,24 @@ final class GlancePanel: NSPanel {
     }
 }
 
+/// Darkens the screen behind the glance, for `"dim"`. Clicks go through it.
+final class DimWindow: NSWindow {
+    init() {
+        super.init(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+        isOpaque = false
+        backgroundColor = .black
+        hasShadow = false
+        ignoresMouseEvents = true
+        level = .statusBar
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        animationBehavior = .none
+        alphaValue = 0
+    }
+
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 /// Acts on the first click and tracks hover although the window is never key and the app never
 /// active.
 final class GlanceHostingView<Content: View>: NSHostingView<Content> {
@@ -88,6 +106,7 @@ enum GlanceKey {
 @MainActor
 final class GlanceController {
     private let panel = GlancePanel()
+    private let dim = DimWindow()
     private let model = GlanceModel()
     private let store: ConfigStore
     /// The focus targets as laid out, in board order.
@@ -98,6 +117,8 @@ final class GlanceController {
     /// A tile the keyboard just scrolled: once it's laid out again, the focus goes to the row
     /// that came into view.
     private var scrolledByKey: (tile: String, direction: FocusNavigation.Direction)?
+    /// The focus when the glance last closed, for `"focusOnOpen": "last"`.
+    private var lastFocus: (entry: FocusEntry, ordinal: Int)?
     private var hideGeneration = 0
     private var appearanceObservation: NSKeyValueObservation?
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -172,6 +193,15 @@ final class GlanceController {
         ]
     }
 
+    /// At once with Reduce Motion on.
+    private func fade(_ window: NSWindow, to alpha: CGFloat, duration: TimeInterval) {
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return window.alphaValue = alpha }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            window.animator().alphaValue = alpha
+        }
+    }
+
     private static func isDark(_ appearance: NSAppearance) -> Bool {
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
@@ -191,6 +221,13 @@ final class GlanceController {
         panel.setFrame(framed.rect, display: false)
         panel.alphaValue = 1
         panel.ignoresMouseEvents = false
+        if config.dim > 0 {
+            dim.setFrame(screen.frame, display: false)
+            dim.orderFrontRegardless()
+            fade(dim, to: config.dim, duration: 0.15)
+        } else {
+            dim.orderOut(nil)
+        }
         panel.orderFrontRegardless()
         model.isVisible = true
         focusFirst()
@@ -216,6 +253,7 @@ final class GlanceController {
 
     func hide() {
         hideGeneration += 1
+        if isShown, let focused = model.focused { lastFocus = (focused, focusOrdinal) }
         isShown = false
         isSticky = false
         model.showsFocus = false
@@ -231,11 +269,13 @@ final class GlanceController {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12
             panel.animator().alphaValue = 0
+            if dim.isVisible { dim.animator().alphaValue = 0 }
         } completionHandler: {
             MainActor.assumeIsolated {
                 // A show during the fade wins.
                 guard generation == self.hideGeneration else { return }
                 self.panel.orderOut(nil)
+                self.dim.orderOut(nil)
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) { self.model.isVisible = false }
@@ -321,6 +361,9 @@ final class GlanceController {
     }
 
     private func focusFirst() {
+        if store.config.focusOnOpen == .last, let last = lastFocus, let index = index(like: last.entry, ordinal: last.ordinal) {
+            return focus(index)
+        }
         let focusTiles = store.config.tiles.filter(\.focus).map(\.id)
         if let index = FocusNavigation.initial(targets.map(Self.target), focusTiles: focusTiles) { focus(index) } else { focusedEntry = nil }
     }
@@ -343,6 +386,13 @@ final class GlanceController {
     private var focusedIndex: Int? {
         guard let focused = model.focused else { return nil }
         return targets.indices.filter { targets[$0].tile == focused.tile && targets[$0].action == focused.action }.dropFirst(focusOrdinal).first
+    }
+
+    /// The same row, or the nearest one in its tile when it changed.
+    private func index(like entry: FocusEntry, ordinal: Int) -> Int? {
+        let inTile = targets.indices.filter { targets[$0].tile == entry.tile }
+        if let same = inTile.filter({ targets[$0].action == entry.action }).dropFirst(ordinal).first { return same }
+        return inTile.min { abs(targets[$0].frame.midY - entry.frame.midY) < abs(targets[$1].frame.midY - entry.frame.midY) }
     }
 
     // MARK: Scrolling
@@ -398,9 +448,7 @@ final class GlanceController {
         guard let previous else { return isShown ? focusFirst() : () }
         if let index = focusedIndex {
             focusedEntry = targets[index]
-        } else if let index = targets.indices.filter({ targets[$0].tile == previous.tile }).min(by: {
-            abs(targets[$0].frame.midY - previous.frame.midY) < abs(targets[$1].frame.midY - previous.frame.midY)
-        }) {
+        } else if let index = index(like: previous, ordinal: focusOrdinal) {
             focus(index)
         } else {
             focusFirst()

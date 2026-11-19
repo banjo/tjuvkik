@@ -89,6 +89,21 @@ public enum ConfigLoader {
             files.error(file, "zoom", "expected \"auto\" or a number, got \"\(value)\"")
         }
 
+        var dim = 0.0
+        switch raw.dim {
+        case nil, .flag(false): break
+        case .flag(true): dim = Config.defaultDim
+        case .number(let value) where (0...1).contains(value): dim = value
+        case .number: files.error(file, "dim", "must be between 0 and 1")
+        }
+
+        var focusOnOpen = Config.FocusOnOpen.urgent
+        if let value = raw.focusOnOpen {
+            if let parsed = Config.FocusOnOpen(rawValue: value) { focusOnOpen = parsed } else {
+                files.error(file, "focusOnOpen", "unknown value \"\(value)\", expected \"urgent\" or \"last\"")
+            }
+        }
+
         let shown = tiles.indices.filter { tiles[$0].show }
         let slots = BentoPacking.pack(shown.map { tiles[$0].size }, grid: grid)
         for (position, index) in shown.enumerated() {
@@ -115,7 +130,7 @@ public enum ConfigLoader {
         let config = Config(
             view: view, layout: layout, lightThemeName: lightName, darkThemeName: darkName, lightTheme: light, darkTheme: dark,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
-            pause: pause, notifications: notifications, grid: grid, zoom: zoom
+            pause: pause, notifications: notifications, grid: grid, zoom: zoom, dim: dim, focusOnOpen: focusOnOpen
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }
