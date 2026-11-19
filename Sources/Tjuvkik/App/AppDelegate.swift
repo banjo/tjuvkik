@@ -91,6 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func apply(_ config: Config) {
         trigger.configure(config.trigger)
+        trigger.jumpKey = config.jumpKey
         glance.closesOnClickOutside = config.trigger.closeOnClickOutside
         startTrigger()
         panels.update(config.tiles)

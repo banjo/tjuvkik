@@ -37,15 +37,36 @@ final class GlanceTrigger {
     private static let rowKeyID: UInt32 = 200
     private var rowKeys: [String] = []
     private var takesNavigationKeys = false
-    private static let navigationKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = [
-        (kVK_LeftArrow, 0, .move(.left)), (kVK_RightArrow, 0, .move(.right)),
-        (kVK_UpArrow, 0, .move(.up)), (kVK_DownArrow, 0, .move(.down)),
-        (kVK_Return, 0, .activate), (kVK_ANSI_KeypadEnter, 0, .activate), (kVK_Space, 0, .activate),
-        (kVK_ANSI_R, cmdKey, .runNow), (kVK_ANSI_O, cmdKey, .openConfig),
-        (kVK_ANSI_K, cmdKey, .menu), (kVK_ANSI_C, cmdKey, .copy),
-        (kVK_Return, optionKey, .openURL), (kVK_ANSI_KeypadEnter, optionKey, .openURL),
-    ] + [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
-        .enumerated().map { ($1, 0, .tile($0 + 1)) }
+    /// The navigation keys as registered, by their offset from `navigationID`.
+    private var registeredKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = []
+    /// Held with an arrow, it jumps to the next tile that way.
+    var jumpKey = Config.JumpKey.option {
+        didSet {
+            guard jumpKey != oldValue, takesNavigationKeys else { return }
+            releaseNavigationKeys()
+            takeNavigationKeys()
+        }
+    }
+    private var navigationKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] {
+        let arrows: [(Int, FocusNavigation.Direction)] = [
+            (kVK_LeftArrow, .left), (kVK_RightArrow, .right), (kVK_UpArrow, .up), (kVK_DownArrow, .down),
+        ]
+        let jumps: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = switch jumpKey {
+        case .option: arrows.map { ($0, optionKey, .jump($1)) }
+        case .command: arrows.map { ($0, cmdKey, .jump($1)) }
+        case .control: arrows.map { ($0, controlKey, .jump($1)) }
+        case .shift: arrows.map { ($0, shiftKey, .jump($1)) }
+        case .none: []
+        }
+        return arrows.map { ($0, 0, .move($1)) } + [
+            (kVK_Return, 0, .activate), (kVK_ANSI_KeypadEnter, 0, .activate), (kVK_Space, 0, .activate),
+            (kVK_ANSI_R, cmdKey, .runNow), (kVK_ANSI_O, cmdKey, .openConfig),
+            (kVK_ANSI_K, cmdKey, .menu), (kVK_ANSI_C, cmdKey, .copy),
+            (kVK_Return, optionKey, .openURL), (kVK_ANSI_KeypadEnter, optionKey, .openURL),
+            (kVK_Tab, 0, .nextTile), (kVK_Tab, shiftKey, .previousTile),
+        ] + [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
+            .enumerated().map { ($1, 0, .tile($0 + 1)) } + jumps
+    }
     /// `NX_SYSDEFINED`, which `CGEventType` has no case for.
     private static let systemDefined: UInt32 = 14
 
@@ -161,8 +182,8 @@ final class GlanceTrigger {
             case .hold: send(pressed ? .triggerDown(otherModifiers: false) : .triggerUp)
             case .toggle, .doubleTap: if pressed { send(.toggle) }
             }
-        case Self.navigationID..<Self.navigationID + UInt32(Self.navigationKeys.count):
-            if pressed { onKey(Self.navigationKeys[Int(id - Self.navigationID)].key) }
+        case Self.navigationID..<Self.navigationID + UInt32(registeredKeys.count):
+            if pressed { onKey(registeredKeys[Int(id - Self.navigationID)].key) }
         case Self.rowKeyID..<Self.rowKeyID + UInt32(rowKeys.count):
             if pressed { onKey(.action(rowKeys[Int(id - Self.rowKeyID)])) }
         default:
@@ -170,11 +191,12 @@ final class GlanceTrigger {
         }
     }
 
-    /// Arrows, Enter, Space, ⌘R, ⌘O and 1–9 move around the glance while it stays open. They're
+    /// Arrows, Tab, Enter, Space, ⌘R, ⌘O and 1–9 move around the glance while it stays open. They're
     /// taken from the app in front only then.
     private func takeNavigationKeys() {
         takesNavigationKeys = true
-        for (offset, entry) in Self.navigationKeys.enumerated() {
+        registeredKeys = navigationKeys
+        for (offset, entry) in registeredKeys.enumerated() {
             _ = hotKeys.register(Self.navigationID + UInt32(offset), keyCode: UInt32(entry.keyCode), modifiers: UInt32(entry.modifiers))
         }
         takeRowKeys()
@@ -182,7 +204,8 @@ final class GlanceTrigger {
 
     private func releaseNavigationKeys() {
         takesNavigationKeys = false
-        for offset in Self.navigationKeys.indices { hotKeys.unregister(Self.navigationID + UInt32(offset)) }
+        for offset in registeredKeys.indices { hotKeys.unregister(Self.navigationID + UInt32(offset)) }
+        registeredKeys = []
         releaseRowKeys()
     }
 

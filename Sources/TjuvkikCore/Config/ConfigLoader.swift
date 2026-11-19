@@ -104,6 +104,14 @@ public enum ConfigLoader {
             }
         }
 
+        var jumpKey = Config.JumpKey.option
+        if let value = raw.jumpKey {
+            if let parsed = Config.JumpKey(rawValue: value) { jumpKey = parsed } else {
+                let expected = Config.JumpKey.allCases.map { "\"\($0.rawValue)\"" }.joined(separator: ", ")
+                files.error(file, "jumpKey", "unknown value \"\(value)\", expected \(expected)")
+            }
+        }
+
         let shown = tiles.indices.filter { tiles[$0].show }
         let slots = BentoPacking.pack(shown.map { tiles[$0].size }, grid: grid)
         for (position, index) in shown.enumerated() {
@@ -130,7 +138,8 @@ public enum ConfigLoader {
         let config = Config(
             view: view, layout: layout, lightThemeName: lightName, darkThemeName: darkName, lightTheme: light, darkTheme: dark,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
-            pause: pause, notifications: notifications, grid: grid, zoom: zoom, dim: dim, focusOnOpen: focusOnOpen
+            pause: pause, notifications: notifications, grid: grid, zoom: zoom, dim: dim, focusOnOpen: focusOnOpen,
+            jumpKey: jumpKey
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }

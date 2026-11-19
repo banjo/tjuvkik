@@ -49,6 +49,14 @@ struct GeneralPage: View {
                     Text("The most urgent row").tag(Config.FocusOnOpen.urgent)
                     Text("The row it was on last").tag(Config.FocusOnOpen.last)
                 }
+                Picker("Jump between panels with", selection: Binding(
+                    get: { config.jumpKey },
+                    set: { key in model.change { try $0.setJumpKey(key) } }
+                )) {
+                    ForEach(Config.JumpKey.allCases, id: \.self) { key in
+                        Text(key.symbol.map { "\($0) and the arrows" } ?? "Only Tab").tag(key)
+                    }
+                }
             }
 
             Section("Startup") {

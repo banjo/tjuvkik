@@ -74,6 +74,10 @@ public struct ConfigEditor {
         try update(["focusOnOpen"], focus == .urgent ? nil : .string(focus.rawValue))
     }
 
+    public mutating func setJumpKey(_ key: Config.JumpKey) throws(JSONCDocument.ParseError) {
+        try update(["jumpKey"], key == .option ? nil : .string(key.rawValue))
+    }
+
     // MARK: Theme
 
     public mutating func setTheme(_ name: String) throws(JSONCDocument.ParseError) {

@@ -38,7 +38,7 @@ struct GlanceView: View {
                 }
                 .overlay(alignment: .topLeading) {
                     GeometryReader { geometry in
-                        HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), theme: theme)
+                        HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), jumpKey: config.jumpKey, theme: theme)
                             .opacity(focus != nil && model.isVisible ? 1 : 0)
                             .frame(width: geometry.size.width)
                             .offset(y: Self.tilesBottom(config, in: geometry.size, theme: theme) + theme.z(10))

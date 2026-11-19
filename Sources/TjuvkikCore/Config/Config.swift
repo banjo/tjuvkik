@@ -29,6 +29,8 @@ public struct Config: Equatable, Sendable {
     public var dim: Double = 0
     /// What the keyboard focus starts on when the glance opens.
     public var focusOnOpen = FocusOnOpen.urgent
+    /// The modifier that, with an arrow, moves the keyboard focus to the next tile that way.
+    public var jumpKey = JumpKey.option
 
     public func theme(dark: Bool) -> Theme { dark ? darkTheme : lightTheme }
 
@@ -40,6 +42,22 @@ public struct Config: Equatable, Sendable {
         case urgent
         /// The row focused when the glance last closed, while it's still there.
         case last
+    }
+
+    /// `"jumpKey"`: held with an arrow, it jumps to the next tile instead of the next row.
+    public enum JumpKey: String, CaseIterable, Sendable {
+        case option, command, control, shift, none
+
+        /// "⌥", or nil for none.
+        public var symbol: String? {
+            switch self {
+            case .option: "⌥"
+            case .command: "⌘"
+            case .control: "⌃"
+            case .shift: "⇧"
+            case .none: nil
+            }
+        }
     }
 
     /// How big the glance draws the board: `"auto"` follows the screen, a number is fixed. Either

@@ -169,6 +169,18 @@
       "default": "urgent",
       "description": "What the keyboard focus starts on when the glance opens. urgent: an error row, then a warning row, then a tile with \"focus\": true. last: the row it was on when the glance closed, while it's still there; otherwise as urgent."
     },
+    "jumpKey": {
+      "type": "string",
+      "enum": [
+        "option",
+        "command",
+        "control",
+        "shift",
+        "none"
+      ],
+      "default": "option",
+      "description": "Held with an arrow, it jumps to the next tile that way instead of the next row. Tab and Shift-Tab go to the next and previous tile either way. none: only Tab."
+    },
     "menuBar": {
       "anyOf": [
         {

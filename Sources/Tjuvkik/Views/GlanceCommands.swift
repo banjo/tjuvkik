@@ -67,6 +67,7 @@ struct ActionMenu: Equatable {
 /// Under the board while the keyboard is in use: what the keys do for the focused row.
 struct HintBar: View {
     let hints: [GlanceCommand]
+    let jumpKey: Config.JumpKey
     let theme: Theme
 
     var body: some View {
@@ -76,6 +77,11 @@ struct HintBar: View {
                     KeyCap(keys: hint.keys, theme: theme)
                     Text(hint.title).font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
                 }
+            }
+            HStack(spacing: theme.z(5)) {
+                KeyCap(keys: "⇥", theme: theme)
+                if let symbol = jumpKey.symbol { KeyCap(keys: "\(symbol)←↑↓→", theme: theme) }
+                Text("Panels").font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText))
             }
             HStack(spacing: theme.z(5)) {
                 KeyCap(keys: "esc", theme: theme)

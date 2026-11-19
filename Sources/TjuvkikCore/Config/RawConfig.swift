@@ -17,6 +17,7 @@ struct RawConfig: Decodable {
     var zoom: RawZoom?
     var dim: RawDim?
     var focusOnOpen: String?
+    var jumpKey: String?
     var panels: [RawPanelRef]?
 }
 

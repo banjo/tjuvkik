@@ -16,6 +16,7 @@ The settings window (Settings…, ⌘,) writes this file for you. It changes onl
   "zoom": "auto",
   "dim": false,
   "focusOnOpen": "urgent",
+  "jumpKey": "option",
   "menuBar": null,
   "pause": { "whenLocked": true, "onLowPower": true },
   "panels": [
@@ -37,6 +38,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
 | `dim` | `false` | Darken the screen behind the glance. See [Dim](#dim). |
 | `focusOnOpen` | `"urgent"` | Which row the keyboard starts on. See [Keyboard](#keyboard). |
+| `jumpKey` | `"option"` | Held with an arrow, it jumps to the next tile. See [Keyboard](#keyboard). |
 | `menuBar` | none | Tiles from `panels`, by id, to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `pause` | both `true` | When background runs stop. See [Pause](#pause). |
 | `notifications` | on | Sound, quiet hours and whether to notify while glancing. See [Notifications](#notifications). |
@@ -89,6 +91,8 @@ While the glance stays open (toggled, or pinned), a row is outlined, and you can
 | Key | |
 |---|---|
 | ← → ↑ ↓ | The nearest row in that direction, across tiles. A tile without clickable rows is picked as a whole. |
+| ⌥ and an arrow | The next tile in that direction, wherever you are in the list. |
+| Tab, ⇧Tab | The next and previous tile, in `panels` order. |
 | Enter or Space | What clicking the row does. |
 | ⌥Enter | Open the row's `url`, when it also has a `command`. |
 | ⌘K | List everything you can do with the row, including its [actions](script-output.md#row-actions). Arrows and Enter pick; Esc closes the list. |
@@ -96,9 +100,11 @@ While the glance stays open (toggled, or pinned), a row is outlined, and you can
 | ⌘C | Copy the row's `url`, or its title. |
 | ⌘R | Run the row's panel now. The glance stays open, so you see the result. |
 | ⌘O | Open its `panel.jsonc`. |
-| 1–9 | The first row of that tile, in `panels` order. |
+| 1–9 | That tile, in `panels` order. |
 
-A bar right under the lowest tile shows the keys for the picked row.
+Jumping to a tile, with ⌥ and an arrow, Tab or a number, lands on the row you were last on there, or its first row. `"jumpKey"` sets the key held with the arrows: `"option"`, `"command"`, `"control"`, `"shift"`, or `"none"` to only use Tab. macOS keeps ⌃ and an arrow for Spaces and Mission Control unless you turn those shortcuts off. Settings → General sets it too.
+
+A bar right under the lowest tile shows the keys for the picked row, and the keys for moving between tiles.
 
 When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. With `"focusOnOpen": "last"`, it starts on the row it was on when the glance closed, or the nearest one in its tile, and picks as above only when that tile is gone. The keys are taken from the app in front only while the glance is open.
 

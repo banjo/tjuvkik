@@ -88,11 +88,16 @@ final class GlanceModel {
 /// A key pressed while the glance stays open.
 enum GlanceKey {
     case move(FocusNavigation.Direction)
+    /// The jump key and an arrow: the next tile that way.
+    case jump(FocusNavigation.Direction)
+    /// Tab and ⇧Tab: the next and previous tile, in `panels` order.
+    case nextTile
+    case previousTile
     /// Enter or Space: what a click on the focused row does.
     case activate
     case runNow
     case openConfig
-    /// 1–9: the first row of that tile on the board.
+    /// 1–9: that tile on the board.
     case tile(Int)
     /// ⌘K: the focused row's commands.
     case menu
@@ -119,6 +124,8 @@ final class GlanceController {
     private var scrolledByKey: (tile: String, direction: FocusNavigation.Direction)?
     /// The focus when the glance last closed, for `"focusOnOpen": "last"`.
     private var lastFocus: (entry: FocusEntry, ordinal: Int)?
+    /// The row last focused in each tile, so jumping back to a tile lands on it.
+    private var tileFocus: [String: (entry: FocusEntry, ordinal: Int)] = [:]
     private var hideGeneration = 0
     private var appearanceObservation: NSKeyValueObservation?
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -304,6 +311,7 @@ final class GlanceController {
             return
         }
         scrolledByKey = nil
+        if let focused = model.focused { tileFocus[focused.tile] = (focused, focusOrdinal) }
         switch key {
         case .move(let direction):
             guard let current = focusedIndex else { return focusFirst() }
@@ -330,8 +338,22 @@ final class GlanceController {
             model.menu = ActionMenu(commands: GlanceCommand.all(for: focused.action))
         case .tile(let number):
             let order = tileOrder
-            guard order.indices.contains(number - 1), let index = targets.firstIndex(where: { $0.tile == order[number - 1] }) else { return }
-            focus(index)
+            guard order.indices.contains(number - 1) else { return }
+            focus(tile: order[number - 1])
+        case .nextTile, .previousTile:
+            let order = tileOrder.filter { tile in targets.contains { $0.tile == tile } }
+            guard !order.isEmpty else { return }
+            let step = if case .nextTile = key { 1 } else { -1 }
+            guard let current = model.focused.flatMap({ order.firstIndex(of: $0.tile) }) else { return focus(tile: order[0]) }
+            focus(tile: order[(current + step + order.count) % order.count])
+        case .jump(let direction):
+            guard let current = model.focused?.tile else { return focusFirst() }
+            let tiles = store.config.tiles.compactMap { tile in
+                tile.slot.map { FocusNavigation.Target(frame: CGRect(x: $0.column, y: $0.row, width: $0.columns, height: $0.rows), tile: tile.id) }
+            }.filter { tile in targets.contains { $0.tile == tile.tile } }
+            guard let from = tiles.firstIndex(where: { $0.tile == current }),
+                  let next = FocusNavigation.move(from: from, direction, in: tiles) else { return }
+            focus(tile: tiles[next].tile)
         }
     }
 
@@ -366,6 +388,12 @@ final class GlanceController {
         }
         let focusTiles = store.config.tiles.filter(\.focus).map(\.id)
         if let index = FocusNavigation.initial(targets.map(Self.target), focusTiles: focusTiles) { focus(index) } else { focusedEntry = nil }
+    }
+
+    /// The row last focused in the tile, or its first.
+    private func focus(tile: String) {
+        let remembered = tileFocus[tile].flatMap { index(like: $0.entry, ordinal: $0.ordinal) }
+        if let index = remembered ?? targets.firstIndex(where: { $0.tile == tile }) { focus(index) }
     }
 
     private func focus(_ index: Int) {

@@ -111,6 +111,13 @@ struct ConfigLoaderTests {
         #expect(errors(["config.json": #"{ "focusOnOpen": "mouse" }"#]) == [#"config.json: focusOnOpen: unknown value "mouse", expected "urgent" or "last""#])
     }
 
+    @Test func jumpKey() throws {
+        #expect(try load(["config.json": "{}"]).config.jumpKey == .option)
+        #expect(try load(["config.json": #"{ "jumpKey": "command" }"#]).config.jumpKey == .command)
+        #expect(try load(["config.json": #"{ "jumpKey": "none" }"#]).config.jumpKey == Config.JumpKey.none)
+        #expect(errors(["config.json": #"{ "jumpKey": "fn" }"#]) == [#"config.json: jumpKey: unknown value "fn", expected "option", "command", "control", "shift", "none""#])
+    }
+
     @Test func missingConfigIsAnError() {
         #expect(errors([:]) == ["config.jsonc: can't read the file"])
     }
