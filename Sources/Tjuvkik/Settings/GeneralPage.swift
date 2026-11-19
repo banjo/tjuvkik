@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import TjuvkikCore
 
-/// The trigger, launch at login, background runs and notifications.
+/// The trigger, how the glance opens, launch at login, background runs and notifications.
 struct GeneralPage: View {
     let model: SettingsModel
 
@@ -29,6 +29,25 @@ struct GeneralPage: View {
                             }
                         }
                     }
+                }
+            }
+
+            Section("Glance") {
+                Picker("Dim the screen behind it", selection: Binding(
+                    get: { config.dim },
+                    set: { dim in model.change { try $0.setDim(dim) } }
+                )) {
+                    Text("Off").tag(0.0)
+                    ForEach(Self.dims(including: config.dim), id: \.self) { value in
+                        Text(value == Config.defaultDim ? "A little" : value.formatted(.percent)).tag(value)
+                    }
+                }
+                Picker("The keyboard starts on", selection: Binding(
+                    get: { config.focusOnOpen },
+                    set: { focus in model.change { try $0.setFocusOnOpen(focus) } }
+                )) {
+                    Text("The most urgent row").tag(Config.FocusOnOpen.urgent)
+                    Text("The row it was on last").tag(Config.FocusOnOpen.last)
                 }
             }
 
@@ -61,6 +80,12 @@ struct GeneralPage: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// How dark to pick from, and the one in config.jsonc when it's another.
+    private static func dims(including dim: Double) -> [Double] {
+        let dims = [Config.defaultDim, 0.5, 0.7]
+        return dim == 0 || dims.contains(dim) ? dims : (dims + [dim]).sorted()
     }
 }
 

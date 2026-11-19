@@ -25,8 +25,22 @@ public struct Config: Equatable, Sendable {
     public var grid = BoardGrid.standard
     /// How big the glance draws the board.
     public var zoom = Zoom.auto
+    /// How dark the screen behind the glance gets, from 0 (not at all) to 1.
+    public var dim: Double = 0
+    /// What the keyboard focus starts on when the glance opens.
+    public var focusOnOpen = FocusOnOpen.urgent
 
     public func theme(dark: Bool) -> Theme { dark ? darkTheme : lightTheme }
+
+    /// `true` for `"dim"`.
+    public static let defaultDim = 0.3
+
+    public enum FocusOnOpen: String, CaseIterable, Sendable {
+        /// The most urgent row: see `FocusNavigation.initial`.
+        case urgent
+        /// The row focused when the glance last closed, while it's still there.
+        case last
+    }
 
     /// How big the glance draws the board: `"auto"` follows the screen, a number is fixed. Either
     /// is made smaller when the board wouldn't fit.

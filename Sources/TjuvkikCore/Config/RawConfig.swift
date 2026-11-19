@@ -15,7 +15,22 @@ struct RawConfig: Decodable {
     var notifications: RawNotifications?
     var grid: String?
     var zoom: RawZoom?
+    var dim: RawDim?
+    var focusOnOpen: String?
     var panels: [RawPanelRef]?
+}
+
+/// `"dim"`: true, false or a number.
+enum RawDim: Decodable {
+    case flag(Bool)
+    case number(Double)
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let flag = try? container.decode(Bool.self) { self = .flag(flag) }
+        else if let number = try? container.decode(Double.self) { self = .number(number) }
+        else { throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "expected true, false or a number from 0 to 1")) }
+    }
 }
 
 /// `"zoom"`: `"auto"` or a number.

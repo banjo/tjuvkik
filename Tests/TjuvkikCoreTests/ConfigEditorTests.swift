@@ -40,6 +40,21 @@ struct ConfigEditorTests {
         } == "{\n}")
     }
 
+    @Test func dimAndFocusOnOpen() throws {
+        let some = try edit("{\n}") {
+            try $0.setDim(Config.defaultDim)
+            try $0.setFocusOnOpen(.last)
+        }
+        #expect(some.contains(#""dim": true"#))
+        #expect(try load(["config.json": some]).config.focusOnOpen == .last)
+        let more = try edit(some) { try $0.setDim(0.7) }
+        #expect(try load(["config.json": more]).config.dim == 0.7)
+        #expect(try edit(more) {
+            try $0.setDim(0)
+            try $0.setFocusOnOpen(.urgent)
+        } == "{\n}")
+    }
+
     @Test func pause() throws {
         let text = try edit("{\n  \"view\": \"bento\",\n}") { try $0.setPause(whenLocked: false, onLowPower: true) }
         #expect(text == """

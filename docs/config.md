@@ -14,6 +14,8 @@ The settings window (Settings…, ⌘,) writes this file for you. It changes onl
   "launchAtLogin": true,
   "grid": "4x3",
   "zoom": "auto",
+  "dim": false,
+  "focusOnOpen": "urgent",
   "menuBar": null,
   "pause": { "whenLocked": true, "onLowPower": true },
   "panels": [
@@ -33,6 +35,8 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. Or `{ "light": …, "dark": … }` to follow the system's appearance. See [Themes](themes.md#light-and-dark). |
 | `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
 | `launchAtLogin` | `true` | Start Tjuvkik when you log in. If macOS asks for approval, the menu links to Login Items. |
+| `dim` | `false` | Darken the screen behind the glance. See [Dim](#dim). |
+| `focusOnOpen` | `"urgent"` | Which row the keyboard starts on. See [Keyboard](#keyboard). |
 | `menuBar` | none | Tiles from `panels`, by id, to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `pause` | both `true` | When background runs stop. See [Pause](#pause). |
 | `notifications` | on | Sound, quiet hours and whether to notify while glancing. See [Notifications](#notifications). |
@@ -94,9 +98,9 @@ While the glance stays open (toggled, or pinned), a row is outlined, and you can
 | ⌘O | Open its `panel.jsonc`. |
 | 1–9 | The first row of that tile, in `panels` order. |
 
-A bar under the board shows the keys for the picked row.
+A bar right under the lowest tile shows the keys for the picked row.
 
-When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. The keys are taken from the app in front only while the glance is open.
+When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. With `"focusOnOpen": "last"`, it starts on the row it was on when the glance closed, or the nearest one in its tile, and picks as above only when that tile is gone. The keys are taken from the app in front only while the glance is open.
 
 ## Panels
 
@@ -151,6 +155,14 @@ Panels that don't fit are left out, and the menu says which. The older size name
 On a screen the board doesn't fit, it's drawn smaller, so a big grid can get small on a laptop. The panels stay where they are on every screen.
 
 Settings → Board sets both.
+
+## Dim
+
+```jsonc
+"dim": true,
+```
+
+Darkens the screen behind the glance, so the board stands out. `true` darkens it a little (0.3); a number from 0 to 1 sets how much, `1` being black. Clicks outside still close the glance. Default: `false`. Settings → General sets it, and `focusOnOpen`.
 
 ## Pause
 

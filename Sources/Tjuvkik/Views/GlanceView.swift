@@ -36,13 +36,28 @@ struct GlanceView: View {
                         }
                     }
                 }
-            HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), theme: theme)
-                .opacity(focus != nil && model.isVisible ? 1 : 0)
+                .overlay(alignment: .topLeading) {
+                    GeometryReader { geometry in
+                        HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), theme: theme)
+                            .opacity(focus != nil && model.isVisible ? 1 : 0)
+                            .frame(width: geometry.size.width)
+                            .offset(y: Self.tilesBottom(config, in: geometry.size, theme: theme) + theme.z(10))
+                            .allowsHitTesting(false)
+                    }
+                }
+            // Room for the hint bar when the tiles reach the board's bottom.
+            Color.clear
                 .frame(height: theme.z(Self.hintSpace - 10))
-                .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture(perform: onBackgroundClick)
         }
+    }
+
+    /// The bottom of the lowest tile, so the hint bar sits right under it, not under empty rows.
+    private static func tilesBottom(_ config: Config, in board: CGSize, theme: Theme) -> CGFloat {
+        let rows = config.tiles.compactMap(\.slot).map { $0.row + $0.rows }.max() ?? config.grid.rows
+        let cell = BentoGeometry.cell(in: board, grid: config.grid, board: theme.board)
+        return CGFloat(theme.board.inset) + BentoGeometry.size(columns: 1, rows: rows, cell: cell, board: theme.board).height
     }
 
     /// Under the row's right end, or above it when there's no room, kept on the board.
