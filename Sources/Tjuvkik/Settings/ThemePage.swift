@@ -84,6 +84,11 @@ struct ThemeGrid: View {
     let selected: String
     let onPick: (String) -> Void
 
+    private var boardRatio: CGFloat {
+        let board = BentoGeometry.board(model.store.config.grid, theme: .darkGlass)
+        return board.width / board.height
+    }
+
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
             ForEach(themes, id: \.name) { theme in
@@ -97,7 +102,7 @@ struct ThemeGrid: View {
                             .foregroundStyle(.red)
                             .padding(8)
                             .frame(maxWidth: .infinity)
-                            .aspectRatio(BentoGeometry.board.width / BentoGeometry.board.height, contentMode: .fit)
+                            .aspectRatio(boardRatio, contentMode: .fit)
                             .background(.quaternary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                     Text(theme.name).font(.callout)

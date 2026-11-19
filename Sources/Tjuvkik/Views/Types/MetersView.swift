@@ -14,15 +14,15 @@ struct MetersView: View {
             if let meter = content.meters.first { MeterRing(meter: meter, theme: theme) }
         case .m:
             let meters = Array(content.meters.prefix(3))
-            HStack(alignment: .bottom, spacing: 14) {
+            HStack(alignment: .bottom, spacing: theme.z(14)) {
                 ForEach(Array(meters.enumerated()), id: \.offset) { _, meter in column(meter) }
                 // Three columns always, so fewer meters keep the widths of a full row.
-                ForEach(meters.count..<3, id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
+                ForEach(meters.count..<3, id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: theme.z(1)) }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .l:
             VStack(alignment: .leading, spacing: 0) {
-                MeterStack(minSpacing: 11) {
+                MeterStack(minSpacing: theme.z(11)) {
                     ForEach(Array(content.meters.enumerated()), id: \.offset) { _, meter in row(meter) }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -31,7 +31,7 @@ struct MetersView: View {
                         .font(theme.font(11).monospacedDigit())
                         .foregroundStyle(Color(theme.tertiaryText))
                         .lineLimit(1)
-                        .padding(.top, 8)
+                        .padding(.top, theme.z(8))
                 }
             }
         }
@@ -43,7 +43,7 @@ struct MetersView: View {
 
     /// m: label, big value with what it's out of, bar.
     private func column(_ meter: MetersContent.Meter) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: theme.z(5)) {
             Text(meter.label ?? " ")
                 .font(theme.font(11.5))
                 .foregroundStyle(Color(theme.secondaryText))
@@ -51,7 +51,7 @@ struct MetersView: View {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text(meter.text)
                     .font(theme.font(22, weight: .semibold).monospacedDigit())
-                    .tracking(-0.44)
+                    .tracking(theme.z(-0.44))
                     .foregroundStyle(tone(meter))
                     .layoutPriority(1)
                 if let of = meter.of {
@@ -69,8 +69,8 @@ struct MetersView: View {
 
     /// l: label left, value and what it's out of right, bar below.
     private func row(_ meter: MetersContent.Meter) -> some View {
-        VStack(spacing: 5) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        VStack(spacing: theme.z(5)) {
+            HStack(alignment: .firstTextBaseline, spacing: theme.z(8)) {
                 Text(meter.label ?? "")
                     .font(theme.font(12.5))
                     .foregroundStyle(Color(theme.text))
@@ -112,12 +112,12 @@ private struct MeterBar: View {
                 if let mark = meter.markFraction {
                     Rectangle()
                         .fill(ink.opacity(0.45))
-                        .frame(width: 1.5, height: 10)
-                        .offset(x: max(0, min(width * mark - 0.75, width - 1.5)))
+                        .frame(width: theme.z(1.5), height: theme.z(10))
+                        .offset(x: max(0, min(width * mark - theme.z(0.75), width - theme.z(1.5))))
                 }
             }
         }
-        .frame(height: 6)
+        .frame(height: theme.z(6))
     }
 
     /// White on dark themes, black on light, like the prototype's `--ink`.
@@ -131,7 +131,7 @@ private struct MeterRing: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let side = min(proxy.size.width, proxy.size.height, 112)
+            let side = min(proxy.size.width, proxy.size.height, theme.z(112))
             let line = side * 0.09
             let color = theme.color(for: meter.tone, default: theme.accent)
             ZStack {
@@ -141,10 +141,10 @@ private struct MeterRing: View {
                     .trim(from: 0, to: meter.fraction)
                     .stroke(color, style: StrokeStyle(lineWidth: line, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                VStack(spacing: 2) {
+                VStack(spacing: theme.z(2)) {
                     Text(meter.text)
                         .font(theme.font(22, weight: .semibold).monospacedDigit())
-                        .tracking(-0.44)
+                        .tracking(theme.z(-0.44))
                         .foregroundStyle(color)
                     if let caption {
                         Text(caption)

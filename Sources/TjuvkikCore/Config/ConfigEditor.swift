@@ -52,6 +52,19 @@ public struct ConfigEditor {
         try removeIfEmpty(["notifications"])
     }
 
+    // MARK: Board
+
+    public mutating func setGrid(_ grid: BoardGrid) throws(JSONCDocument.ParseError) {
+        try update(["grid"], grid == .standard ? nil : .string(grid.description))
+    }
+
+    public mutating func setZoom(_ zoom: Config.Zoom) throws(JSONCDocument.ParseError) {
+        switch zoom {
+        case .auto: try update(["zoom"], nil)
+        case .fixed(let value): try update(["zoom"], .number(value))
+        }
+    }
+
     // MARK: Theme
 
     public mutating func setTheme(_ name: String) throws(JSONCDocument.ParseError) {

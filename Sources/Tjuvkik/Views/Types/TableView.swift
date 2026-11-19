@@ -9,19 +9,19 @@ struct TableView: View {
     let size: TileSize
     let theme: Theme
 
-    private static let spacing: CGFloat = 12
+    private var spacing: CGFloat { theme.z(12) }
     private static let cellSize: CGFloat = 11.5
     private static let monoSize: CGFloat = 11
     private static let headerSize: CGFloat = 10
     /// The most a column asks for when deciding what fits; wider text is cut instead.
-    private static let widest: CGFloat = 120
+    private var widest: CGFloat { theme.z(120) }
 
     var body: some View {
         GeometryReader { proxy in
             let shown = visible(in: proxy.size.width)
             let widths = TableLayout.widths(
                 shares: shown.map { content.columns[$0].width },
-                available: max(proxy.size.width - Self.spacing * CGFloat(max(shown.count - 1, 0)), 0),
+                available: max(proxy.size.width - spacing * CGFloat(max(shown.count - 1, 0)), 0),
                 needed: shown.map { Double(needed($0)) }
             ).map { CGFloat($0) }
             VStack(alignment: .leading, spacing: 0) {
@@ -49,37 +49,37 @@ struct TableView: View {
             widths: content.columns.indices.map { Double(needed($0)) },
             priorities: content.columns.map(\.priority),
             available: Double(width),
-            spacing: Double(Self.spacing),
+            spacing: Double(spacing),
             limit: limit
         )
         return TableLayout.visibleColumns(priorities: content.columns.map(\.priority), fitting: count)
     }
 
     private func header(_ shown: [Int], _ widths: [CGFloat]) -> some View {
-        HStack(spacing: Self.spacing) {
+        HStack(spacing: spacing) {
             ForEach(Array(shown.enumerated()), id: \.offset) { position, index in
                 let column = content.columns[index]
                 Text(column.title.uppercased())
                     .font(theme.font(Self.headerSize, weight: .semibold))
-                    .tracking(0.6)
+                    .tracking(theme.z(0.6))
                     .foregroundStyle(Color(theme.tertiaryText))
                     .lineLimit(1)
                     .frame(width: widths[position], alignment: alignment(column.align))
             }
         }
-        .padding(.bottom, 6)
+        .padding(.bottom, theme.z(6))
     }
 
     private func line(_ row: TableContent.Row, _ shown: [Int], _ widths: [CGFloat]) -> some View {
         VStack(spacing: 0) {
-            Rectangle().fill(Color(theme.line)).frame(height: 1)
-            HStack(spacing: Self.spacing) {
+            Rectangle().fill(Color(theme.line)).frame(height: theme.z(1))
+            HStack(spacing: spacing) {
                 ForEach(Array(shown.enumerated()), id: \.offset) { position, index in
                     cell(row.cell(index), content.columns[index])
                         .frame(width: widths[position], alignment: alignment(content.columns[index].align))
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, theme.z(5))
             .background {
                 if let tone = row.highlight {
                     theme.background(for: tone, color: theme.color(for: tone, default: theme.text), opacity: 0.08)
@@ -93,9 +93,9 @@ struct TableView: View {
         let color = cell.dim && cell.tone == nil
             ? Color(theme.secondaryText)
             : theme.color(for: cell.tone, default: theme.text)
-        return HStack(spacing: 6) {
+        return HStack(spacing: theme.z(6)) {
             if cell.dot {
-                Circle().fill(color).frame(width: 6, height: 6)
+                Circle().fill(color).frame(width: theme.z(6), height: theme.z(6))
             }
             Text(cell.text)
                 .font(column.mono
@@ -123,13 +123,13 @@ struct TableView: View {
             : theme.nsFont(Self.cellSize).monospacedDigits
         let headerFont = theme.nsFont(Self.headerSize, weight: .semibold)
         let title = column.title.uppercased()
-        var widest = measure(title, headerFont) + 0.6 * CGFloat(title.count)
+        var widest = measure(title, headerFont) + theme.z(0.6) * CGFloat(title.count)
         // The first rows are enough for an estimate, and keep this cheap for long tables.
         for row in content.rows.prefix(30) {
             let cell = row.cell(index)
-            widest = max(widest, measure(cell.text, cellFont) + (cell.dot ? 12 : 0))
+            widest = max(widest, measure(cell.text, cellFont) + (cell.dot ? theme.z(12) : 0))
         }
-        return min(ceil(widest), Self.widest)
+        return min(ceil(widest), self.widest)
     }
 
     private func measure(_ text: String, _ font: NSFont) -> CGFloat {

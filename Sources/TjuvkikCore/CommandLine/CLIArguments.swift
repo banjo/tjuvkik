@@ -9,7 +9,7 @@ public enum CLICommand: Equatable, Sendable {
     /// Run a tile or a panel once and say what its tile shows. `raw` prints the output as is instead.
     case run(panel: String, raw: Bool, options: [String: String] = [:])
     /// Render a tile or a panel's tile to a PNG.
-    case preview(panel: String, size: TileSize?, theme: String?, output: String?, scale: Double, options: [String: String] = [:])
+    case preview(panel: String, size: TileSize?, theme: String?, output: String?, scale: Double, zoom: Double = 1, options: [String: String] = [:])
     /// Make a panel folder: `script`, `cli` or a content type.
     case new(name: String, type: String)
     /// Print a JSON schema, or list them.
@@ -50,7 +50,7 @@ public enum CLIArguments {
         var options: [String: String] = [:]
         var flags: Set<String> = []
         var given: [String: String] = [:]
-        let valued = ["--config", "--size", "--theme", "--out", "-o", "--scale", "--type"]
+        let valued = ["--config", "--size", "--theme", "--out", "-o", "--scale", "--zoom", "--type"]
         let known = ["--raw", "--cli", "--script", "-h", "--help", "-v", "--version"]
         var index = 0
         while index < arguments.count {
@@ -124,7 +124,7 @@ public enum CLIArguments {
             try allow(["--raw", "--option"])
             command = .run(panel: try one("panel name"), raw: flags.contains("--raw"), options: given)
         case "preview":
-            try allow(["--size", "--theme", "--out", "--scale", "--option"])
+            try allow(["--size", "--theme", "--out", "--scale", "--zoom", "--option"])
             var size: TileSize?
             if let value = options["--size"] {
                 size = TileSize(rawValue: value)
@@ -137,7 +137,14 @@ public enum CLIArguments {
                 }
                 scale = parsed
             }
-            command = .preview(panel: try one("panel name"), size: size, theme: options["--theme"], output: options["--out"], scale: scale, options: given)
+            var zoom = 1.0
+            if let value = options["--zoom"] {
+                guard let parsed = Double(value), Config.Zoom.range.contains(parsed) else {
+                    throw CLIUsageError(message: "--zoom must be a number from \(Config.Zoom.range.lowerBound.formatted()) to \(Config.Zoom.range.upperBound.formatted()), got \"\(value)\"")
+                }
+                zoom = parsed
+            }
+            command = .preview(panel: try one("panel name"), size: size, theme: options["--theme"], output: options["--out"], scale: scale, zoom: zoom, options: given)
         case "new":
             try allow(["--type", "--cli", "--script"])
             let choices = [options["--type"], flags.contains("--cli") ? "cli" : nil, flags.contains("--script") ? "script" : nil].compactMap { $0 }
@@ -179,6 +186,7 @@ public enum CLIArguments {
           --theme <name>       Default: the theme in config.jsonc for the current appearance.
           -o, --out <file>     Default: <panel>-<size>.png in this folder.
           --scale <1-4>        Pixels per point. Default: 2.
+          --zoom <0.75-2>      Draw the tile as the glance does at this zoom. Default: 1.
       new <name>               Make panels/<name>/ with a panel.jsonc and a script.
           --type <type>        script (default), cli, or a content type like stats or table.
       schema [config|panel|theme]

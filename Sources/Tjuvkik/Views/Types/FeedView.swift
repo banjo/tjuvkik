@@ -40,11 +40,11 @@ struct FeedView: View {
                             if let title = entry.title {
                                 Text(title.uppercased())
                                     .font(theme.font(10, weight: .semibold))
-                                    .tracking(0.6)
+                                    .tracking(theme.z(0.6))
                                     .foregroundStyle(Color(theme.tertiaryText))
                                     .lineLimit(1)
-                                    .padding(.top, 4)
-                                    .padding(.bottom, 6)
+                                    .padding(.top, theme.z(4))
+                                    .padding(.bottom, theme.z(6))
                             }
                             FeedRow(item: entry.item, when: entry.item.when(now: now, calendar: calendar),
                                     isFirst: entry.startsDay, theme: theme)
@@ -65,10 +65,10 @@ struct FeedView: View {
             Spacer(minLength: 0)
             Text(FeedMessage.text(item.text, theme: theme, boldSize: 14))
                 .font(theme.font(14))
-                .lineSpacing(3)
+                .lineSpacing(theme.z(3))
                 .foregroundStyle(Color(theme.text))
                 .lineLimit(4)
-            HStack(spacing: 7) {
+            HStack(spacing: theme.z(7)) {
                 FeedAvatarView(item: item, diameter: 20, theme: theme)
                 Text([item.author, when].compactMap { $0 }.joined(separator: " · "))
                     .font(theme.font(11.5).monospacedDigit())
@@ -82,7 +82,7 @@ struct FeedView: View {
                         .fixedSize()
                 }
             }
-            .padding(.top, 10)
+            .padding(.top, theme.z(10))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
     }
@@ -113,20 +113,20 @@ private struct FeedRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !isFirst {
-                Rectangle().fill(Color(theme.line)).frame(height: 1)
+                Rectangle().fill(Color(theme.line)).frame(height: theme.z(1))
             }
-            HStack(alignment: .top, spacing: 9) {
+            HStack(alignment: .top, spacing: theme.z(9)) {
                 FeedAvatarView(item: item, diameter: 26, theme: theme)
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(alignment: .center, spacing: 6) {
+                VStack(alignment: .leading, spacing: theme.z(1)) {
+                    HStack(alignment: .center, spacing: theme.z(6)) {
                         if item.unread {
-                            Circle().fill(Color(theme.info)).frame(width: 6, height: 6)
+                            Circle().fill(Color(theme.info)).frame(width: theme.z(6), height: theme.z(6))
                         }
                         who
                             .font(theme.font(12))
                             .lineLimit(1)
                             .truncationMode(.tail)
-                        Spacer(minLength: 4)
+                        Spacer(minLength: theme.z(4))
                         if let when {
                             Text(when)
                                 .font(theme.font(10.5).monospacedDigit())
@@ -137,14 +137,14 @@ private struct FeedRow: View {
                     }
                     Text(FeedMessage.text(item.text, theme: theme, boldSize: 12))
                         .font(theme.font(12))
-                        .lineSpacing(2)
+                        .lineSpacing(theme.z(2))
                         .foregroundStyle(Color(theme.secondaryText))
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.top, isFirst ? 0 : 7)
-            .padding(.bottom, 7)
+            .padding(.top, isFirst ? 0 : theme.z(7))
+            .padding(.bottom, theme.z(7))
         }
         .clickable(RowAction(url: item.url, title: item.text, actions: item.actions), theme: theme)
     }
@@ -167,8 +167,8 @@ private struct FeedAvatarView: View {
         if let icon = item.icon, !icon.isEmpty {
             Text(icon)
                 .font(theme.font(diameter * 0.5))
-                .frame(width: diameter, height: diameter)
-                .background(Color(theme.well), in: RoundedRectangle(cornerRadius: diameter * 0.27, style: .continuous))
+                .frame(width: theme.z(diameter), height: theme.z(diameter))
+                .background(Color(theme.well), in: RoundedRectangle(cornerRadius: theme.z(diameter * 0.27), style: .continuous))
         } else {
             let name = item.author ?? item.place ?? ""
             ZStack {
@@ -189,7 +189,7 @@ private struct FeedAvatarView: View {
                     }
                 }
             }
-            .frame(width: diameter, height: diameter)
+            .frame(width: theme.z(diameter), height: theme.z(diameter))
             .clipShape(Circle())
         }
     }

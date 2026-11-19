@@ -66,8 +66,8 @@ struct FocusEntriesKey: PreferenceKey {
 extension View {
     /// Highlights on hover and performs the action on click, when there's one and the glance takes clicks.
     /// `tone` makes an error or warning row the first the keyboard focuses.
-    func clickable(_ action: RowAction, theme: Theme, radius: CGFloat = 6, tone: Tone? = nil) -> some View {
-        modifier(ClickableRow(action: action, theme: theme, radius: radius, tone: tone))
+    func clickable(_ action: RowAction, theme: Theme, radius: CGFloat? = nil, tone: Tone? = nil) -> some View {
+        modifier(ClickableRow(action: action, theme: theme, radius: radius ?? theme.z(6), tone: tone))
     }
 
     /// Reports this view's frame on the board as something the keyboard can focus.

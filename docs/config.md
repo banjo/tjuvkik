@@ -12,6 +12,8 @@ The settings window (Settings…, ⌘,) writes this file for you. It changes onl
   "theme": "dark-glass",
   "trigger": { "key": "fn", "mode": "hold", "holdMs": 250, "closeOnClickOutside": true },
   "launchAtLogin": true,
+  "grid": "4x3",
+  "zoom": "auto",
   "menuBar": null,
   "pause": { "whenLocked": true, "onLowPower": true },
   "panels": [
@@ -124,7 +126,7 @@ The same panel can be on the board more than once; give each an `id`:
 ]
 ```
 
-Panels fill a 4×3 grid in order:
+Panels fill the [grid](#grid-and-zoom) in order:
 
 | Size | Columns × rows |
 |---|---|
@@ -134,6 +136,20 @@ Panels fill a 4×3 grid in order:
 | `xl` | 2 × 3 |
 
 Panels that don't fit are left out, and the menu says which.
+
+## Grid and zoom
+
+```jsonc
+"grid": "6x4",
+"zoom": "auto",
+```
+
+- `grid`: how many cells the board has, columns x rows. 2–8 columns and 3–6 rows. Default: `"4x3"`. A cell is the same size on every grid, so a bigger grid fits more panels and makes the glance bigger, and each panel looks the same.
+- `zoom`: how big the glance draws everything, text included. `"auto"` is 1 on a laptop and grows on wider screens, up to 1.5. A number from 0.75 to 2 is fixed. Default: `"auto"`.
+
+On a screen the board doesn't fit, it's drawn smaller, so a big grid can get small on a laptop. The panels stay where they are on every screen.
+
+Settings → Board sets both.
 
 ## Pause
 

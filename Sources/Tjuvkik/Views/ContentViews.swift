@@ -7,9 +7,9 @@ struct RowsView: View {
     let theme: Theme
 
     var body: some View {
-        FittingStack(spacing: 2) {
+        FittingStack(spacing: theme.z(2)) {
             if let hero = content.hero {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: theme.z(8)) {
                     Text(hero.value)
                         .font(theme.font(30, weight: .semibold, rounded: true))
                         .foregroundStyle(theme.color(for: hero.tone, default: theme.text))
@@ -17,10 +17,10 @@ struct RowsView: View {
                         Text(label).font(theme.font(12)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
                     }
                 }
-                .padding(.bottom, 4)
+                .padding(.bottom, theme.z(4))
             }
             if let summary = content.summary, !summary.isEmpty {
-                SummaryView(chips: summary, theme: theme).padding(.bottom, 6)
+                SummaryView(chips: summary, theme: theme).padding(.bottom, theme.z(6))
             }
             if let progress = content.progress {
                 GeometryReader { geometry in
@@ -29,17 +29,17 @@ struct RowsView: View {
                         Capsule().fill(Color(theme.accent)).frame(width: geometry.size.width * progress)
                     }
                 }
-                .frame(height: 4)
-                .padding(.bottom, 8)
+                .frame(height: theme.z(4))
+                .padding(.bottom, theme.z(8))
             }
             ForEach(Array(content.rows.enumerated()), id: \.offset) { index, row in
                 if let group = row.group, index == 0 || content.rows[index - 1].group != group {
                     Text(group.uppercased())
                         .font(theme.font(9.5, weight: .semibold))
-                        .tracking(0.6)
+                        .tracking(theme.z(0.6))
                         .foregroundStyle(Color(theme.tertiaryText))
                         .lineLimit(1)
-                        .padding(.top, index == 0 ? 0 : 6)
+                        .padding(.top, index == 0 ? 0 : theme.z(6))
                 }
                 RowView(row: row, theme: theme)
                 if let note = row.note {
@@ -56,9 +56,9 @@ private struct SummaryView: View {
     let theme: Theme
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.z(12)) {
             ForEach(Array(chips.enumerated()), id: \.offset) { _, chip in
-                HStack(spacing: 4) {
+                HStack(spacing: theme.z(4)) {
                     if let icon = chip.icon { Text(icon).font(theme.font(11.5)) }
                     if let value = chip.value {
                         Text(value)
@@ -88,12 +88,12 @@ private struct NoteView: View {
             .foregroundStyle(color)
             .lineLimit(1)
             .truncationMode(.middle)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, theme.z(8))
+            .padding(.vertical, theme.z(4))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.background(for: tone, color: color, opacity: 0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .padding(.leading, 26)
-            .padding(.bottom, 2)
+            .background(theme.background(for: tone, color: color, opacity: 0.1), in: RoundedRectangle(cornerRadius: theme.z(6), style: .continuous))
+            .padding(.leading, theme.z(26))
+            .padding(.bottom, theme.z(2))
     }
 }
 
@@ -102,11 +102,11 @@ private struct RowView: View {
     let theme: Theme
 
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
+        HStack(alignment: .center, spacing: theme.z(8)) {
             if let icon = row.icon {
-                Text(icon).font(theme.font(13)).frame(width: 18)
+                Text(icon).font(theme.font(13)).frame(width: theme.z(18))
             }
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: theme.z(1)) {
                 Text(row.title)
                     .font(theme.font(12.5, weight: .medium))
                     .foregroundStyle(Color(row.tone == .muted ? theme.secondaryText : theme.text))
@@ -115,7 +115,7 @@ private struct RowView: View {
                     Text(subtitle).font(theme.font(11)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
                 }
             }
-            Spacer(minLength: 4)
+            Spacer(minLength: theme.z(4))
             if let trailing = row.trailing {
                 Text(trailing)
                     .font(theme.font(11).monospacedDigit())
@@ -123,7 +123,7 @@ private struct RowView: View {
                     .lineLimit(1)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, theme.z(4))
         .clickable(RowAction(url: row.url, command: row.command, title: row.title, actions: row.actions), theme: theme, tone: row.tone)
     }
 }
@@ -146,8 +146,8 @@ struct TextOutputView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(8)
+        .padding(theme.z(8))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(theme.well), in: RoundedRectangle(cornerRadius: max(theme.radius - 6, 4), style: .continuous))
+        .background(Color(theme.well), in: RoundedRectangle(cornerRadius: max(theme.radius - theme.z(6), theme.z(4)), style: .continuous))
     }
 }

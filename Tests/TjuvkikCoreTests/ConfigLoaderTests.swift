@@ -82,6 +82,21 @@ struct ConfigLoaderTests {
         #expect(config.trigger == .fn)
         #expect(config.launchAtLogin)
         #expect(config.tiles.isEmpty)
+        #expect(config.grid == .standard)
+        #expect(config.zoom == .auto)
+    }
+
+    @Test func gridAndZoom() throws {
+        let config = try load(["config.json": #"{ "grid": "6x4", "zoom": 1.25 }"#]).config
+        #expect(config.grid == BoardGrid(columns: 6, rows: 4))
+        #expect(config.zoom == .fixed(1.25))
+        #expect(try load(["config.json": #"{ "zoom": "auto" }"#]).config.zoom == .auto)
+    }
+
+    @Test func badGridAndZoom() {
+        #expect(errors(["config.json": #"{ "grid": "4x2" }"#]) == [#"config.json: grid: expected columns x rows, like "6x4", with 2–8 columns and 3–6 rows, got "4x2""#])
+        #expect(errors(["config.json": #"{ "zoom": 3 }"#]) == ["config.json: zoom: must be between 0.75 and 2.0"])
+        #expect(errors(["config.json": #"{ "zoom": "big" }"#]) == [#"config.json: zoom: expected "auto" or a number, got "big""#])
     }
 
     @Test func missingConfigIsAnError() {

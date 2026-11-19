@@ -3,9 +3,9 @@ import SwiftUI
 import TjuvkikCore
 
 extension Theme {
-    /// Text at `size` points before the theme's scale, in its font.
+    /// Text at `size` points before the theme's scale and zoom, in its font.
     func font(_ size: CGFloat, weight: Font.Weight = .regular, mono: Bool = false, rounded: Bool = false) -> Font {
-        let size = size * font.scale
+        let size = size * font.scale * zoom
         if mono {
             if let name = font.mono { return .custom(name, size: size).weight(weight) }
             return .system(size: size, weight: weight, design: .monospaced)
@@ -16,7 +16,7 @@ extension Theme {
 
     /// The same, for measuring with AppKit.
     func nsFont(_ size: CGFloat, weight: NSFont.Weight = .regular, mono: Bool = false) -> NSFont {
-        let size = size * font.scale
+        let size = size * font.scale * zoom
         let family = mono ? font.mono : font.family
         if let family {
             let descriptor = NSFontDescriptor(fontAttributes: [.family: family, .traits: [NSFontDescriptor.TraitKey.weight: weight]])

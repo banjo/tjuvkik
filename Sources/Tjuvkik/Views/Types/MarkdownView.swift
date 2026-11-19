@@ -11,10 +11,10 @@ struct MarkdownView: View {
     var body: some View {
         let layout = TileLayout(size)
         let pieces = Self.pieces(content.blocks, titleLevel: content.titleLevel)
-        MarkdownFlowLayout(columns: layout == .m ? 2 : 1) {
+        MarkdownFlowLayout(columns: layout == .m ? 2 : 1, gap: theme.z(20)) {
             ForEach(Array(pieces.enumerated()), id: \.offset) { index, piece in
                 pieceView(piece, compact: layout == .s, tint: nil)
-                    .layoutValue(key: PieceSpacing.self, value: index == 0 ? 0 : Self.spacing(after: pieces[index - 1], before: piece))
+                    .layoutValue(key: PieceSpacing.self, value: index == 0 ? 0 : theme.z(Self.spacing(after: pieces[index - 1], before: piece)))
                     .layoutValue(key: KeepWithNext.self, value: piece.isHeading)
             }
         }
@@ -78,30 +78,30 @@ struct MarkdownView: View {
         case .title(let text):
             let size: CGFloat = compact ? 15 : 14
             Text(inline(text, size: size, weight: .semibold, color: tint ?? Color(theme.text), tint: tint))
-                .tracking(-0.01 * size)
+                .tracking(theme.z(-0.01 * size))
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .section(let text):
             Text(inline(text.uppercased(), size: 10.5, weight: .semibold, color: tint ?? Color(theme.tertiaryText), tint: tint))
-                .tracking(0.63)
+                .tracking(theme.z(0.63))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .paragraph(let text):
             Text(inline(text, size: 12.5, color: tint ?? Color(theme.secondaryText), tint: tint))
-                .lineSpacing(3.5)
+                .lineSpacing(theme.z(3.5))
                 .lineLimit(compact ? 4 : nil)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .item(let item, _):
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: theme.z(4)) {
                 marker(item, tint: tint)
-                    .frame(width: 14, alignment: .trailing)
+                    .frame(width: theme.z(14), alignment: .trailing)
                 Text(inline(item.text, size: 12.5, color: itemColor(item, tint: tint), tint: tint))
-                    .lineSpacing(3.5)
+                    .lineSpacing(theme.z(3.5))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.leading, CGFloat(item.depth) * 18)
+            .padding(.leading, CGFloat(item.depth) * theme.z(18))
         case .code(let text):
-            VStack(alignment: .leading, spacing: 5.75) {
+            VStack(alignment: .leading, spacing: theme.z(5.75)) {
                 ForEach(Array(text.split(separator: "\n", omittingEmptySubsequences: false).enumerated()), id: \.offset) { _, line in
                     Text(line.isEmpty ? " " : String(line))
                         .font(theme.font(11.5, mono: true))
@@ -110,16 +110,16 @@ struct MarkdownView: View {
                         .truncationMode(.tail)
                 }
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
+            .padding(.vertical, theme.z(8))
+            .padding(.horizontal, theme.z(10))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .well(theme, radius: 8)
+            .well(theme, radius: theme.z(8))
         case .quote(let inner):
             quote(inner, compact: compact)
         case .rule:
             Rectangle()
                 .fill(Color(theme.line))
-                .frame(height: 1)
+                .frame(height: theme.z(1))
                 .frame(maxWidth: .infinity)
         }
     }
@@ -127,7 +127,7 @@ struct MarkdownView: View {
     /// A blockquote, in the warning tone with a bar on its left.
     private func quote(_ inner: [Piece], compact: Bool) -> AnyView {
         let warning = Color(theme.warning)
-        return AnyView(VStack(alignment: .leading, spacing: 4) {
+        return AnyView(VStack(alignment: .leading, spacing: theme.z(4)) {
             ForEach(Array(inner.enumerated()), id: \.offset) { _, piece in
                 // A quote in a quote is drawn as one quote.
                 if case .quote(let nested) = piece {
@@ -139,12 +139,12 @@ struct MarkdownView: View {
                 }
             }
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 10)
+        .padding(.vertical, theme.z(6))
+        .padding(.horizontal, theme.z(10))
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(theme.background(for: .warning, color: warning, opacity: 0.12))
-        .overlay(alignment: .leading) { Rectangle().fill(warning).frame(width: 2) }
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous)))
+        .overlay(alignment: .leading) { Rectangle().fill(warning).frame(width: theme.z(2)) }
+        .clipShape(RoundedRectangle(cornerRadius: theme.z(8), style: .continuous)))
     }
 
     @ViewBuilder private func marker(_ item: MarkdownListItem, tint: Color?) -> some View {
@@ -226,7 +226,7 @@ private struct KeepWithNext: LayoutValueKey {
 /// Places pieces in columns with `MarkdownFlow`: whole pieces only, two columns balanced.
 private struct MarkdownFlowLayout: Layout {
     var columns: Int
-    var gap: CGFloat = 20
+    var gap: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         proposal.replacingUnspecifiedDimensions()

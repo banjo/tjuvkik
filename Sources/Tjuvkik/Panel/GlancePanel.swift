@@ -54,6 +54,8 @@ final class GlanceHostingView<Content: View>: NSHostingView<Content> {
 final class GlanceModel {
     var isVisible = false
     var systemIsDark = false
+    /// How much bigger than at zoom 1 the glance draws, for the screen it's on.
+    var zoom: CGFloat = 1
     /// What the keyboard has focused, and whether it shows: only while the glance stays open.
     var focused: FocusEntry?
     var showsFocus = false
@@ -169,10 +171,15 @@ final class GlanceController {
         guard let screen = FocusedScreen.current() else { return }
         hideGeneration += 1
         isShown = true
-        var frame = GlancePlacement.framedRect(in: screen.visibleFrame)
-        frame.origin.y -= GlanceView.hintSpace
-        frame.size.height += GlanceView.hintSpace
-        panel.setFrame(frame, display: false)
+        let config = store.config
+        let board = BentoGeometry.board(config.grid, theme: config.theme(dark: model.systemIsDark))
+        let framed = GlancePlacement.framed(
+            in: screen.visibleFrame,
+            content: CGSize(width: board.width, height: board.height + GlanceView.hintSpace),
+            zoom: config.zoom
+        )
+        model.zoom = framed.zoom
+        panel.setFrame(framed.rect, display: false)
         panel.alphaValue = 1
         panel.ignoresMouseEvents = false
         panel.orderFrontRegardless()

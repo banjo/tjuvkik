@@ -72,12 +72,29 @@ public enum ConfigLoader {
             if !id.isEmpty { used[id] = index }
             if let tile = tile(ref, path: "panels[\(index)]", config: file, requireOptions: true, files: &files) { tiles.append(tile) }
         }
+        var grid = BoardGrid.standard
+        if let value = raw.grid {
+            if let parsed = BoardGrid(value) { grid = parsed } else {
+                files.error(file, "grid", "expected columns x rows, like \"6x4\", with \(BoardGrid.columnRange.lowerBound)–\(BoardGrid.columnRange.upperBound) columns and \(BoardGrid.rowRange.lowerBound)–\(BoardGrid.rowRange.upperBound) rows, got \"\(value)\"")
+            }
+        }
+
+        var zoom = Config.Zoom.auto
+        switch raw.zoom {
+        case nil, .text("auto"): break
+        case .number(let value) where Config.Zoom.range.contains(value): zoom = .fixed(value)
+        case .number:
+            files.error(file, "zoom", "must be between \(Config.Zoom.range.lowerBound) and \(Config.Zoom.range.upperBound)")
+        case .text(let value):
+            files.error(file, "zoom", "expected \"auto\" or a number, got \"\(value)\"")
+        }
+
         let shown = tiles.indices.filter { tiles[$0].show }
-        let slots = BentoPacking.pack(shown.map { tiles[$0].size })
+        let slots = BentoPacking.pack(shown.map { tiles[$0].size }, grid: grid)
         for (position, index) in shown.enumerated() {
             tiles[index].slot = slots[position]
             if slots[position] == nil {
-                files.warning(file, "panels[\(index)]", "\"\(tiles[index].id)\" doesn't fit on the 4×3 grid and is left out")
+                files.warning(file, "panels[\(index)]", "\"\(tiles[index].id)\" doesn't fit on the \(grid) grid and is left out")
             }
         }
 
@@ -98,7 +115,7 @@ public enum ConfigLoader {
         let config = Config(
             view: view, layout: layout, lightThemeName: lightName, darkThemeName: darkName, lightTheme: light, darkTheme: dark,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
-            pause: pause, notifications: notifications
+            pause: pause, notifications: notifications, grid: grid, zoom: zoom
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }

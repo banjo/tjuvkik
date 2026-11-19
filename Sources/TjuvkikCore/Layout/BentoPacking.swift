@@ -1,4 +1,6 @@
-/// Tile sizes on the 4×3 Bento grid.
+import Foundation
+
+/// Tile sizes on the Bento grid.
 public enum TileSize: String, CaseIterable, Sendable {
     case s, m, l, xl
 
@@ -18,6 +20,33 @@ public enum TileSize: String, CaseIterable, Sendable {
     }
 }
 
+/// How many cells the board has: `grid` in config.jsonc, like `"6x4"`.
+public struct BoardGrid: Equatable, Sendable, CustomStringConvertible {
+    public var columns: Int
+    public var rows: Int
+
+    public static let standard = BoardGrid(columns: 4, rows: 3)
+    public static let columnRange = 2...8
+    /// At least 3, so an xl tile fits.
+    public static let rowRange = 3...6
+
+    public init(columns: Int, rows: Int) {
+        self.columns = columns
+        self.rows = rows
+    }
+
+    /// `"6x4"` or `"6×4"`, in range.
+    public init?(_ text: String) {
+        let parts = text.lowercased().split(whereSeparator: { $0 == "x" || $0 == "×" })
+        guard parts.count == 2, let columns = Int(parts[0].trimmingCharacters(in: .whitespaces)),
+              let rows = Int(parts[1].trimmingCharacters(in: .whitespaces)),
+              Self.columnRange.contains(columns), Self.rowRange.contains(rows) else { return nil }
+        self.init(columns: columns, rows: rows)
+    }
+
+    public var description: String { "\(columns)x\(rows)" }
+}
+
 public struct GridSlot: Equatable, Sendable {
     public var column: Int
     public var row: Int
@@ -27,11 +56,9 @@ public struct GridSlot: Equatable, Sendable {
 
 /// Dense packing: each tile, in order, takes the first free spot (row by row) it fits in.
 public enum BentoPacking {
-    public static let columns = 4
-    public static let rows = 3
-
     /// One slot per tile, nil for tiles that don't fit.
-    public static func pack(_ sizes: [TileSize]) -> [GridSlot?] {
+    public static func pack(_ sizes: [TileSize], grid: BoardGrid = .standard) -> [GridSlot?] {
+        let columns = grid.columns, rows = grid.rows
         var taken = Array(repeating: Array(repeating: false, count: columns), count: rows)
 
         func fits(_ size: TileSize, column: Int, row: Int) -> Bool {

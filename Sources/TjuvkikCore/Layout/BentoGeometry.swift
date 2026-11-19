@@ -1,18 +1,27 @@
 import CoreGraphics
 
 /// Where tiles sit on the board, in points: the board is inset by the theme's `board.inset`, and
-/// cells are separated by its `board.gap`.
+/// cells are separated by its `board.gap`. A cell has the same size on every grid; a bigger grid
+/// makes a bigger board, and the zoom draws all of it bigger.
 public enum BentoGeometry {
-    /// The board at its largest, as the framed glance draws it on a big enough screen.
-    public static let board = CGSize(width: 1080, height: 580)
+    /// One cell at zoom 1: what the panel types are drawn for.
+    public static let cell = CGSize(width: 257.5, height: 180)
+
+    /// The board for `grid`: its cells at the theme's zoom, the gaps between them and its inset.
+    public static func board(_ grid: BoardGrid, theme: Theme) -> CGSize {
+        let inset = CGFloat(theme.board.inset)
+        let cells = size(columns: grid.columns, rows: grid.rows,
+                         cell: CGSize(width: theme.z(cell.width), height: theme.z(cell.height)), board: theme.board)
+        return CGSize(width: cells.width + inset * 2, height: cells.height + inset * 2)
+    }
 
     /// One cell's size on a board of `size`, inside its inset.
-    public static func cell(in size: CGSize, board: Theme.Board = Theme.Board()) -> CGSize {
+    public static func cell(in size: CGSize, grid: BoardGrid, board: Theme.Board = Theme.Board()) -> CGSize {
         let inset = CGFloat(board.inset), gap = CGFloat(board.gap)
         let inner = CGSize(width: size.width - inset * 2, height: size.height - inset * 2)
         return CGSize(
-            width: (inner.width - gap * CGFloat(BentoPacking.columns - 1)) / CGFloat(BentoPacking.columns),
-            height: (inner.height - gap * CGFloat(BentoPacking.rows - 1)) / CGFloat(BentoPacking.rows)
+            width: (inner.width - gap * CGFloat(grid.columns - 1)) / CGFloat(grid.columns),
+            height: (inner.height - gap * CGFloat(grid.rows - 1)) / CGFloat(grid.rows)
         )
     }
 
@@ -25,8 +34,8 @@ public enum BentoGeometry {
         )
     }
 
-    /// A tile of `size` on the largest board.
+    /// A tile of `size` at zoom 1.
     public static func size(of size: TileSize, board: Theme.Board = Theme.Board()) -> CGSize {
-        self.size(columns: size.columns, rows: size.rows, cell: cell(in: self.board, board: board), board: board)
+        self.size(columns: size.columns, rows: size.rows, cell: cell, board: board)
     }
 }

@@ -35,6 +35,11 @@ struct CLIArgumentsTests {
         #expect(try command("--version").command == .version)
     }
 
+    @Test func previewZoom() throws {
+        #expect(try command("preview cpu --zoom 1.5").command == .preview(panel: "cpu", size: nil, theme: nil, output: nil, scale: 2, zoom: 1.5))
+        #expect(throws: CLIUsageError.self) { try command("preview cpu --zoom 3") }
+    }
+
     @Test func readsTheConfigFolderAnywhere() throws {
         #expect(try command("--config /tmp/x validate").configDirectory == "/tmp/x")
         #expect(try command("validate --config=/tmp/x").configDirectory == "/tmp/x")

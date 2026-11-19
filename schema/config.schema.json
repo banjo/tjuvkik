@@ -116,6 +116,32 @@
       "default": true,
       "description": "Start Tjuvkik when you log in."
     },
+    "grid": {
+      "type": "string",
+      "pattern": "^\\s*[2-8]\\s*[x×]\\s*[3-6]\\s*$",
+      "default": "4x3",
+      "examples": [
+        "4x3",
+        "5x3",
+        "6x3",
+        "6x4"
+      ],
+      "description": "How many cells the board has, columns x rows: 2–8 columns and 3–6 rows. Every cell keeps its size, so a bigger grid fits more panels and makes the glance bigger."
+    },
+    "zoom": {
+      "default": "auto",
+      "description": "How big the glance draws everything. \"auto\" is 1 on a laptop and grows on wider screens, up to 1.5. A number from 0.75 to 2 is fixed. Either is made smaller when the board doesn't fit the screen.",
+      "anyOf": [
+        {
+          "const": "auto"
+        },
+        {
+          "type": "number",
+          "minimum": 0.75,
+          "maximum": 2
+        }
+      ]
+    },
     "menuBar": {
       "anyOf": [
         {

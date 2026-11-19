@@ -19,16 +19,33 @@ public enum GlancePlacement {
         return best
     }
 
-    /// The Framed glance: centered, 13% down from the top of the usable area, at most 1080×580.
-    public static func framedRect(in visibleFrame: CGRect) -> CGRect {
-        let width = min(1080, visibleFrame.width - 48)
-        let height = min(580, visibleFrame.height * 0.66)
+    /// The screen width `"zoom": "auto"` draws the board at zoom 1 on, a 16-inch MacBook Pro's.
+    /// Wider screens zoom in, up to `autoZoomLimit`; narrower ones stay at 1.
+    public static let autoZoomWidth: CGFloat = 1728
+    public static let autoZoomLimit: CGFloat = 1.5
+
+    public struct Framed: Equatable, Sendable {
+        /// The glance's window: the board and what's below it.
+        public var rect: CGRect
+        public var zoom: CGFloat
+    }
+
+    /// The Framed glance: centered, 13% down from the top of the usable area. `content` is the
+    /// board and what's below it at zoom 1. The zoom is the one asked for, made smaller when the
+    /// glance wouldn't fit.
+    public static func framed(in visibleFrame: CGRect, content: CGSize, zoom: Config.Zoom) -> Framed {
+        let wanted: CGFloat = switch zoom {
+        case .auto: min(max(visibleFrame.width / autoZoomWidth, 1), autoZoomLimit)
+        case .fixed(let value): CGFloat(value)
+        }
+        let fitsWidth = (visibleFrame.width - 48) / content.width
+        let fitsHeight = (visibleFrame.height * 0.87 - 24) / content.height
+        let scale = min(wanted, fitsWidth, fitsHeight)
+        let width = (content.width * scale).rounded(), height = (content.height * scale).rounded()
         let top = visibleFrame.maxY - visibleFrame.height * 0.13
-        return CGRect(
-            x: (visibleFrame.midX - width / 2).rounded(),
-            y: (top - height).rounded(),
-            width: width.rounded(),
-            height: height.rounded()
+        return Framed(
+            rect: CGRect(x: (visibleFrame.midX - width / 2).rounded(), y: (top - height).rounded(), width: width, height: height),
+            zoom: scale
         )
     }
 }

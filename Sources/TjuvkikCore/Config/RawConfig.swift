@@ -13,7 +13,22 @@ struct RawConfig: Decodable {
     var menuBar: OneOrMany?
     var pause: RawPause?
     var notifications: RawNotifications?
+    var grid: String?
+    var zoom: RawZoom?
     var panels: [RawPanelRef]?
+}
+
+/// `"zoom"`: `"auto"` or a number.
+enum RawZoom: Decodable {
+    case text(String)
+    case number(Double)
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let number = try? container.decode(Double.self) { self = .number(number) }
+        else if let text = try? container.decode(String.self) { self = .text(text) }
+        else { throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: #"expected "auto" or a number"#)) }
+    }
 }
 
 /// `"theme"`: a name, or one for each appearance.

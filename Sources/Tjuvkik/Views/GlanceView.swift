@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import TjuvkikCore
 
-/// The Framed Bento board: tiles on a 4×3 grid, placed from the config.
+/// The Framed Bento board: tiles on the config's grid, drawn at the glance's zoom.
 struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
@@ -13,14 +13,14 @@ struct GlanceView: View {
     let onAction: (Tile, RowAction) -> Void
     let menu: (Tile) -> TileMenu
 
-    /// The hint bar's height and its gap to the board, added below the board.
+    /// The hint bar's height and its gap to the board at zoom 1, added below the board.
     static let hintSpace: CGFloat = 38
 
     var body: some View {
         let config = store.config
-        let theme = config.theme(dark: model.systemIsDark)
+        let theme = config.theme(dark: model.systemIsDark).zoomed(model.zoom)
         let focus = model.showsFocus ? model.focused : nil
-        VStack(spacing: 10) {
+        VStack(spacing: theme.z(10)) {
             BoardView(config: config, theme: theme, states: panels.states, isVisible: model.isVisible,
                       onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
                       focus: focus, onFocusEntries: onFocusEntries)
@@ -29,13 +29,13 @@ struct GlanceView: View {
                         GeometryReader { geometry in
                             ActionMenuView(menu: actions, theme: theme)
                                 .fixedSize()
-                                .offset(Self.menuOffset(below: focus.frame, rows: actions.commands.count, in: geometry.size))
+                                .offset(Self.menuOffset(below: focus.frame, rows: actions.commands.count, in: geometry.size, theme: theme))
                         }
                     }
                 }
             HintBar(hints: GlanceCommand.hints(for: focus.map { $0.action } ?? nil), theme: theme)
                 .opacity(focus != nil && model.isVisible ? 1 : 0)
-                .frame(height: Self.hintSpace - 10)
+                .frame(height: theme.z(Self.hintSpace - 10))
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture(perform: onBackgroundClick)
@@ -43,10 +43,10 @@ struct GlanceView: View {
     }
 
     /// Under the row's right end, or above it when there's no room, kept on the board.
-    private static func menuOffset(below row: CGRect, rows: Int, in board: CGSize) -> CGSize {
-        let width: CGFloat = 240, height = CGFloat(rows) * 27 + 10
+    private static func menuOffset(below row: CGRect, rows: Int, in board: CGSize, theme: Theme) -> CGSize {
+        let width = theme.z(240), height = theme.z(CGFloat(rows) * 27 + 10), space = theme.z(4)
         let x = min(max(row.maxX - width, 0), board.width - width)
-        let y = row.maxY + 4 + height <= board.height ? row.maxY + 4 : max(row.minY - 4 - height, 0)
+        let y = row.maxY + space + height <= board.height ? row.maxY + space : max(row.minY - space - height, 0)
         return CGSize(width: x, height: y)
     }
 }
@@ -81,8 +81,8 @@ struct TileView: View {
         // Content may draw into the padding at the sides, and at the bottom unless an error is
         // shown there.
         let bleed = TileBleed(horizontal: padding, bottom: state?.error == nil ? padding : 0)
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: theme.z(8)) {
+            HStack(spacing: theme.z(6)) {
                 Text(tile.title)
                     .font(theme.font(12, weight: .semibold))
                     .foregroundStyle(Color(theme.secondaryText))
@@ -91,9 +91,9 @@ struct TileView: View {
                     Text(state?.content?.type?.rawValue ?? tile.typeName)
                         .font(theme.font(9.5, weight: .medium, mono: true))
                         .foregroundStyle(Color(theme.tertiaryText))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(Color(theme.well), in: RoundedRectangle(cornerRadius: 4))
+                        .padding(.horizontal, theme.z(5))
+                        .padding(.vertical, theme.z(1))
+                        .background(Color(theme.well), in: RoundedRectangle(cornerRadius: theme.z(4)))
                 }
                 Spacer()
                 if state?.error != nil && state?.content != nil {
@@ -141,7 +141,7 @@ struct TileView: View {
         }
         .shadow(
             color: theme.tile.shadow ? .black.opacity(theme.blur ? 0.18 : 0.35) : .clear,
-            radius: theme.tile.shadow ? 18 : 0, y: theme.tile.shadow ? 10 : 0
+            radius: theme.tile.shadow ? theme.z(18) : 0, y: theme.tile.shadow ? theme.z(10) : 0
         )
         .opacity(isVisible ? 1 : 0)
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)

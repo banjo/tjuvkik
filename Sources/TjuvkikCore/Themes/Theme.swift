@@ -59,6 +59,27 @@ public struct Theme: Equatable, Sendable {
     public var tile = TileStyle()
     /// Backgrounds for tones that set one. Others use the tone's color, faded.
     public var toneBackgrounds: [Tone: RGBA] = [:]
+    /// How much bigger the glance draws everything: set by `zoomed(_:)`, never by a theme file.
+    public private(set) var zoom: Double = 1
+}
+
+extension Theme {
+    /// The theme for a glance drawn `zoom` times its size: the sizes it sets are multiplied here,
+    /// and views multiply their own with `z(_:)`. Text scales in `font(_:)`.
+    public func zoomed(_ zoom: Double) -> Theme {
+        var theme = self
+        let factor = zoom / self.zoom
+        theme.zoom = zoom
+        theme.radius *= factor
+        theme.board.gap *= factor
+        theme.board.inset *= factor
+        theme.tile.padding *= factor
+        theme.tile.border *= factor
+        return theme
+    }
+
+    /// A size in points, at the theme's zoom.
+    public func z(_ points: CGFloat) -> CGFloat { points * CGFloat(zoom) }
 }
 
 extension Theme {

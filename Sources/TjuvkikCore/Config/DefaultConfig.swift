@@ -49,7 +49,12 @@ public enum DefaultConfig {
       // it shows there; by default its first summary count.
       // "menuBar": "agents",
 
-      // Panels fill a 4×3 grid in order. Each one is a folder in panels/.
+      // How many cells the board has, columns x rows, and how big it's drawn: "auto" grows on wider
+      // screens, or a number from 0.75 to 2.
+      // "grid": "6x4",
+      // "zoom": 1.25,
+
+      // Panels fill the grid in order. Each one is a folder in panels/.
       // Sizes: s 1×1, m 2×1, l 2×2, xl 2×3. Leave it out to use the panel's own size.
       "panels": [
         { "panel": "disk" },

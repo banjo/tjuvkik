@@ -28,7 +28,7 @@ struct GridView: View {
         return VStack(alignment: .leading, spacing: 0) {
             Text(headline.value)
                 .font(theme.font(26, weight: .semibold).monospacedDigit())
-                .tracking(-0.52)
+                .tracking(theme.z(-0.52))
                 .foregroundStyle(theme.color(for: headline.tone, default: theme.text))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -37,10 +37,10 @@ struct GridView: View {
                     .font(theme.font(11.5))
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
-                    .padding(.top, 4)
+                    .padding(.top, theme.z(4))
             }
             GeometryReader { geo in
-                let side: CGFloat = 13, gap: CGFloat = 4
+                let side = theme.z(13), gap = theme.z(4)
                 let perLine = max(1, Int((geo.size.width + gap) / (side + gap)))
                 let lines = max(0, Int((geo.size.height + gap) / (side + gap)))
                 let shown = Array(content.rows.prefix(perLine * lines))
@@ -49,7 +49,7 @@ struct GridView: View {
                     ForEach(Array(rows.enumerated()), id: \.offset) { _, line in
                         HStack(spacing: gap) {
                             ForEach(Array(line.enumerated()), id: \.offset) { _, row in
-                                RoundedRectangle(cornerRadius: 3.5, style: .continuous)
+                                RoundedRectangle(cornerRadius: theme.z(3.5), style: .continuous)
                                     .fill(theme.color(for: row.status, default: theme.line))
                                     .opacity(row.status == .success ? 0.45 : 0.85)
                                     .frame(width: side, height: side)
@@ -59,7 +59,7 @@ struct GridView: View {
                 }
                 .frame(width: geo.size.width, height: geo.size.height, alignment: .bottomLeading)
             }
-            .padding(.top, 8)
+            .padding(.top, theme.z(8))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -69,11 +69,11 @@ struct GridView: View {
     /// A chip per row, three to a line, as many lines as fit.
     private var chips: some View {
         let lines = stride(from: 0, to: content.rows.count, by: 3).map { Array(content.rows[$0..<min($0 + 3, content.rows.count)]) }
-        return FittingStack(spacing: 6) {
+        return FittingStack(spacing: theme.z(6)) {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                HStack(spacing: 6) {
+                HStack(spacing: theme.z(6)) {
                     ForEach(Array(line.enumerated()), id: \.offset) { _, row in chip(row) }
-                    ForEach(line.count..<3, id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
+                    ForEach(line.count..<3, id: \.self) { _ in Color.clear.frame(maxWidth: .infinity, maxHeight: theme.z(1)) }
                 }
             }
         }
@@ -83,10 +83,10 @@ struct GridView: View {
     private func chip(_ row: GridContent.Row) -> some View {
         let tone = theme.color(for: row.status, default: theme.tertiaryText)
         let loud = row.status == .error || row.status == .warning
-        return HStack(spacing: 4) {
+        return HStack(spacing: theme.z(4)) {
             ZStack {
-                Circle().fill(tone.opacity(0.18)).frame(width: 13, height: 13)
-                Circle().fill(tone).frame(width: 7, height: 7)
+                Circle().fill(tone.opacity(0.18)).frame(width: theme.z(13), height: theme.z(13))
+                Circle().fill(tone).frame(width: theme.z(7), height: theme.z(7))
             }
             Text(row.label)
                 .font(theme.font(11.5))
@@ -102,25 +102,25 @@ struct GridView: View {
                     .fixedSize()
             }
         }
-        .padding(.vertical, 6)
-        .padding(.leading, 5)
-        .padding(.trailing, 8)
+        .padding(.vertical, theme.z(6))
+        .padding(.leading, theme.z(5))
+        .padding(.trailing, theme.z(8))
         .frame(maxWidth: .infinity)
-        .well(theme, radius: 8)
+        .well(theme, radius: theme.z(8))
     }
 
     // MARK: - l
 
     private var hasValues: Bool { content.rows.contains { $0.value != nil } }
-    private let labelWidth: CGFloat = 92
-    private let valueWidth: CGFloat = 44
-    private let columnGap: CGFloat = 10
+    private var labelWidth: CGFloat { theme.z(92) }
+    private var valueWidth: CGFloat { theme.z(44) }
+    private var columnGap: CGFloat { theme.z(10) }
 
     /// A row per item with its cells, spread over the height; the axis and legend below.
     private var history: some View {
         VStack(spacing: 0) {
             GeometryReader { geo in
-                let fit = max(0, Int((geo.size.height + 7) / (18 + 7)))
+                let fit = max(0, Int((geo.size.height + theme.z(7)) / theme.z(18 + 7)))
                 VStack(spacing: 0) {
                     ForEach(Array(content.rows.prefix(fit).enumerated()), id: \.offset) { _, row in
                         Spacer(minLength: 0)
@@ -133,7 +133,7 @@ struct GridView: View {
             if let axis = content.axis, !axis.isEmpty {
                 HStack(spacing: 0) {
                     ForEach(Array(axis.enumerated()), id: \.offset) { index, text in
-                        if index > 0 { Spacer(minLength: 4) }
+                        if index > 0 { Spacer(minLength: theme.z(4)) }
                         Text(text).lineLimit(1)
                     }
                 }
@@ -141,16 +141,16 @@ struct GridView: View {
                 .foregroundStyle(Color(theme.tertiaryText))
                 .padding(.leading, labelWidth + columnGap)
                 .padding(.trailing, hasValues ? valueWidth + columnGap : 0)
-                .padding(.top, 3)
+                .padding(.top, theme.z(3))
             }
             if !content.legend.isEmpty || content.footer != nil {
-                HStack(spacing: 12) {
+                HStack(spacing: theme.z(12)) {
                     ForEach(Array(content.legend.enumerated()), id: \.offset) { _, entry in
-                        HStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        HStack(spacing: theme.z(5)) {
+                            RoundedRectangle(cornerRadius: theme.z(2), style: .continuous)
                                 .fill(theme.color(for: entry.tone, default: theme.line))
                                 .opacity(entry.tone == .success ? 0.55 : 1)
-                                .frame(width: 8, height: 8)
+                                .frame(width: theme.z(8), height: theme.z(8))
                             Text(entry.text).lineLimit(1)
                         }
                     }
@@ -161,7 +161,7 @@ struct GridView: View {
                 }
                 .font(theme.font(10.5))
                 .foregroundStyle(Color(theme.tertiaryText))
-                .padding(.top, 8)
+                .padding(.top, theme.z(8))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -175,15 +175,15 @@ struct GridView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(width: labelWidth, alignment: .leading)
-            HStack(spacing: 2) {
+            HStack(spacing: theme.z(2)) {
                 ForEach(Array(row.cells.enumerated()), id: \.offset) { _, cell in
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    RoundedRectangle(cornerRadius: theme.z(3), style: .continuous)
                         .fill(fill(cell))
                         .opacity(opacity(cell))
                         .frame(maxWidth: .infinity)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 18, maxHeight: 18)
+            .frame(maxWidth: .infinity, minHeight: theme.z(18), maxHeight: theme.z(18))
             if hasValues {
                 Text(row.value ?? "")
                     .font(theme.font(11).monospacedDigit())
@@ -193,7 +193,7 @@ struct GridView: View {
                     .frame(width: valueWidth, alignment: .trailing)
             }
         }
-        .frame(height: 18)
+        .frame(height: theme.z(18))
     }
 
     private func fill(_ cell: GridContent.Cell) -> Color {
@@ -218,14 +218,14 @@ struct GridView: View {
     private func heatmap(footer: Bool) -> some View {
         VStack(spacing: 0) {
             GeometryReader { geo in
-                let gap: CGFloat = 3, minCell: CGFloat = 8
+                let gap = theme.z(3), minCell = theme.z(8)
                 let height = max(content.levelHeight, 1)
                 let columns = content.heatmap(limit: max(1, Int((geo.size.width + gap) / (minCell + gap))))
                 HStack(spacing: gap) {
                     ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
                         VStack(spacing: gap) {
                             ForEach(0..<height, id: \.self) { index in
-                                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                                RoundedRectangle(cornerRadius: theme.z(2.5), style: .continuous)
                                     .fill(heat)
                                     .opacity(index < column.count ? GridContent.opacity(level: column[index]) : 0)
                             }
@@ -235,26 +235,26 @@ struct GridView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
             if footer {
-                HStack(spacing: 12) {
+                HStack(spacing: theme.z(12)) {
                     if let text = content.footer {
                         Text(text).lineLimit(1).truncationMode(.tail)
                     }
                     Spacer(minLength: 0)
-                    HStack(spacing: 3) {
-                        Text("less").padding(.trailing, 2)
+                    HStack(spacing: theme.z(3)) {
+                        Text("less").padding(.trailing, theme.z(2))
                         ForEach(0..<5, id: \.self) { level in
-                            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            RoundedRectangle(cornerRadius: theme.z(2), style: .continuous)
                                 .fill(heat)
                                 .opacity(GridContent.opacity(level: level))
-                                .frame(width: 8, height: 8)
+                                .frame(width: theme.z(8), height: theme.z(8))
                         }
-                        Text("more").padding(.leading, 2)
+                        Text("more").padding(.leading, theme.z(2))
                     }
                     .fixedSize()
                 }
                 .font(theme.font(11).monospacedDigit())
                 .foregroundStyle(Color(theme.tertiaryText))
-                .padding(.top, 8)
+                .padding(.top, theme.z(8))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

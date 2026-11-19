@@ -15,7 +15,7 @@ struct KeyValueView: View {
             stacked(content.pairs)
         case .m:
             let columns = content.columns
-            HStack(alignment: .top, spacing: 22) {
+            HStack(alignment: .top, spacing: theme.z(22)) {
                 list(columns.left)
                 list(columns.right)
             }
@@ -36,9 +36,9 @@ struct KeyValueView: View {
                     value(pair, size: 13)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, index == 0 ? 0 : 6)
-                .padding(.bottom, 6)
-                .overlay(alignment: .bottom) { Rectangle().fill(Color(theme.line)).frame(height: 1) }
+                .padding(.top, index == 0 ? 0 : theme.z(6))
+                .padding(.bottom, theme.z(6))
+                .overlay(alignment: .bottom) { Rectangle().fill(Color(theme.line)).frame(height: theme.z(1)) }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -52,11 +52,11 @@ struct KeyValueView: View {
                     if let heading = line.heading {
                         Text(heading.uppercased())
                             .font(theme.font(10, weight: .semibold))
-                            .tracking(0.6)
+                            .tracking(theme.z(0.6))
                             .foregroundStyle(Color(theme.tertiaryText))
                             .lineLimit(1)
-                            .padding(.top, line.isFirst ? 0 : 10)
-                            .padding(.bottom, 2)
+                            .padding(.top, line.isFirst ? 0 : theme.z(10))
+                            .padding(.bottom, theme.z(2))
                     }
                     row(line.pair, divider: !line.isFirst)
                 }
@@ -72,12 +72,12 @@ struct KeyValueView: View {
                 .foregroundStyle(Color(theme.secondaryText))
                 .lineLimit(1)
                 .layoutPriority(1)
-            Spacer(minLength: 14)
+            Spacer(minLength: theme.z(14))
             value(pair, size: 11.5)
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, theme.z(5))
         .overlay(alignment: .top) {
-            if divider { Rectangle().fill(Color(theme.line)).frame(height: 1) }
+            if divider { Rectangle().fill(Color(theme.line)).frame(height: theme.z(1)) }
         }
     }
 
@@ -91,7 +91,7 @@ struct KeyValueView: View {
             .truncationMode(.middle)
         if pair.pill && pair.tone != nil {
             text
-                .padding(.horizontal, 6)
+                .padding(.horizontal, theme.z(6))
                 .background(theme.background(for: pair.tone, color: color, opacity: 0.16), in: Capsule())
         } else {
             text

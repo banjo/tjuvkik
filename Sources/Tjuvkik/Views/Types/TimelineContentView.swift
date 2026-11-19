@@ -39,7 +39,7 @@ private struct TimelineCountdown: View {
             if let value = countdown.value {
                 Text(value)
                     .font(theme.font(30, weight: .semibold).monospacedDigit())
-                    .tracking(-0.6)
+                    .tracking(theme.z(-0.6))
                     .foregroundStyle(tone)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -48,13 +48,13 @@ private struct TimelineCountdown: View {
                 .font(theme.font(13, weight: .medium))
                 .foregroundStyle(Color(countdown.value == nil ? theme.tertiaryText : theme.text))
                 .lineLimit(1)
-                .padding(.top, countdown.value == nil ? 0 : 8)
+                .padding(.top, countdown.value == nil ? 0 : theme.z(8))
             if let detail = countdown.detail {
                 Text(detail)
                     .font(theme.font(11.5))
                     .foregroundStyle(Color(theme.secondaryText))
                     .lineLimit(1)
-                    .padding(.top, 2)
+                    .padding(.top, theme.z(2))
             }
             if let progress = countdown.progress {
                 GeometryReader { geometry in
@@ -63,8 +63,8 @@ private struct TimelineCountdown: View {
                             Capsule().fill(tone).frame(width: geometry.size.width * progress)
                         }
                 }
-                .frame(height: 4)
-                .padding(.top, 10)
+                .frame(height: theme.z(4))
+                .padding(.top, theme.z(10))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -83,14 +83,14 @@ private struct TimelineStrip: View {
             GeometryReader { geometry in
                 strip(width: geometry.size.width, height: geometry.size.height)
             }
-            .frame(height: 34)
-            .padding(.top, 4)
+            .frame(height: theme.z(34))
+            .padding(.top, theme.z(4))
             GeometryReader { geometry in
-                TimelineAxis(ticks: snapshot.ticks(max: max(Int(geometry.size.width / 60), 2)), width: geometry.size.width, theme: theme)
+                TimelineAxis(ticks: snapshot.ticks(max: max(Int(geometry.size.width / theme.z(60)), 2)), width: geometry.size.width, theme: theme)
             }
-            .frame(height: 14)
-            .padding(.top, 5)
-            Spacer(minLength: 6)
+            .frame(height: theme.z(14))
+            .padding(.top, theme.z(5))
+            Spacer(minLength: theme.z(6))
             notes
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -98,12 +98,12 @@ private struct TimelineStrip: View {
 
     private func strip(width: CGFloat, height: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color(theme.well))
+            RoundedRectangle(cornerRadius: theme.z(8), style: .continuous).fill(Color(theme.well))
             ForEach(snapshot.items.filter(\.isInWindow), id: \.index) { item in
                 let x = width * item.from
-                let boxWidth = max(width * (item.to - item.from) - 2, 6)
+                let boxWidth = max(width * (item.to - item.from) - theme.z(2), theme.z(6))
                 TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text),
-                                 fill: theme.eventFill(item), state: item.state, radius: 5) {
+                                 fill: theme.eventFill(item), state: item.state, radius: theme.z(5), theme: theme) {
                     // Too narrow for a readable title: color only; the notes below name what matters.
                     ViewThatFits(in: .horizontal) {
                         Text(item.event.title)
@@ -111,18 +111,18 @@ private struct TimelineStrip: View {
                             .foregroundStyle(Color(theme.text))
                             .lineLimit(1)
                             .fixedSize()
-                            .padding(.horizontal, 6)
+                            .padding(.horizontal, theme.z(6))
                         Color.clear
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
-                .frame(width: boxWidth, height: max(height - 8, 0))
-                .clickable(RowAction(url: item.event.url, command: item.event.command, title: item.event.title, actions: item.event.actions), theme: theme, radius: 5, tone: item.event.tone)
-                .offset(x: x, y: 4)
+                .frame(width: boxWidth, height: max(height - theme.z(8), 0))
+                .clickable(RowAction(url: item.event.url, command: item.event.command, title: item.event.title, actions: item.event.actions), theme: theme, radius: theme.z(5), tone: item.event.tone)
+                .offset(x: x, y: theme.z(4))
             }
             if let now = snapshot.nowPosition {
-                NowMarker(vertical: true, length: height + 8, theme: theme)
-                    .offset(x: width * now - 3.5, y: -7)
+                NowMarker(vertical: true, length: height + theme.z(8), theme: theme)
+                    .offset(x: width * now - theme.z(3.5), y: theme.z(-7))
             }
         }
         .frame(width: width, height: height, alignment: .topLeading)
@@ -143,12 +143,12 @@ private struct TimelineStrip: View {
     }
 
     private func noteRow(_ notes: [TimelineContent.Snapshot.Note]) -> some View {
-        HStack(alignment: .top, spacing: 18) {
+        HStack(alignment: .top, spacing: theme.z(18)) {
             ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: theme.z(2)) {
                     Text(note.key.uppercased())
                         .font(theme.font(10, weight: .semibold))
-                        .tracking(0.6)
+                        .tracking(theme.z(0.6))
                         .foregroundStyle(Color(theme.tertiaryText))
                     noteLine(note)
                         .font(theme.font(12))
@@ -195,37 +195,37 @@ private struct TimelineAgenda: View {
     let theme: Theme
 
     /// Room for the hour labels, left of the events.
-    private let gutter: CGFloat = 34
+    private var gutter: CGFloat { theme.z(34) }
 
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width - gutter
             let height = geometry.size.height
             ZStack(alignment: .topLeading) {
-                ForEach(Array(snapshot.ticks(max: max(Int(height / 22), 2)).enumerated()), id: \.offset) { _, tick in
+                ForEach(Array(snapshot.ticks(max: max(Int(height / theme.z(22)), 2)).enumerated()), id: \.offset) { _, tick in
                     if tick.position < 0.999 {
                         Rectangle().fill(Color(theme.line))
-                            .frame(width: width, height: 1)
+                            .frame(width: width, height: theme.z(1))
                             .offset(x: gutter, y: height * tick.position)
                         Text(tick.label)
                             .font(theme.font(10).monospacedDigit())
                             .foregroundStyle(Color(theme.tertiaryText))
                             .fixedSize()
-                            .offset(y: height * tick.position - 6)
+                            .offset(y: height * tick.position - theme.z(6))
                     }
                 }
                 ForEach(snapshot.items.filter(\.isInWindow), id: \.index) { item in
                     let laneWidth = width / CGFloat(max(item.lanes, 1))
-                    let top = height * item.from + 1
-                    let boxHeight = max(height * (item.to - item.from) - 2, 20)
-                    event(item, short: boxHeight < 34)
-                        .frame(width: max(laneWidth - (item.lanes > 1 ? 2 : 0), 0), height: boxHeight)
+                    let top = height * item.from + theme.z(1)
+                    let boxHeight = max(height * (item.to - item.from) - theme.z(2), theme.z(20))
+                    event(item, short: boxHeight < theme.z(34))
+                        .frame(width: max(laneWidth - (item.lanes > 1 ? theme.z(2) : 0), 0), height: boxHeight)
                         .clickable(RowAction(url: item.event.url, command: item.event.command, title: item.event.title, actions: item.event.actions), theme: theme, tone: item.event.tone)
                         .offset(x: gutter + laneWidth * CGFloat(item.lane), y: top)
                 }
                 if let now = snapshot.nowPosition {
-                    NowMarker(vertical: false, length: width + 6, theme: theme)
-                        .offset(x: gutter - 6 - 3, y: height * now - 3.5)
+                    NowMarker(vertical: false, length: width + theme.z(6), theme: theme)
+                        .offset(x: gutter - theme.z(6) - theme.z(3), y: height * now - theme.z(3.5))
                 }
                 if snapshot.items.isEmpty {
                     Text("Nothing scheduled")
@@ -237,12 +237,12 @@ private struct TimelineAgenda: View {
             }
             .frame(width: geometry.size.width, height: height, alignment: .topLeading)
         }
-        .padding(.top, 6)
-        .padding(.bottom, 2)
+        .padding(.top, theme.z(6))
+        .padding(.bottom, theme.z(2))
     }
 
     private func event(_ item: TimelineContent.Snapshot.Item, short: Bool) -> some View {
-        TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text), fill: theme.eventFill(item), state: item.state, radius: 6) {
+        TimelineEventBox(tone: theme.color(for: item.event.tone ?? .accent, default: theme.text), fill: theme.eventFill(item), state: item.state, radius: theme.z(6), theme: theme) {
             Group {
                 if short {
                     Text("\(Text(item.event.title).fontWeight(.semibold)) \(Text(item.startTime).font(theme.font(10.5)).foregroundStyle(Color(theme.secondaryText)))")
@@ -251,7 +251,7 @@ private struct TimelineAgenda: View {
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 } else {
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: theme.z(1)) {
                         Text(item.event.title)
                             .font(theme.font(11.5, weight: .semibold))
                             .foregroundStyle(Color(theme.text))
@@ -261,11 +261,11 @@ private struct TimelineAgenda: View {
                             .foregroundStyle(Color(theme.secondaryText))
                             .lineLimit(1)
                     }
-                    .padding(.vertical, 3)
+                    .padding(.vertical, theme.z(3))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, theme.z(8))
         }
     }
 }
@@ -279,18 +279,19 @@ private struct TimelineEventBox<Label: View>: View {
     let fill: Color
     let state: TimelineContent.Snapshot.State
     let radius: CGFloat
+    let theme: Theme
     @ViewBuilder let label: Label
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         ZStack(alignment: .leading) {
             shape.fill(fill)
-            Rectangle().fill(tone).frame(width: 2)
+            Rectangle().fill(tone).frame(width: theme.z(2))
             label
         }
         .clipShape(shape)
         .overlay {
-            if state == .now { shape.strokeBorder(tone.opacity(0.45), lineWidth: 1) }
+            if state == .now { shape.strokeBorder(tone.opacity(0.45), lineWidth: theme.z(1)) }
         }
         .opacity(state == .past ? 0.45 : 1)
     }
@@ -307,16 +308,16 @@ private struct NowMarker: View {
         let color = Color(theme.error)
         if vertical {
             ZStack(alignment: .top) {
-                Rectangle().fill(color).frame(width: 1.5, height: length).offset(y: 3)
-                Circle().fill(color).frame(width: 7, height: 7)
+                Rectangle().fill(color).frame(width: theme.z(1.5), height: length).offset(y: theme.z(3))
+                Circle().fill(color).frame(width: theme.z(7), height: theme.z(7))
             }
-            .frame(width: 7, alignment: .top)
+            .frame(width: theme.z(7), alignment: .top)
         } else {
             ZStack(alignment: .leading) {
-                Rectangle().fill(color).frame(width: length, height: 1.5).offset(x: 3)
-                Circle().fill(color).frame(width: 7, height: 7)
+                Rectangle().fill(color).frame(width: length, height: theme.z(1.5)).offset(x: theme.z(3))
+                Circle().fill(color).frame(width: theme.z(7), height: theme.z(7))
             }
-            .frame(height: 7, alignment: .leading)
+            .frame(height: theme.z(7), alignment: .leading)
         }
     }
 }

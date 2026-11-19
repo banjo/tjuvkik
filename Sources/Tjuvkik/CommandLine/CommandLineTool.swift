@@ -48,8 +48,8 @@ enum CommandLineTool {
             return validation.isValid ? .ok : .failed
         case .run(let panel, let raw, let options):
             return await runPanel(panel, raw: raw, options: options, directory: directory)
-        case .preview(let panel, let size, let theme, let output, let scale, let options):
-            return await preview(panel, size: size, themeName: theme, output: output, scale: scale, options: options, directory: directory)
+        case .preview(let panel, let size, let theme, let output, let scale, let zoom, let options):
+            return await preview(panel, size: size, themeName: theme, output: output, scale: scale, zoom: zoom, options: options, directory: directory)
         case .new(let name, let type):
             return makePanel(name, type: type, directory: directory)
         case .schema(let name):
@@ -116,7 +116,7 @@ enum CommandLineTool {
 
     // MARK: preview
 
-    private static func preview(_ panel: String, size: TileSize?, themeName: String?, output: String?, scale: Double, options: [String: String], directory: URL) async -> Exit {
+    private static func preview(_ panel: String, size: TileSize?, themeName: String?, output: String?, scale: Double, zoom: Double, options: [String: String], directory: URL) async -> Exit {
         guard var tile = loadPanel(panel, options: options, directory: directory) else { return .failed }
         let config = try? ConfigLoader.load(from: directory).get().config
         // No NSApplication runs here, so no effectiveAppearance.
@@ -124,7 +124,7 @@ enum CommandLineTool {
         let name = themeName ?? config?.themeName(dark: isDark) ?? "dark-glass"
         let theme: Theme
         switch ConfigLoader.theme(name, in: directory) {
-        case .success(let resolved): theme = resolved
+        case .success(let resolved): theme = resolved.zoomed(zoom)
         case .failure(let failure):
             failure.issues.forEach { printError("\($0)") }
             return .failed
@@ -156,15 +156,21 @@ enum CommandLineTool {
             printError("can't write \(url.path): \(error.localizedDescription)")
             return .failed
         }
-        let points = BentoGeometry.size(of: tile.size, board: theme.board)
-        print("\(url.path): \(tile.size.rawValue), \(Int(points.width))×\(Int(points.height)) pt at \(scale.formatted())x, \(name)")
+        let points = tileSize(tile.size, theme: theme)
+        print("\(url.path): \(tile.size.rawValue), \(Int(points.width))×\(Int(points.height)) pt at \(scale.formatted())x\(zoom == 1 ? "" : ", zoom \(zoom.formatted())"), \(name)")
         return exit
     }
 
-    /// The tile at its size on the largest board, with room around it for its shadow.
+    /// A tile of `size` at the theme's zoom.
+    private static func tileSize(_ size: TileSize, theme: Theme) -> CGSize {
+        let cell = CGSize(width: theme.z(BentoGeometry.cell.width), height: theme.z(BentoGeometry.cell.height))
+        return BentoGeometry.size(columns: size.columns, rows: size.rows, cell: cell, board: theme.board)
+    }
+
+    /// The tile at its size and zoom, with room around it for its shadow.
     private static func render(tile: Tile, state: PanelStore.State, theme: Theme, scale: Double, to url: URL) throws {
-        let size = BentoGeometry.size(of: tile.size, board: theme.board)
-        let margin: CGFloat = 24
+        let size = tileSize(tile.size, theme: theme)
+        let margin = theme.z(24)
         let view = TileView(tile: tile, state: state, theme: theme, index: 0, isVisible: true, solid: true)
             .frame(width: size.width, height: size.height)
             .padding(margin)

@@ -21,8 +21,21 @@ public struct Config: Equatable, Sendable {
     public var pause = Pause()
     /// `notifications`: how panels' notifications are delivered.
     public var notifications = NotificationSettings()
+    /// How many cells the board has.
+    public var grid = BoardGrid.standard
+    /// How big the glance draws the board.
+    public var zoom = Zoom.auto
 
     public func theme(dark: Bool) -> Theme { dark ? darkTheme : lightTheme }
+
+    /// How big the glance draws the board: `"auto"` follows the screen, a number is fixed. Either
+    /// is made smaller when the board wouldn't fit.
+    public enum Zoom: Hashable, Sendable {
+        case auto
+        case fixed(Double)
+
+        public static let range = 0.75...2.0
+    }
     public func themeName(dark: Bool) -> String { dark ? darkThemeName : lightThemeName }
 
     /// When background runs stop.

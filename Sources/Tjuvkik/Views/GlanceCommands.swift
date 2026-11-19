@@ -70,20 +70,20 @@ struct HintBar: View {
     let theme: Theme
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: theme.z(14)) {
             ForEach(Array(hints.enumerated()), id: \.offset) { _, hint in
-                HStack(spacing: 5) {
+                HStack(spacing: theme.z(5)) {
                     KeyCap(keys: hint.keys, theme: theme)
                     Text(hint.title).font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText)).lineLimit(1)
                 }
             }
-            HStack(spacing: 5) {
+            HStack(spacing: theme.z(5)) {
                 KeyCap(keys: "esc", theme: theme)
                 Text("Close").font(theme.font(11.5)).foregroundStyle(Color(theme.secondaryText))
             }
         }
-        .padding(.horizontal, 12)
-        .frame(height: 28)
+        .padding(.horizontal, theme.z(12))
+        .frame(height: theme.z(28))
         .background(GlassCapsule(theme: theme))
     }
 }
@@ -96,9 +96,9 @@ struct KeyCap: View {
         Text(keys)
             .font(theme.font(10.5, weight: .medium, mono: true))
             .foregroundStyle(Color(theme.text))
-            .padding(.horizontal, 5)
-            .frame(minWidth: 18, minHeight: 17)
-            .background(Color(theme.well), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .padding(.horizontal, theme.z(5))
+            .frame(minWidth: theme.z(18), minHeight: theme.z(17))
+            .background(Color(theme.well), in: RoundedRectangle(cornerRadius: theme.z(4), style: .continuous))
     }
 }
 
@@ -108,31 +108,31 @@ struct ActionMenuView: View {
     let theme: Theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: theme.z(1)) {
             ForEach(Array(menu.commands.enumerated()), id: \.offset) { index, command in
-                HStack(spacing: 10) {
+                HStack(spacing: theme.z(10)) {
                     Text(command.title).font(theme.font(12.5)).foregroundStyle(Color(theme.text)).lineLimit(1)
-                    Spacer(minLength: 12)
+                    Spacer(minLength: theme.z(12))
                     if !command.keys.isEmpty {
                         Text(command.keys).font(theme.font(11, mono: true)).foregroundStyle(Color(theme.tertiaryText))
                     }
                 }
-                .padding(.horizontal, 9)
-                .frame(height: 26)
+                .padding(.horizontal, theme.z(9))
+                .frame(height: theme.z(26))
                 .background(index == menu.selected ? Color(theme.accent).opacity(0.22) : .clear,
-                            in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            in: RoundedRectangle(cornerRadius: theme.z(6), style: .continuous))
             }
         }
-        .padding(5)
-        .frame(width: 240)
+        .padding(theme.z(5))
+        .frame(width: theme.z(240))
         .background {
             ZStack {
-                VisualEffect(cornerRadius: 10, appearance: theme.appearance, material: theme.material)
-                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(theme.panel.opaque).opacity(0.85))
+                VisualEffect(cornerRadius: theme.z(10), appearance: theme.appearance, material: theme.material)
+                RoundedRectangle(cornerRadius: theme.z(10), style: .continuous).fill(Color(theme.panel.opaque).opacity(0.85))
             }
         }
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(theme.line), lineWidth: 1))
-        .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+        .overlay(RoundedRectangle(cornerRadius: theme.z(10), style: .continuous).strokeBorder(Color(theme.line), lineWidth: theme.z(1)))
+        .shadow(color: .black.opacity(0.3), radius: theme.z(16), y: theme.z(8))
     }
 }
 
@@ -141,8 +141,8 @@ private struct GlassCapsule: View {
 
     var body: some View {
         ZStack {
-            VisualEffect(cornerRadius: 14, appearance: theme.appearance, material: theme.material)
-            RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(theme.panel))
+            VisualEffect(cornerRadius: theme.z(14), appearance: theme.appearance, material: theme.material)
+            RoundedRectangle(cornerRadius: theme.z(14), style: .continuous).fill(Color(theme.panel))
         }
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 import TjuvkikCore
 
-/// The tiles placed on the 4×3 grid, filling the space it's given. The glance draws it, and the
+/// The tiles placed on the config's grid, filling the space it's given. The glance draws it, and the
 /// settings window draws it small. `solid` draws tiles without the blur, which doesn't work
 /// inside a scaled view.
 struct BoardView: View {
@@ -34,7 +34,7 @@ struct BoardView: View {
                     .onTapGesture(perform: onBackgroundClick)
             }
             let board = theme.board
-            let cell = BentoGeometry.cell(in: geometry.size, board: board)
+            let cell = BentoGeometry.cell(in: geometry.size, grid: config.grid, board: board)
             let gap = CGFloat(board.gap), inset = CGFloat(board.inset)
             ForEach(Array(config.tiles.enumerated()), id: \.offset) { index, tile in
                 if let slot = tile.slot {
@@ -44,9 +44,9 @@ struct BoardView: View {
                         .frame(width: size.width, height: size.height)
                         .overlay {
                             if selected == tile.id {
-                                RoundedRectangle(cornerRadius: theme.radius + 3, style: .continuous)
-                                    .strokeBorder(Color.accentColor, lineWidth: 6)
-                                    .padding(-6)
+                                RoundedRectangle(cornerRadius: theme.radius + theme.z(3), style: .continuous)
+                                    .strokeBorder(Color.accentColor, lineWidth: theme.z(6))
+                                    .padding(-theme.z(6))
                             }
                         }
                         .contentShape(Rectangle())
@@ -59,7 +59,7 @@ struct BoardView: View {
                 }
             }
             if let focus {
-                let ring: CGFloat = focus.action == nil ? 3 : 1.5
+                let ring = theme.z(focus.action == nil ? 3 : 1.5)
                 RoundedRectangle(cornerRadius: focus.radius + ring, style: .continuous)
                     .fill(focus.action == nil ? Color.clear : Color(theme.accent).opacity(0.12))
                     .strokeBorder(Color(theme.accent), lineWidth: ring)
@@ -85,7 +85,7 @@ struct BoardMiniature: View {
     var onSelect: ((String) -> Void)?
 
     var body: some View {
-        let full = BentoGeometry.board
+        let full = BentoGeometry.board(config.grid, theme: theme)
         GeometryReader { geometry in
             let scale = geometry.size.width / full.width
             BoardView(config: config, theme: theme, states: states, isVisible: true, solid: true, selected: selected, onSelect: onSelect)

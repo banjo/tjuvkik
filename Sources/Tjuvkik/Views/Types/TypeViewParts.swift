@@ -42,10 +42,10 @@ struct ValueText: View {
     let theme: Theme
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 2) {
+        HStack(alignment: .firstTextBaseline, spacing: theme.z(2)) {
             Text(value)
                 .font(theme.font(size, weight: .semibold).monospacedDigit())
-                .tracking(-0.02 * size)
+                .tracking(theme.z(-0.02 * size))
                 .foregroundStyle(color ?? Color(theme.text))
             if let unit, !unit.isEmpty {
                 Text(unit)
@@ -67,7 +67,7 @@ struct DeltaLine: View {
     let theme: Theme
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: theme.z(6)) {
             if let delta {
                 Text(delta)
                     .font(theme.font(deltaSize, weight: .medium).monospacedDigit())
@@ -87,7 +87,7 @@ struct DeltaLine: View {
 
 extension View {
     /// The darker inset that cells and chips sit on.
-    func well(_ theme: Theme, radius: CGFloat = 10) -> some View {
-        background(Color(theme.well), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+    func well(_ theme: Theme, radius: CGFloat? = nil) -> some View {
+        background(Color(theme.well), in: RoundedRectangle(cornerRadius: radius ?? theme.z(10), style: .continuous))
     }
 }

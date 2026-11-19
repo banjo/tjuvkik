@@ -27,6 +27,19 @@ struct ConfigEditorTests {
         #expect(try edit(off) { try $0.setLaunchAtLogin(true) } == "{\n}")
     }
 
+    @Test func gridAndZoom() throws {
+        let set = try edit("{\n}") {
+            try $0.setGrid(BoardGrid(columns: 6, rows: 4))
+            try $0.setZoom(.fixed(1.25))
+        }
+        #expect(try load(["config.json": set]).config.grid == BoardGrid(columns: 6, rows: 4))
+        #expect(try load(["config.json": set]).config.zoom == .fixed(1.25))
+        #expect(try edit(set) {
+            try $0.setGrid(.standard)
+            try $0.setZoom(.auto)
+        } == "{\n}")
+    }
+
     @Test func pause() throws {
         let text = try edit("{\n  \"view\": \"bento\",\n}") { try $0.setPause(whenLocked: false, onLowPower: true) }
         #expect(text == """

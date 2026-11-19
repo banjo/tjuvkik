@@ -47,14 +47,14 @@ prs: table, ran in 0.84s
 ## preview
 
 ```sh
-tjuvkik preview <tile|panel> [--size s|m|l|xl] [--theme <name>] [-o <file>] [--scale <1-4>] [--option key=value]...
+tjuvkik preview <tile|panel> [--size s|m|l|xl] [--theme <name>] [-o <file>] [--scale <1-4>] [--zoom <0.75-2>] [--option key=value]...
 ```
 
 ```sh
 tjuvkik preview ci-dots --option limit=3
 ```
 
-Runs the panel and renders its tile to a PNG, at its size on the largest board, with a transparent background. Like `run`, it takes a tile's id or a panel's name, and `--option`. The size defaults to the one `config.jsonc` gives the tile, else the panel's own; the theme to the one in `config.jsonc`, for the current appearance when it names one for light and one for dark. The file defaults to `<panel>-<size>.png` in the current folder. Blur isn't rendered, so the tile's background is drawn solid.
+Runs the panel and renders its tile to a PNG, at its size at zoom 1, with a transparent background. `--zoom` draws it as the glance does at another [zoom](config.md#grid-and-zoom). Like `run`, it takes a tile's id or a panel's name, and `--option`. The size defaults to the one `config.jsonc` gives the tile, else the panel's own; the theme to the one in `config.jsonc`, for the current appearance when it names one for light and one for dark. The file defaults to `<panel>-<size>.png` in the current folder. Blur isn't rendered, so the tile's background is drawn solid.
 
 A failed run renders the tile with its error, and exits 1.
 

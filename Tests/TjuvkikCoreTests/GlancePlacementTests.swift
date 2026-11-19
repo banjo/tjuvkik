@@ -20,18 +20,49 @@ struct GlancePlacementTests {
         #expect(GlancePlacement.screenIndex(for: CGRect(x: 5000, y: 0, width: 10, height: 10), screens: [screen]) == nil)
     }
 
-    @Test func framedOnALaptop() {
-        let rect = GlancePlacement.framedRect(in: CGRect(x: 0, y: 0, width: 1512, height: 944))
-        #expect(rect.width == 1080)
-        #expect(rect.height == 580)
-        #expect(rect.midX == 756)
-        #expect(abs(rect.maxY - 821) <= 1)
+    private let board = BentoGeometry.board(.standard, theme: .darkGlass)
+
+    @Test func theStandardBoardIsTheOldSize() {
+        #expect(board == CGSize(width: 1080, height: 580))
     }
 
-    @Test func framedShrinksOnASmallScreen() {
-        let rect = GlancePlacement.framedRect(in: CGRect(x: 2000, y: 100, width: 800, height: 600))
-        #expect(rect.width == 752)
-        #expect(rect.height == 396)
-        #expect(rect.midX == 2400)
+    @Test func framedOnALaptop() {
+        let framed = GlancePlacement.framed(in: CGRect(x: 0, y: 0, width: 1512, height: 944), content: board, zoom: .auto)
+        #expect(framed.zoom == 1)
+        #expect(framed.rect.size == CGSize(width: 1080, height: 580))
+        #expect(framed.rect.midX == 756)
+        #expect(abs(framed.rect.maxY - 821) <= 1)
+    }
+
+    @Test func autoZoomsInOnABigScreen() {
+        let framed = GlancePlacement.framed(in: CGRect(x: 0, y: 0, width: 2560, height: 1415), content: board, zoom: .auto)
+        #expect(abs(framed.zoom - 2560 / 1728) < 0.001)
+        #expect(abs(framed.rect.width / framed.rect.height - board.width / board.height) < 0.01)
+    }
+
+    @Test func autoStopsAtItsLimit() {
+        let framed = GlancePlacement.framed(in: CGRect(x: 0, y: 0, width: 5120, height: 2880), content: board, zoom: .auto)
+        #expect(framed.zoom == GlancePlacement.autoZoomLimit)
+    }
+
+    @Test func aFixedZoomIsKept() {
+        let framed = GlancePlacement.framed(in: CGRect(x: 0, y: 0, width: 1512, height: 944), content: board, zoom: .fixed(0.9))
+        #expect(abs(framed.zoom - 0.9) < 0.001)
+    }
+
+    @Test func framedShrinksOnASmallScreenAndKeepsItsShape() {
+        let framed = GlancePlacement.framed(in: CGRect(x: 2000, y: 100, width: 800, height: 600), content: board, zoom: .fixed(1.5))
+        #expect(framed.rect.width == 752)
+        #expect(framed.zoom < 1)
+        #expect(abs(framed.rect.width / framed.rect.height - board.width / board.height) < 0.01)
+        #expect(framed.rect.midX == 2400)
+    }
+
+    @Test func aTallGridShrinksToTheHeight() {
+        let tall = BentoGeometry.board(BoardGrid(columns: 4, rows: 6), theme: .darkGlass)
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 944)
+        let framed = GlancePlacement.framed(in: screen, content: tall, zoom: .auto)
+        #expect(framed.zoom < 1)
+        #expect(framed.rect.minY >= screen.minY)
     }
 }

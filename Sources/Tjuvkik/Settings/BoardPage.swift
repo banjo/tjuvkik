@@ -56,6 +56,7 @@ struct BoardPage: View {
             Divider()
 
             Form {
+                BoardSizeSection(model: model, grid: config.grid, zoom: config.zoom)
                 Section {
                     BoardMiniature(
                         config: config, theme: config.theme(dark: colorScheme == .dark), states: model.panels.states,
@@ -92,7 +93,7 @@ struct BoardPage: View {
             .filter { $0.file == file && $0.path.hasPrefix("panels[\(entry.index)]") }
             .map(\.message)
         if messages.isEmpty, let tile = tile(entry), tile.show, tile.slot == nil {
-            messages.append("Doesn't fit on the 4×3 grid")
+            messages.append("Doesn't fit on the \(model.store.config.grid) grid")
         }
         return messages
     }
@@ -103,6 +104,46 @@ struct BoardPage: View {
         let to = destination > from ? destination - 1 : destination
         guard to != from, entries.indices.contains(to) else { return }
         model.change { try $0.moveTile(from: entries[from].index, to: entries[to].index) }
+    }
+}
+
+/// How many cells the board has, and how big the glance draws it.
+private struct BoardSizeSection: View {
+    let model: SettingsModel
+    let grid: BoardGrid
+    let zoom: Config.Zoom
+
+    private static let zooms = [0.75, 0.9, 1, 1.25, 1.5, 1.75, 2]
+
+    var body: some View {
+        Section {
+            Stepper("Columns: \(grid.columns)", value: Binding(
+                get: { grid.columns },
+                set: { columns in model.change { try $0.setGrid(BoardGrid(columns: columns, rows: grid.rows)) } }
+            ), in: BoardGrid.columnRange)
+            Stepper("Rows: \(grid.rows)", value: Binding(
+                get: { grid.rows },
+                set: { rows in model.change { try $0.setGrid(BoardGrid(columns: grid.columns, rows: rows)) } }
+            ), in: BoardGrid.rowRange)
+            Picker("Size", selection: Binding(
+                get: { zoom },
+                set: { zoom in model.change { try $0.setZoom(zoom) } }
+            )) {
+                Text("Auto").tag(Config.Zoom.auto)
+                ForEach(Self.zooms(including: zoom), id: \.self) { value in
+                    Text(value.formatted(.percent)).tag(Config.Zoom.fixed(value))
+                }
+            }
+        } footer: {
+            Text("Auto draws the glance bigger on bigger screens. Any size is made smaller when the board doesn't fit the screen.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// The sizes to pick from, and the one in config.jsonc when it's another.
+    private static func zooms(including zoom: Config.Zoom) -> [Double] {
+        guard case .fixed(let value) = zoom, !zooms.contains(value) else { return zooms }
+        return (zooms + [value]).sorted()
     }
 }
 
