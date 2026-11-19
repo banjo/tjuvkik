@@ -1,0 +1,21 @@
+{
+  "name": "tjuvkik",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Only for changesets: the app's version and changelog. scripts/release.sh copies the version to Resources/Info.plist.",
+  "license": "MIT",
+  "author": "Anton Ödman <anton.odman@gmail.com>",
+  "scripts": {
+    "changeset": "changeset"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.21.0",
+      "onFail": "download"
+    }
+  }
+}

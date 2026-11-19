@@ -22,11 +22,19 @@ Needs macOS 15 and the Xcode Command Line Tools. `bundle.sh` builds a release `T
 
 ## Release
 
+Every change a user notices gets a [changeset](https://github.com/changesets/changesets), committed with the change:
+
+```sh
+pnpm changeset   # pick the bump, write a line for users
+```
+
+While Tjuvkik is in 0.x, pick patch: 0.1.0, 0.1.1, 0.1.2. To release them:
+
 ```sh
 scripts/release.sh
 ```
 
-Releases the version in `Resources/Info.plist`, so bump `CFBundleShortVersionString` first. While Tjuvkik is in 0.x, a release only needs a patch bump: 0.1.0, 0.1.1, 0.1.2. It builds and signs `Tjuvkik.app`, uploads it zipped as a GitHub release on `banjo/tjuvkik` and writes the cask in [banjo/homebrew-tap](https://github.com/banjo/homebrew-tap) with the new version and checksum. Needs a clean working tree and `gh` logged in as an account that can push to both repos.
+It turns the changesets into a new version in `package.json` and an entry in `CHANGELOG.md`, copies the version to `Resources/Info.plist` (and bumps `CFBundleVersion`) and commits that as `release <version>`. Then it builds and signs `Tjuvkik.app`, uploads it zipped as a GitHub release on `banjo/tjuvkik`, with the changelog entry as its notes, and writes the cask in [banjo/homebrew-tap](https://github.com/banjo/homebrew-tap) with the new version and checksum. Needs a clean working tree and `gh` logged in as an account that can push to both repos.
 
 The app isn't notarized, so the cask removes the quarantine flag after installing; without it Gatekeeper blocks the app. It's built for Apple silicon only: a universal build needs full Xcode.
 

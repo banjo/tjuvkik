@@ -1,24 +1,41 @@
 #!/bin/sh
-# Releases the version in Resources/Info.plist: builds and signs Tjuvkik.app, uploads it as a
-# GitHub release on banjo/tjuvkik and points the cask in banjo/homebrew-tap at it.
+# Releases the changesets in .changeset/: bumps the version, writes CHANGELOG.md and commits that,
+# then builds and signs Tjuvkik.app, uploads it as a GitHub release on banjo/tjuvkik with the
+# changelog as its notes, and points the cask in banjo/homebrew-tap at it.
 set -eu
 cd "$(dirname "$0")/.."
 
 repo=banjo/tjuvkik
 tap=banjo/homebrew-tap
 
-version=$(plutil -extract CFBundleShortVersionString raw Resources/Info.plist)
-tag="v$version"
-
 if [ -n "$(git status --porcelain)" ]; then
   echo "Commit or stash your changes first" >&2
   exit 1
 fi
+
+# Changesets other than the README: turn them into a version, a changelog entry and a commit.
+if ls .changeset/*.md 2>/dev/null | grep -qv '/README\.md$'; then
+  pnpm install --silent --frozen-lockfile
+  pnpm exec changeset version
+  version=$(jq -r .version package.json)
+  build=$(( $(plutil -extract CFBundleVersion raw Resources/Info.plist) + 1 ))
+  plutil -replace CFBundleShortVersionString -string "$version" Resources/Info.plist
+  plutil -replace CFBundleVersion -string "$build" Resources/Info.plist
+  git add -A
+  git commit --quiet -m "release $version"
+fi
+
+version=$(plutil -extract CFBundleShortVersionString raw Resources/Info.plist)
+tag="v$version"
+
 if gh release view "$tag" -R "$repo" >/dev/null 2>&1; then
-  echo "$tag is already released. Bump CFBundleShortVersionString in Resources/Info.plist" >&2
+  echo "$tag is already released. Add a changeset with 'pnpm changeset' first" >&2
   exit 1
 fi
 git push origin HEAD
+
+# This version's section of CHANGELOG.md, without its heading.
+notes=$(awk -v heading="## $version" '$0 == heading { on = 1; next } on && /^## / { exit } on' CHANGELOG.md 2>/dev/null || true)
 
 scripts/build-app.sh
 codesign --verify --strict build/Tjuvkik.app
@@ -28,8 +45,11 @@ rm -f "$zip"
 ditto -c -k --keepParent build/Tjuvkik.app "$zip"
 sha=$(shasum -a 256 "$zip" | cut -d ' ' -f 1)
 
-gh release create "$tag" "$zip" -R "$repo" --target "$(git rev-parse HEAD)" \
-  --title "$tag" --generate-notes
+if [ -n "$(printf '%s' "$notes" | tr -d '[:space:]')" ]; then
+  gh release create "$tag" "$zip" -R "$repo" --target "$(git rev-parse HEAD)" --title "$tag" --notes "$notes"
+else
+  gh release create "$tag" "$zip" -R "$repo" --target "$(git rev-parse HEAD)" --title "$tag" --generate-notes
+fi
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
