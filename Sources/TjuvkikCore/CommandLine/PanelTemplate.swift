@@ -21,7 +21,7 @@ public enum PanelTemplate {
     public static func files(name: String, type: String) -> [File] {
         let content = ContentType(rawValue: type)
         // Rows and a chart read well small; the rest want the room of an m.
-        let size = content == .chart || type == "script" ? "s" : "m"
+        let size = content == .chart || type == "script" ? "1x1" : "2x1"
         let panel = """
         {
           "$schema": "../../schemas/panel.schema.json",

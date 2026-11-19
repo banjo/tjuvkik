@@ -6,5 +6,5 @@
   "title": "Agents (demo)",
   "command": "cat agents.json",
   "every": "1h",
-  "size": "l",
+  "size": "2x2",
 }

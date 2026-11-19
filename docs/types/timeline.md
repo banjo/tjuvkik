@@ -18,15 +18,15 @@ What's now, what's next, and how long until.
 }
 ```
 
-![Timeline at s](images/timeline-s.png) ![Timeline at m](images/timeline-m.png) ![Timeline at l](images/timeline-l.png)
+![Timeline at 1×1](images/timeline-1x1.png) ![Timeline at 2×1](images/timeline-2x1.png) ![Timeline at 2×2](images/timeline-2x2.png)
 
 Tjuvkik draws now and counts down itself, every 30 seconds, so the tile stays right between runs. Your script only has to run when the events change.
 
 | Size | Shows |
 |---|---|
-| `s` | A countdown: how long the current event has left, with a progress bar, or how long until the next one. |
-| `m` | The window as a strip with a now line, then what's on now, what's next, and how much is left. |
-| `l`, `xl` | An agenda: hour lines down the left, the events placed by time, and a now line. Events that overlap sit side by side. |
+| A single cell, 1×1 | A countdown: how long the current event has left, with a progress bar, or how long until the next one. |
+| One row high, like 2×1 or 4×1 | The window as a strip with a now line, then what's on now, what's next, and how much is left. |
+| Taller, like 2×2 or 1×3 | An agenda: hour lines down the left, the events placed by time, and a now line. Events that overlap sit side by side. |
 
 ## Fields
 

@@ -7,6 +7,8 @@ struct GlanceView: View {
     let model: GlanceModel
     let store: ConfigStore
     let onFocusEntries: ([FocusEntry]) -> Void
+    let onScrollItems: ([ScrollItem]) -> Void
+    let onScroll: (String, Int) -> Void
     let panels: PanelStore
     /// A click between the tiles.
     let onBackgroundClick: () -> Void
@@ -23,7 +25,8 @@ struct GlanceView: View {
         VStack(spacing: theme.z(10)) {
             BoardView(config: config, theme: theme, states: panels.states, isVisible: model.isVisible,
                       onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
-                      focus: focus, onFocusEntries: onFocusEntries)
+                      focus: focus, onFocusEntries: onFocusEntries,
+                      scroll: model.scroll, scrollStates: model.scrollStates, onScroll: onScroll, onScrollItems: onScrollItems)
                 .overlay(alignment: .topLeading) {
                     if let actions = model.menu, let focus {
                         GeometryReader { geometry in
@@ -71,6 +74,11 @@ struct TileView: View {
     /// Set by the glance, where rows with a `url` or `command` click.
     var onAction: ((RowAction) -> Void)?
     var menu: TileMenu?
+    /// List items scrolled away at the top, and what's out of view, in the glance.
+    var scroll = 0
+    var scrollState: TileScrollState?
+    /// Set by the glance: scrolls by that many items, down when positive.
+    var onScroll: ((Int) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -111,6 +119,7 @@ struct TileView: View {
             }
             content
                 .environment(\.tileBleed, bleed)
+                .environment(\.tileScroll, scroll)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .clipShape(BleedClip(bleed: bleed))
             if let error = state?.error {
@@ -122,6 +131,21 @@ struct TileView: View {
         }
         .padding(padding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .overlay(alignment: .bottomTrailing) {
+            if let hint = scrollState.flatMap(Self.scrollHint) {
+                Text(hint)
+                    .font(theme.font(9.5, weight: .medium).monospacedDigit())
+                    .foregroundStyle(Color(theme.tertiaryText))
+                    .padding(.horizontal, theme.z(5))
+                    .padding(.vertical, theme.z(1))
+                    .background(Color(theme.well), in: Capsule())
+                    .padding(.trailing, padding)
+                    .padding(.bottom, max(padding / 2 - theme.z(6), theme.z(2)))
+                    .allowsHitTesting(false)
+            }
+        }
+        .scrollsWithWheel(step: theme.z(22))
+        .environment(\.scrollTile, onScroll)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .background {
             if theme.blur && !reduceTransparency && !solid {
@@ -150,6 +174,12 @@ struct TileView: View {
         .environment(\.focusTile, tile.id)
         .modifier(TileFocusEntry(tile: tile.id, radius: radius, active: onAction != nil))
         .tileMenu(menu)
+    }
+
+    /// "↑ 2  ↓ 5": how many list items are out of view above and below, or nil when none are.
+    private static func scrollHint(_ state: TileScrollState) -> String? {
+        let parts = (state.above > 0 ? ["↑ \(state.above)"] : []) + (state.below > 0 ? ["↓ \(state.below)"] : [])
+        return parts.isEmpty ? nil : parts.joined(separator: "  ")
     }
 
     @ViewBuilder private var content: some View {

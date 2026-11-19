@@ -236,13 +236,28 @@
             "description": "The tile's title here; overrides the panel's own."
           },
           "size": {
-            "enum": [
-              "s",
-              "m",
-              "l",
-              "xl"
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\s*[1-8]\\s*[x×]\\s*[1-6]\\s*$"
+              },
+              {
+                "enum": [
+                  "s",
+                  "m",
+                  "l",
+                  "xl"
+                ],
+                "deprecated": true,
+                "description": "Older names, still read: s 1x1, m 2x1, l 2x2, xl 2x3."
+              }
             ],
-            "description": "Size here; overrides the panel's own. s 1×1, m 2×1, l 2×2, xl 2×3"
+            "examples": [
+              "2x1",
+              "3x1",
+              "1x2"
+            ],
+            "description": "Size here, columns x rows, like \"2x1\"; overrides the panel's own. \"3x1\" is a wide strip, \"1x2\" a tall one."
           },
           "background": {
             "anyOf": [

@@ -6,5 +6,5 @@
   "title": "Slack (demo)",
   "command": "./slack.sh",
   "every": "1m",
-  "size": "m",
+  "size": "2x1",
 }

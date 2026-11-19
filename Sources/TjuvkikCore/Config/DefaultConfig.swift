@@ -55,7 +55,8 @@ public enum DefaultConfig {
       // "zoom": 1.25,
 
       // Panels fill the grid in order. Each one is a folder in panels/.
-      // Sizes: s 1×1, m 2×1, l 2×2, xl 2×3. Leave it out to use the panel's own size.
+      // Sizes are columns x rows, like "2x1", or "3x1" for a wide strip. Leave it out to use the
+      // panel's own size.
       "panels": [
         { "panel": "disk" },
       ],
@@ -72,7 +73,7 @@ public enum DefaultConfig {
       "title": "Disk",
       "command": "df -h /",
       "every": "5m",
-      "size": "m",
+      "size": "2x1",
     }
 
     """

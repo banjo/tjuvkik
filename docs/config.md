@@ -102,7 +102,7 @@ When the glance opens, the first row picked is an error row, then a warning row,
 
 ```jsonc
 "panels": [
-  { "panel": "agents", "size": "xl" },
+  { "panel": "agents", "size": "2x3" },
   { "panel": "github" },
 ]
 ```
@@ -126,16 +126,17 @@ The same panel can be on the board more than once; give each an `id`:
 ]
 ```
 
-Panels fill the [grid](#grid-and-zoom) in order:
+A tile's `size` is columns x rows, like `"2x1"`, and panels fill the [grid](#grid-and-zoom) in order. Each content type has three layouts, picked by the shape:
 
-| Size | Columns × rows |
+| Size | Layout |
 |---|---|
-| `s` | 1 × 1 |
-| `m` | 2 × 1 |
-| `l` | 2 × 2 |
-| `xl` | 2 × 3 |
+| `"1x1"` | A single cell: the one thing that matters most. |
+| `"2x1"`, `"4x1"`, … | One row high, however wide: a strip, like a timeline across the board. |
+| `"2x2"`, `"1x3"`, … | Taller, a single column included: the full layout, like a long list down the board's side. |
 
-Panels that don't fit are left out, and the menu says which.
+Lists too long for their tile scroll an item at a time: press ↓ on the last row in view, or use the trackpad or mouse wheel over the tile. A `↓ 5` in its corner says how many are left.
+
+Panels that don't fit are left out, and the menu says which. The older size names still work: `s` is `"1x1"`, `m` `"2x1"`, `l` `"2x2"` and `xl` `"2x3"`.
 
 ## Grid and zoom
 

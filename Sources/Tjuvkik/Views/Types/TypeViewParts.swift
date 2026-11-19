@@ -1,15 +1,16 @@
 import SwiftUI
 import TjuvkikCore
 
-/// The three layouts each content type has. An xl tile uses l's.
+/// The three layouts each content type has: s for a single cell, m for a strip one cell high
+/// however wide, and l for anything taller, the tall single column included.
 enum TileLayout {
     case s, m, l
 
     init(_ size: TileSize) {
-        switch size {
-        case .s: self = .s
-        case .m: self = .m
-        case .l, .xl: self = .l
+        if size.rows == 1 {
+            self = size.columns == 1 ? .s : .m
+        } else {
+            self = .l
         }
     }
 }

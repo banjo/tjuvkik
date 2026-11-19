@@ -8,6 +8,7 @@ struct KeyValueView: View {
     let content: KeyValueContent
     let size: TileSize
     let theme: Theme
+    @Environment(\.tileScroll) private var scroll
 
     var body: some View {
         switch TileLayout(size) {
@@ -20,13 +21,13 @@ struct KeyValueView: View {
                 list(columns.right)
             }
         case .l:
-            list(content.sections)
+            list(content.sections, scrolls: true)
         }
     }
 
     /// Label above value, a line under each.
     private func stacked(_ pairs: [KeyValueContent.Pair]) -> some View {
-        FittingStack(spacing: 0) {
+        FittingStack(spacing: 0, skip: scroll) {
             ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
                 VStack(alignment: .leading, spacing: 0) {
                     Text(pair.key)
@@ -36,18 +37,20 @@ struct KeyValueView: View {
                     value(pair, size: 13)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, index == 0 ? 0 : theme.z(6))
+                .padding(.top, index == scroll ? 0 : theme.z(6))
                 .padding(.bottom, theme.z(6))
                 .overlay(alignment: .bottom) { Rectangle().fill(Color(theme.line)).frame(height: theme.z(1)) }
+                .scrollItem(index)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// Key left, value right, a line between pairs, headings above their sections.
-    private func list(_ sections: [KeyValueContent.Section]) -> some View {
-        FittingStack(spacing: 0) {
-            ForEach(Array(Self.lines(sections).enumerated()), id: \.offset) { _, line in
+    /// Key left, value right, a line between pairs, headings above their sections. Only the one
+    /// list of l scrolls; m's two columns side by side don't.
+    private func list(_ sections: [KeyValueContent.Section], scrolls: Bool = false) -> some View {
+        FittingStack(spacing: 0, skip: scrolls ? scroll : 0) {
+            ForEach(Array(Self.lines(sections).enumerated()), id: \.offset) { index, line in
                 VStack(alignment: .leading, spacing: 0) {
                     if let heading = line.heading {
                         Text(heading.uppercased())
@@ -60,6 +63,7 @@ struct KeyValueView: View {
                     }
                     row(line.pair, divider: !line.isFirst)
                 }
+                .scrollItem(scrolls ? index : nil)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

@@ -169,7 +169,7 @@ private struct BoardRow: View {
                 Image(systemName: "menubar.rectangle").foregroundStyle(.secondary).help("In the menu bar")
             }
             if let tile {
-                Text(tile.size.rawValue)
+                Text(tile.size.label)
                     .font(.caption.monospaced())
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
@@ -221,6 +221,14 @@ private struct TileForm: View {
     private var base: [JSONCDocument.Key] { ["panels", .index(entry.index)] }
     private func value<T: Decodable>(_ type: T.Type, _ key: JSONCDocument.Key) -> T? { document.value(type, at: base + [key]) }
 
+    /// The usual sizes, narrow to wide and short to tall, and the tile's own when it's none of them.
+    private static func sizes(with current: String?) -> [TileSize] {
+        var sizes = [(1, 1), (2, 1), (3, 1), (4, 1), (1, 2), (2, 2), (3, 2), (4, 2), (1, 3), (2, 3)]
+            .map { TileSize(columns: $0.0, rows: $0.1) }
+        if let current = current.flatMap(TileSize.init(rawValue:)), !sizes.contains(current) { sizes.append(current) }
+        return sizes
+    }
+
     var body: some View {
         let index = entry.index
         Section(tile?.title ?? entry.panel) {
@@ -233,11 +241,14 @@ private struct TileForm: View {
             TextField("Title", text: $title, prompt: Text(own?.title ?? entry.panel))
                 .onSubmit { model.change { try $0.setTile(index, .title, title.isEmpty ? nil : .string(title)) } }
             Picker("Size", selection: Binding<String?>(
-                get: { value(String.self, "size") },
+                // An alias like "m" picks its columns x rows.
+                get: { value(String.self, "size").map { TileSize(rawValue: $0)?.rawValue ?? $0 } },
                 set: { size in model.change { try $0.setTile(index, .size, size.map { .string($0) }) } }
             )) {
-                Text("Panel's own (\(own?.size.rawValue ?? "s"))").tag(String?.none)
-                ForEach(TileSize.allCases, id: \.self) { Text($0.rawValue).tag(String?.some($0.rawValue)) }
+                Text("Panel's own (\((own?.size ?? .s).label))").tag(String?.none)
+                ForEach(Self.sizes(with: value(String.self, "size")), id: \.self) { size in
+                    Text(size.label).tag(String?.some(size.rawValue))
+                }
             }
             Toggle("On the board", isOn: Binding(
                 get: { value(Bool.self, "show") ?? true },

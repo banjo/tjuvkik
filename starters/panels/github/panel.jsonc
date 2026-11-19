@@ -8,5 +8,5 @@
   "command": "./github.sh",
   "every": "5m",
   "timeout": "20s",
-  "size": "s",
+  "size": "1x1",
 }

@@ -7,5 +7,5 @@
   "command": "./battery.sh",
   "every": "1m",
   "timeout": "8s",
-  "size": "s",
+  "size": "1x1",
 }

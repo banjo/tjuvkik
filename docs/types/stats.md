@@ -12,13 +12,13 @@ A few numbers, each against its last period.
 }
 ```
 
-![Stats at s](images/stats-s.png) ![Stats at m](images/stats-m.png) ![Stats at l](images/stats-l.png)
+![Stats at 1×1](images/stats-1x1.png) ![Stats at 2×1](images/stats-2x1.png) ![Stats at 2×2](images/stats-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The first stat, big: label, value, change. |
-| `m` | The first three, in a row. |
-| `l`, `xl` | The first six, in a 2×3 grid. |
+| A single cell, 1×1 | The first stat, big: label, value, change. |
+| One row high, like 2×1 or 4×1 | The first three, in a row. |
+| Taller, like 2×2 or 1×3 | The first six, in a 2×3 grid. |
 
 ## Fields
 

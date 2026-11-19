@@ -7,6 +7,7 @@ struct FeedView: View {
     let content: FeedContent
     let size: TileSize
     let theme: Theme
+    @Environment(\.tileScroll) private var scroll
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -23,17 +24,18 @@ struct FeedView: View {
                 empty
             }
         case .m:
-            FittingStack(spacing: 0) {
+            FittingStack(spacing: 0, skip: scroll) {
                 ForEach(Array(content.newestFirst.enumerated()), id: \.offset) { index, item in
-                    FeedRow(item: item, when: item.when(now: now, calendar: calendar), isFirst: index == 0, theme: theme)
+                    FeedRow(item: item, when: item.when(now: now, calendar: calendar), isFirst: index == scroll, theme: theme)
+                        .scrollItem(index)
                 }
             }
         case .l:
             if content.items.isEmpty {
                 empty
             } else {
-                FittingStack(spacing: 0) {
-                    ForEach(Array(entries(now: now, calendar: calendar).enumerated()), id: \.offset) { _, entry in
+                FittingStack(spacing: 0, skip: scroll) {
+                    ForEach(Array(entries(now: now, calendar: calendar).enumerated()), id: \.offset) { index, entry in
                         // A day's heading and its first item are one child, so a heading is never
                         // left at the bottom without an item under it.
                         VStack(alignment: .leading, spacing: 0) {
@@ -49,6 +51,7 @@ struct FeedView: View {
                             FeedRow(item: entry.item, when: entry.item.when(now: now, calendar: calendar),
                                     isFirst: entry.startsDay, theme: theme)
                         }
+                        .scrollItem(index)
                     }
                 }
             }

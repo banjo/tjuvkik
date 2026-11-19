@@ -17,13 +17,13 @@ The same fields for every row, in columns.
 }
 ```
 
-![Table at s](images/table-s.png) ![Table at m](images/table-m.png) ![Table at l](images/table-l.png)
+![Table at 1×1](images/table-1x1.png) ![Table at 2×1](images/table-2x1.png) ![Table at 2×2](images/table-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | Up to two columns. |
-| `m` | Up to four columns. |
-| `l`, `xl` | Every column that fits. |
+| A single cell, 1×1 | Up to two columns. |
+| One row high, like 2×1 or 4×1 | Up to four columns. |
+| Taller, like 2×2 or 1×3 | Every column that fits. |
 
 Columns that don't fit the tile's width are dropped from the right. A column with a higher `priority` stays longer: with room for two of the four columns above, you see Pod and Status; give Age `"priority": 2` and you see Status and Age. Rows that don't fit are cut from the bottom.
 

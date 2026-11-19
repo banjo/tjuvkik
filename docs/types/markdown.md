@@ -8,13 +8,13 @@ Notes, runbooks and answers, written in Markdown.
 }
 ```
 
-![Markdown at s](images/markdown-s.png) ![Markdown at m](images/markdown-m.png) ![Markdown at l](images/markdown-l.png)
+![Markdown at 1×1](images/markdown-1x1.png) ![Markdown at 2×1](images/markdown-2x1.png) ![Markdown at 2×2](images/markdown-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The heading and the first lines. Paragraphs stop after four lines. |
-| `m` | The document in two columns. |
-| `l`, `xl` | The whole document, cut where the tile ends. |
+| A single cell, 1×1 | The heading and the first lines. Paragraphs stop after four lines. |
+| One row high, like 2×1 or 4×1 | The document in two columns. |
+| Taller, like 2×2 or 1×3 | The whole document, cut where the tile ends. |
 
 Only whole blocks are shown: a paragraph, list item or code block that doesn't fit is left out, with everything after it.
 
@@ -50,7 +50,7 @@ Not supported, so shown as text: headings underlined with `===` or `---`, code i
 A markdown panel can read a file instead of running a command. The tile reloads when the file changes:
 
 ```jsonc
-{ "type": "markdown", "title": "Today", "file": "~/notes/today.md", "size": "l" }
+{ "type": "markdown", "title": "Today", "file": "~/notes/today.md", "size": "2x2" }
 ```
 
 `file` takes `~`, an absolute path, or a path in the panel's folder. Use either `file` or `command`, not both. See [panels](../panels.md).

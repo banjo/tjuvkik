@@ -47,7 +47,7 @@ prs: table, ran in 0.84s
 ## preview
 
 ```sh
-tjuvkik preview <tile|panel> [--size s|m|l|xl] [--theme <name>] [-o <file>] [--scale <1-4>] [--zoom <0.75-2>] [--option key=value]...
+tjuvkik preview <tile|panel> [--size <columns>x<rows>] [--theme <name>] [-o <file>] [--scale <1-4>] [--zoom <0.75-2>] [--option key=value]...
 ```
 
 ```sh

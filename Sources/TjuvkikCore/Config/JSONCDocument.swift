@@ -342,7 +342,7 @@ public struct JSONCDocument: Equatable, Sendable {
 
     // MARK: Writing values
 
-    /// One line of JSON: `{ "panel": "ci", "size": "m" }`, `[1, 2]`.
+    /// One line of JSON: `{ "panel": "ci", "size": "2x1" }`, `[1, 2]`.
     static func render(_ value: Value) -> String {
         switch value {
         case .string(let string): quote(string)

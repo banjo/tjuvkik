@@ -13,13 +13,13 @@ How full, how far, how close to a limit.
 }
 ```
 
-![Meters at s](images/meters-s.png) ![Meters at m](images/meters-m.png) ![Meters at l](images/meters-l.png)
+![Meters at 1×1](images/meters-1x1.png) ![Meters at 2×1](images/meters-2x1.png) ![Meters at 2×2](images/meters-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The first meter as a ring, with its value and label inside. |
-| `m` | The first three, each a big value over a bar. |
-| `l`, `xl` | A bar per meter, with limit marks, and the footer. Meters that don't fit are cut. |
+| A single cell, 1×1 | The first meter as a ring, with its value and label inside. |
+| One row high, like 2×1 or 4×1 | The first three, each a big value over a bar. |
+| Taller, like 2×2 or 1×3 | A bar per meter, with limit marks, and the footer. Meters that don't fit are cut. |
 
 ## Fields
 
@@ -29,7 +29,7 @@ Each meter:
 |---|---|
 | `value` | Required. How far the bar fills, against `max`. A number, or text like `"4,212"` or `"83%"`. |
 | `max` | What a full bar is. Defaults to 100, so without it `value` is a percentage. |
-| `label` | The meter's name. At size `s`, the line under the value. |
+| `label` | The meter's name. In a single cell, the line under the value. |
 | `text` | What the value says, like `412 GB`. Defaults to the number, with a `%` when there's no `max`. |
 | `of` | What it's out of, shown after the value: `412 GB / 494 GB`. Defaults to `max` when you set one. |
 | `mark` | A limit tick on the bar, on the same scale as `value`. |
@@ -41,7 +41,7 @@ At the top level:
 
 | Field | |
 |---|---|
-| `footer` | A line under the bars at size `l`. |
+| `footer` | A line under the bars on taller tiles. |
 
 `meters` can also be a single meter instead of an array.
 

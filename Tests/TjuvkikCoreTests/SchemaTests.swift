@@ -26,6 +26,12 @@ struct SchemaTests {
         Set((property?["enum"] as? [String]) ?? [])
     }
 
+    /// A size: the named ones as an enum, and columns x rows as a pattern.
+    private func sizeValues(_ property: [String: Any]?) -> (names: Set<String>, pattern: String?) {
+        let options = property?["anyOf"] as? [[String: Any]] ?? []
+        return (options.reduce(into: Set<String>()) { $0.formUnion(enumValues($1)) }, options.compactMap { $0["pattern"] as? String }.first)
+    }
+
     @Test func configKeys() throws {
         let config = properties(try schema("config"))
         #expect(Set(config.keys) == keys(RawConfig()).union(["$schema"]))
@@ -41,7 +47,8 @@ struct SchemaTests {
         #expect(enumValues(config["layout"]) == Set(Config.Layout.allCases.map(\.rawValue)))
         let themeName = (config["theme"]?["anyOf"] as? [[String: Any]])?.first { $0["type"] as? String == "string" }
         #expect(Set(themeName?["examples"] as? [String] ?? []) == Set(Theme.builtIn.keys))
-        #expect(enumValues(properties(config["panels"]?["items"])["size"]) == Set(TileSize.allCases.map(\.rawValue)))
+        #expect(sizeValues(properties(config["panels"]?["items"])["size"]).names == Set(TileSize.aliases.map(\.name)))
+        #expect(sizeValues(properties(config["panels"]?["items"])["size"]).pattern == sizeValues(try properties(schema("panel"))["size"]).pattern)
         #expect(enumValues(properties(config["trigger"])["key"]) == Set(Trigger.Key.allCases.map(\.rawValue)))
         #expect(enumValues(properties(config["trigger"])["mode"]) == Set(Trigger.Mode.allCases.map(\.rawValue)))
     }
@@ -51,7 +58,17 @@ struct SchemaTests {
         #expect(Set(panel.keys) == keys(RawPanel()).union(["$schema"]))
         #expect(enumValues(panel["type"]) == Set(Tile.Kind.allCases.map(\.rawValue) + ContentType.allCases.map(\.rawValue)))
         #expect(enumValues(panel["mode"]) == Set(Tile.Mode.allCases.map(\.rawValue)))
-        #expect(enumValues(panel["size"]) == Set(TileSize.allCases.map(\.rawValue)))
+        #expect(sizeValues(panel["size"]).names == Set(TileSize.aliases.map(\.name)))
+        let pattern = try #require(sizeValues(panel["size"]).pattern)
+        let sizes = try Regex(pattern)
+        for text in ["3x1", "1×2", " 8x6 "] {
+            #expect(text.wholeMatch(of: sizes) != nil)
+            #expect(TileSize(rawValue: text) != nil)
+        }
+        for text in ["0x1", "9x1", "1x7", "3"] {
+            #expect(text.wholeMatch(of: sizes) == nil)
+            #expect(TileSize(rawValue: text) == nil)
+        }
         let option = panel["options"]?["additionalProperties"]
         #expect(Set(properties(option).keys) == keys(RawOption()))
         #expect(enumValues(properties(option)["type"]) == Set(PanelOption.Kind.allCases.map(\.rawValue)))

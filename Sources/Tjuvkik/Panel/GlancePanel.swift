@@ -61,6 +61,10 @@ final class GlanceModel {
     var showsFocus = false
     /// The ⌘K list, while it's open.
     var menu: ActionMenu?
+    /// List items each tile has scrolled away at its top, while the glance is open.
+    var scroll: [String: Int] = [:]
+    /// What each tile's list has out of view, above and below.
+    var scrollStates: [String: TileScrollState] = [:]
 }
 
 /// A key pressed while the glance stays open.
@@ -91,6 +95,9 @@ final class GlanceController {
     /// Which of the targets with the same tile and action is focused, so the focus survives a
     /// panel's update.
     private var focusOrdinal = 0
+    /// A tile the keyboard just scrolled: once it's laid out again, the focus goes to the row
+    /// that came into view.
+    private var scrolledByKey: (tile: String, direction: FocusNavigation.Direction)?
     private var hideGeneration = 0
     private var appearanceObservation: NSKeyValueObservation?
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -123,6 +130,8 @@ final class GlanceController {
         panel.contentView = GlanceHostingView(rootView: GlanceView(
             model: model, store: store,
             onFocusEntries: { [weak self] entries in self?.update(entries) },
+            onScrollItems: { [weak self] items in self?.update(items) },
+            onScroll: { [weak self] tile, items in _ = self?.scroll(tile, by: items) },
             panels: panels,
             onBackgroundClick: { [weak self] in
                 guard let self, self.isSticky, self.closesOnClickOutside else { return }
@@ -211,6 +220,8 @@ final class GlanceController {
         isSticky = false
         model.showsFocus = false
         model.menu = nil
+        model.scroll = [:]
+        scrolledByKey = nil
         stuckWhileActive = false
         panel.ignoresMouseEvents = true
         if let outsideClicks { NSEvent.removeMonitor(outsideClicks) }
@@ -252,10 +263,19 @@ final class GlanceController {
             model.menu = menu
             return
         }
+        scrolledByKey = nil
         switch key {
         case .move(let direction):
             guard let current = focusedIndex else { return focusFirst() }
-            if let next = FocusNavigation.move(from: current, direction, in: targets.map(Self.target)) { focus(next) }
+            let tile = targets[current].tile
+            let next = FocusNavigation.move(from: current, direction, in: targets.map(Self.target))
+            // At the end of what a tile shows: scroll its list before leaving it.
+            if direction == .down || direction == .up, next.map({ targets[$0].tile != tile }) ?? true,
+               scroll(tile, by: direction == .down ? 1 : -1) {
+                scrolledByKey = (tile, direction)
+                return
+            }
+            if let next { focus(next) }
         case .activate:
             if model.focused?.action?.clicks == true { perform(.click) }
         case .runNow: perform(.refresh)
@@ -325,6 +345,35 @@ final class GlanceController {
         return targets.indices.filter { targets[$0].tile == focused.tile && targets[$0].action == focused.action }.dropFirst(focusOrdinal).first
     }
 
+    // MARK: Scrolling
+
+    /// Scrolls a tile's list by that many items, down when positive, as far as it goes. False
+    /// when it can't move that way.
+    @discardableResult
+    func scroll(_ tile: String, by items: Int) -> Bool {
+        var state = model.scrollStates[tile] ?? TileScrollState()
+        let moved = items > 0 ? min(items, state.below) : -min(-items, state.above)
+        guard moved != 0 else { return false }
+        let skipped = (model.scroll[tile] ?? 0) + moved
+        model.scroll[tile] = skipped == 0 ? nil : skipped
+        // Until the tile is laid out again, so a fast swipe doesn't scroll past the end.
+        state.above += moved
+        state.below -= moved
+        model.scrollStates[tile] = state
+        return true
+    }
+
+    /// New layout of the tiles' lists: what each has out of view. A list that got shorter is
+    /// scrolled back so it isn't empty.
+    private func update(_ items: [ScrollItem]) {
+        let states = TileScrollState.states(items, scroll: model.scroll)
+        for (tile, skipped) in model.scroll {
+            let count = items.filter { $0.tile == tile }.map(\.index).max().map { $0 + 1 } ?? 0
+            if skipped >= count { model.scroll[tile] = count > 1 ? count - 1 : nil }
+        }
+        if states != model.scrollStates { model.scrollStates = states }
+    }
+
     /// New layout: tiles in config order, each one's rows top to bottom, or the tile itself when
     /// it has none in view. The focus stays on its row, or moves to the nearest in its tile.
     private func update(_ entries: [FocusEntry]) {
@@ -340,6 +389,12 @@ final class GlanceController {
         guard ordered != targets else { return }
         let previous = model.focused
         targets = ordered
+        // Scrolled by the keyboard: on to the row that came into view.
+        if let scrolled = scrolledByKey {
+            scrolledByKey = nil
+            let inTile = targets.indices.filter { targets[$0].tile == scrolled.tile }
+            if let index = scrolled.direction == .down ? inTile.last : inTile.first { return focus(index) }
+        }
         guard let previous else { return isShown ? focusFirst() : () }
         if let index = focusedIndex {
             focusedEntry = targets[index]

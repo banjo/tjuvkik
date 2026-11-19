@@ -272,7 +272,7 @@ struct ConfigLoaderTests {
         ])
         #expect(issues == [
             #"config.json: theme: unknown theme "nope", expected one of "dark-glass", "dracula", "light-glass""#,
-            #"config.json: panels[0].size: unknown size "huge", expected "s", "m", "l" or "xl""#,
+            #"config.json: panels[0].size: unknown size "huge", expected columns x rows, like 2x1 (8 columns and 6 rows at most)"#,
             "panels/pods/panel.json: command: a cli panel needs a command",
             #"panels/pods/panel.json: every: can't read "soon", write it like "30s", "5m" or "1h""#,
             #"panels/gh/panel.json: type: unknown type "web", expected one of "script", "cli", "chart", "meters", "grid", "timeline", "stats", "markdown", "keyvalue", "table", "feed", "checklist""#,

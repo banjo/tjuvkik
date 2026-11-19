@@ -1,11 +1,14 @@
 import SwiftUI
 
-/// A vertical stack that shows only the children that fit whole. Tiles cut their content
-/// instead of scrolling, and a half-shown row looks broken.
+/// A vertical stack that shows only the children that fit whole: a half-shown row looks broken.
+/// A tile scrolls by an item at a time instead, by leaving out the children of the first `skip`
+/// list items (see `scrollItem`).
 struct FittingStack: Layout {
     var spacing: CGFloat = 0
     /// Keep the last children that fit, aligned to the bottom, instead of the first.
     var fromBottom = false
+    /// List items scrolled away at the top.
+    var skip = 0
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
@@ -21,6 +24,10 @@ struct FittingStack: Layout {
         var y = bounds.minY
         var full = false
         for subview in subviews {
+            if let item = subview[ScrollItemKey.self], item < skip {
+                subview.place(at: CGPoint(x: -10_000, y: -10_000), proposal: .zero)
+                continue
+            }
             let size = subview.sizeThatFits(.init(width: bounds.width, height: nil))
             if full || y + size.height > bounds.maxY + 0.5 {
                 full = true

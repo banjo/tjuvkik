@@ -7,5 +7,5 @@
   "command": "./cpu-memory.sh",
   "every": "10s",
   "timeout": "8s",
-  "size": "m",
+  "size": "2x1",
 }

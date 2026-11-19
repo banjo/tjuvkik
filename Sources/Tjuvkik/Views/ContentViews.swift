@@ -5,9 +5,10 @@ import TjuvkikCore
 struct RowsView: View {
     let content: RowsContent
     let theme: Theme
+    @Environment(\.tileScroll) private var scroll
 
     var body: some View {
-        FittingStack(spacing: theme.z(2)) {
+        FittingStack(spacing: theme.z(2), skip: scroll) {
             if let hero = content.hero {
                 HStack(alignment: .firstTextBaseline, spacing: theme.z(8)) {
                     Text(hero.value)
@@ -33,17 +34,20 @@ struct RowsView: View {
                 .padding(.bottom, theme.z(8))
             }
             ForEach(Array(content.rows.enumerated()), id: \.offset) { index, row in
-                if let group = row.group, index == 0 || content.rows[index - 1].group != group {
+                // The first row in view gets its group's heading too, so a scrolled list says
+                // what it's in.
+                if let group = row.group, index == 0 || index == scroll || content.rows[index - 1].group != group {
                     Text(group.uppercased())
                         .font(theme.font(9.5, weight: .semibold))
                         .tracking(theme.z(0.6))
                         .foregroundStyle(Color(theme.tertiaryText))
                         .lineLimit(1)
-                        .padding(.top, index == 0 ? 0 : theme.z(6))
+                        .padding(.top, index == 0 || index == scroll ? 0 : theme.z(6))
+                        .scrollItem(index)
                 }
-                RowView(row: row, theme: theme)
+                RowView(row: row, theme: theme).scrollItem(index)
                 if let note = row.note {
-                    NoteView(text: note, tone: row.tone, theme: theme)
+                    NoteView(text: note, tone: row.tone, theme: theme).scrollItem(index)
                 }
             }
         }

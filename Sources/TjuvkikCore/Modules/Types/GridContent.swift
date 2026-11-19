@@ -2,8 +2,8 @@ import Foundation
 
 /// Many things at once, a colored cell each:
 /// `{ "grid": { "rows": [{ "label": "auth", "value": "100%", "cells": ["success", "warning"] }] } }`.
-/// An s tile shows the worst count and a dot per row, m a chip per row, l a row each with its
-/// cells as history. `levels` instead of rows gives a heatmap, like GitHub contributions.
+/// A single cell shows the worst count and a dot per row, a tile one row high a chip per row, and
+/// a taller one a row each with its cells as history. `levels` instead of rows gives a heatmap, like GitHub contributions.
 public struct GridContent: Equatable, Sendable, Decodable {
     /// One cell: a tone, or a level from 0 to 4 for a heatmap.
     public enum Cell: Equatable, Sendable, Decodable {

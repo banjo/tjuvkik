@@ -8,6 +8,7 @@ struct TableView: View {
     let content: TableContent
     let size: TileSize
     let theme: Theme
+    @Environment(\.tileScroll) private var scroll
 
     private var spacing: CGFloat { theme.z(12) }
     private static let cellSize: CGFloat = 11.5
@@ -26,9 +27,9 @@ struct TableView: View {
             ).map { CGFloat($0) }
             VStack(alignment: .leading, spacing: 0) {
                 header(shown, widths)
-                FittingStack(spacing: 0) {
-                    ForEach(Array(content.rows.enumerated()), id: \.offset) { _, row in
-                        line(row, shown, widths)
+                FittingStack(spacing: 0, skip: scroll) {
+                    ForEach(Array(content.rows.enumerated()), id: \.offset) { index, row in
+                        line(row, shown, widths).scrollItem(index)
                     }
                 }
                 .frame(maxHeight: .infinity, alignment: .top)

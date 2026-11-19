@@ -12,13 +12,13 @@ Who said what, and when: mentions, notifications, commits, posts.
 }
 ```
 
-![Feed at s](images/feed-s.png) ![Feed at m](images/feed-m.png) ![Feed at l](images/feed-l.png)
+![Feed at 1×1](images/feed-1x1.png) ![Feed at 2×1](images/feed-2x1.png) ![Feed at 2×2](images/feed-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The newest message, large, with who and when under it, and how many more are unread. |
-| `m` | The latest messages that fit, two lines each. |
-| `l`, `xl` | The messages that fit, under a heading per day: Today, Yesterday, the weekday, then the date. |
+| A single cell, 1×1 | The newest message, large, with who and when under it, and how many more are unread. |
+| One row high, like 2×1 or 4×1 | The latest messages that fit, two lines each. |
+| Taller, like 2×2 or 1×3 | The messages that fit, under a heading per day: Today, Yesterday, the weekday, then the date. |
 
 ## Fields
 

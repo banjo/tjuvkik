@@ -17,13 +17,13 @@ Steps, and what's done, next and stuck. The tile is read-only: your script owns 
 }
 ```
 
-![Checklist at s](images/checklist-s.png) ![Checklist at m](images/checklist-m.png) ![Checklist at l](images/checklist-l.png)
+![Checklist at 1×1](images/checklist-1x1.png) ![Checklist at 2×1](images/checklist-2x1.png) ![Checklist at 2×2](images/checklist-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The count, a bar, and the next step: the first one in progress, else the first one to do. |
-| `m` | The steps, in two columns when one doesn't fit. Sections are left out. |
-| `l`, `xl` | The count and bar, then sections, steps and notes. With `foldDone`, done steps are hidden behind a `✓ 3 done` line. |
+| A single cell, 1×1 | The count, a bar, and the next step: the first one in progress, else the first one to do. |
+| One row high, like 2×1 or 4×1 | The steps, in two columns when one doesn't fit. Sections are left out. |
+| Taller, like 2×2 or 1×3 | The count and bar, then sections, steps and notes. With `foldDone`, done steps are hidden behind a `✓ 3 done` line. |
 
 Steps that don't fit are cut, never scrolled.
 
@@ -33,7 +33,7 @@ Steps that don't fit are cut, never scrolled.
 |---|---|
 | `items` | Required. Steps and sections, in order. A single step works without an array. |
 | `caption` | Next to the count, like `steps · release Thu 14:00`. |
-| `foldDone` | `true` hides done and skipped steps in an `l` tile. Off by default. |
+| `foldDone` | `true` hides done and skipped steps in a taller tile. Off by default. |
 
 Each step:
 

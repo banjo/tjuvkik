@@ -12,8 +12,8 @@ $ tjuvkik run deploys
 deploys: timeline, ran in 0.84s
   shows timeline, 4 events
 
-$ tjuvkik preview deploys --size m
-deploys-m.png: m, 535×185 pt at 2x, deploys
+$ tjuvkik preview deploys --size 2x1
+deploys-2x1.png: 2x1, 525×180 pt at 2x, dark-glass
 
 $ tjuvkik validate
 ✓ config.jsonc and 7 panels are valid, 6 on the board`;
@@ -35,7 +35,7 @@ const prompt =
     <div class="split">
       <CodeBlock file="Terminal" lang="shellsession" code={session} />
       <div class="preview">
-        <div class="preview-file">deploys-m.png</div>
+        <div class="preview-file">deploys-2x1.png</div>
         <div class="wallpaper preview-canvas">
           <Tile panel={deploys} class="preview-tile" />
         </div>
@@ -131,6 +131,7 @@ const prompt =
   }
 
   .copy {
+    position: relative;
     padding: 6px 13px;
     border: 0;
     border-radius: 99px;
@@ -141,6 +142,12 @@ const prompt =
     transition:
       background-color 150ms ease-out,
       transform 120ms var(--ease-out);
+  }
+
+  .copy::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
   }
 
   .copy:active {

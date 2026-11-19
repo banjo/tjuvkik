@@ -47,7 +47,7 @@ swift test
 
 ## Previews in the docs
 
-Every page in `docs/types/` shows its first JSON example as the app draws it, at s, m and l, from `docs/types/images/`. After changing an example or how a type draws, install the app with `scripts/bundle.sh` and run:
+Every page in `docs/types/` shows its first JSON example as the app draws it, at 1x1, 2x1 and 2x2, from `docs/types/images/`. After changing an example or how a type draws, install the app with `scripts/bundle.sh` and run:
 
 ```sh
 scripts/docs-previews.py          # every type

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { APIRoute, GetStaticPaths } from "astro";
 import { docsDir } from "../../lib/doc-links";
 
-// The images in docs/, like types/images/chart-m.png, at the same path under /docs/.
+// The images in docs/, like types/images/chart-2x1.png, at the same path under /docs/.
 export const getStaticPaths = (() =>
   readdirSync(docsDir, { recursive: true, encoding: "utf8" })
     .filter((f) => f.endsWith(".png"))

@@ -52,7 +52,7 @@ struct CLIArgumentsTests {
         #expect(usageError("run a b") == "run takes one panel name, got 2")
         #expect(usageError("run a --size m") == "run doesn't take --size")
         #expect(usageError("validate --raw") == "validate doesn't take --raw")
-        #expect(usageError("preview a --size huge") == "unknown size \"huge\", expected s, m, l or xl")
+        #expect(usageError("preview a --size huge") == "unknown size \"huge\", expected columns x rows, like 2x1")
         #expect(usageError("preview a --scale 9") == "--scale must be a number from 1 to 4, got \"9\"")
         #expect(usageError("preview a --theme") == "--theme needs a value")
         #expect(usageError("new a --cli --script") == "pick one of --type, --cli and --script")
@@ -153,7 +153,7 @@ struct ConfigValidationTests {
             "panels/b/panel.jsonc": #"{ "type": "cli", "command": "date", "size": "q" }"#,
         ]).directory)
         #expect(!validation.isValid)
-        #expect(validation.errors.map(\.description) == [#"panels/b/panel.jsonc: size: unknown size "q", expected "s", "m", "l" or "xl""#])
+        #expect(validation.errors.map(\.description) == [#"panels/b/panel.jsonc: size: unknown size "q", expected columns x rows, like 2x1 (8 columns and 6 rows at most)"#])
         #expect(validation.panels == ["a", "b"])
         #expect(validation.report.hasSuffix("✗ 1 error in config.jsonc and 2 panels"))
     }

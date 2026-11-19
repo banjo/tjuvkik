@@ -22,7 +22,7 @@ Right-click a tile in the glance to run it now, open its `panel.jsonc`, show its
   "every": "60s",
   "timeout": "10s",
   "background": true,
-  "size": "s",
+  "size": "1x1",
 }
 ```
 
@@ -36,7 +36,7 @@ Right-click a tile in the glance to run it now, open its `panel.jsonc`, show its
 | `title` | folder name | Shown on the tile. |
 | `every` | `"60s"` | How often an interval panel runs. At least `5s`. |
 | `timeout` | `"10s"` | How long an interval run may take. |
-| `size` | `"s"` | `s`, `m`, `l` or `xl`. `config.jsonc` can override it. |
+| `size` | `"1x1"` | Columns x rows, like `"2x1"`, or `"3x1"` for a wide strip. See [sizes](config.md#panels). `config.jsonc` can override it. |
 | `history` | | For a [chart](types/chart.md) whose script prints only its value: how many values to keep as the series, 2 to 1000. |
 | `file` | | A [markdown](types/markdown.md) panel only: a file to show instead of a command's output, reloaded when it changes. `~`, absolute, or in the panel's folder. |
 | `requires` | `[]` | Commands that must be on PATH. If one is missing, the tile says so instead of running. |
@@ -140,13 +140,13 @@ Commands get your login shell's PATH, so tools from Homebrew, mise and the like 
 A cli panel:
 
 ```jsonc
-{ "type": "cli", "title": "Pods", "command": "kubectl get pods", "every": "30s", "size": "m" }
+{ "type": "cli", "title": "Pods", "command": "kubectl get pods", "every": "30s", "size": "2x1" }
 ```
 
 A log that updates live:
 
 ```jsonc
-{ "type": "cli", "mode": "stream", "title": "Server", "command": "tail -f /tmp/server.log", "size": "l" }
+{ "type": "cli", "mode": "stream", "title": "Server", "command": "tail -f /tmp/server.log", "size": "2x2" }
 ```
 
 More in the [starter panels](#starter-panels).

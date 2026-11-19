@@ -15,13 +15,13 @@ One number and where it's heading.
 }
 ```
 
-![Chart at s](images/chart-s.png) ![Chart at m](images/chart-m.png) ![Chart at l](images/chart-l.png)
+![Chart at 1×1](images/chart-1x1.png) ![Chart at 2×1](images/chart-2x1.png) ![Chart at 2×2](images/chart-2x2.png)
 
 | Size | Shows |
 |---|---|
-| `s` | The value and change, a sparkline below them. |
-| `m` | The value, label and change on the left, the chart on the right. |
-| `l`, `xl` | The value and change, the label, the chart with a grid and the threshold line, the axis labels, then min, avg and max. |
+| A single cell, 1×1 | The value and change, a sparkline below them. |
+| One row high, like 2×1 or 4×1 | The value, label and change on the left, the chart on the right. |
+| Taller, like 2×2 or 1×3 | The value and change, the label, the chart with a grid and the threshold line, the axis labels, then min, avg and max. |
 
 ## Fields
 
@@ -29,12 +29,12 @@ One number and where it's heading.
 |---|---|
 | `value` | The current value, as shown: `64`, `"4:12"`. Text or a number. Without it, the last value in `series`. |
 | `unit` | Smaller, after the value: `%`, `ms`, `GB`. |
-| `label` | What the number is, like `CPU, all cores`. Shown at `m` and `l`. |
+| `label` | What the number is, like `CPU, all cores`. Shown on tiles bigger than one cell. |
 | `delta` | The change: `{ "text": "▲ 22 pts in 10m", "tone": "warning" }`, or just the text. Your script picks the tone, since up isn't always good. |
 | `series` | Numbers, oldest first. Numbers written as text work; `null` is skipped. |
 | `min`, `max` | The bottom and top of the scale. Without them, the series' lowest and highest value. |
-| `threshold` | A dashed line at this value, with its label, at `l`. |
-| `axis` | Labels under the chart at `l`, spread from left to right: `["−60m", "−30m", "now"]`. |
+| `threshold` | A dashed line at this value, with its label, on taller tiles. |
+| `axis` | Labels under the chart on taller tiles, spread from left to right: `["−60m", "−30m", "now"]`. |
 | `tone` | The line's color: `accent` (default), `info`, `success`, `warning`, `error`, `muted`. |
 
 Either `value` or `series` is required. min, avg and max use the value's decimals and its unit: with `"value": "0.4"` and `"unit": "%"`, an average of 0.125 shows as `0.1%`.

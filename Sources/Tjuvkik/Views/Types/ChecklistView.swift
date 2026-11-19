@@ -7,6 +7,7 @@ struct ChecklistView: View {
     let content: ChecklistContent
     let size: TileSize
     let theme: Theme
+    @Environment(\.tileScroll) private var scroll
 
     /// A one-line step: 4 above and below a 12.5pt line at 1.35.
     private static let rowHeight: CGFloat = 25
@@ -76,13 +77,13 @@ struct ChecklistView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             bar.padding(.bottom, theme.z(8))
-            FittingStack(spacing: 0) {
+            FittingStack(spacing: 0, skip: scroll) {
                 ForEach(Array(content.visibleItems.enumerated()), id: \.offset) { index, entry in
                     switch entry {
                     case .section(let title):
-                        section(title, first: index == 0)
+                        section(title, first: index == scroll).scrollItem(index)
                     case .task(let task):
-                        item(task)
+                        item(task).scrollItem(index)
                     }
                 }
             }

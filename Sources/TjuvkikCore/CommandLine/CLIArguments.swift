@@ -128,7 +128,7 @@ public enum CLIArguments {
             var size: TileSize?
             if let value = options["--size"] {
                 size = TileSize(rawValue: value)
-                if size == nil { throw CLIUsageError(message: "unknown size \"\(value)\", expected s, m, l or xl") }
+                if size == nil { throw CLIUsageError(message: "unknown size \"\(value)\", expected \(TileSize.expected)") }
             }
             var scale = 2.0
             if let value = options["--scale"] {
@@ -182,7 +182,7 @@ public enum CLIArguments {
           --option key=value   Set an option. Repeat for more.
       preview <tile|panel>     Run a panel and render its tile to a PNG.
           --option key=value   Set an option. Repeat for more.
-          --size s|m|l|xl      The tile's size. Default: the panel's size.
+          --size <cols>x<rows> The tile's size, like 2x1. Default: the panel's size.
           --theme <name>       Default: the theme in config.jsonc for the current appearance.
           -o, --out <file>     Default: <panel>-<size>.png in this folder.
           --scale <1-4>        Pixels per point. Default: 2.

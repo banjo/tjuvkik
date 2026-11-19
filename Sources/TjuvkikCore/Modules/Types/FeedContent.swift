@@ -1,7 +1,8 @@
 import Foundation
 
 /// Who said what, and when: `{ "items": [{ "author": "Sara Lind", "text": "…", "time": "2026-11-16T13:12:00Z" }] }`.
-/// An s tile shows the newest message large, m the latest few, l all that fit, grouped by day.
+/// A single cell shows the newest message large, a tile one row high the latest few, and a taller
+/// one all that fit, grouped by day.
 public struct FeedContent: Equatable, Sendable, Decodable {
     public struct Item: Equatable, Sendable, Decodable {
         /// Who said it. Gives the initials and color when there's no avatar or icon.

@@ -147,14 +147,29 @@
       "description": "false: this panel never notifies."
     },
     "size": {
-      "enum": [
-        "s",
-        "m",
-        "l",
-        "xl"
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^\\s*[1-8]\\s*[x×]\\s*[1-6]\\s*$"
+        },
+        {
+          "enum": [
+            "s",
+            "m",
+            "l",
+            "xl"
+          ],
+          "deprecated": true,
+          "description": "Older names, still read: s 1x1, m 2x1, l 2x2, xl 2x3."
+        }
       ],
-      "description": "Default size; config.json can override it. s 1×1, m 2×1, l 2×2, xl 2×3",
-      "default": "s"
+      "examples": [
+        "2x1",
+        "3x1",
+        "1x2"
+      ],
+      "description": "Default size, columns x rows, like \"2x1\"; config.jsonc can override it. \"3x1\" is a wide strip, \"1x2\" a tall one.",
+      "default": "1x1"
     },
     "history": {
       "type": "integer",

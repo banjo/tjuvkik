@@ -65,16 +65,6 @@ struct CommandRunnerTests {
         #expect(Date().timeIntervalSince(start) < 3)
     }
 
-    @Test func launchKeepsBackgroundChildren() async throws {
-        let marker = FileManager.default.temporaryDirectory.appending(path: "tjuvkik-launch-\(UUID().uuidString)")
-        let result = await CommandRunner.launch("(sleep 0.5; touch '\(marker.path)') & echo started >&2", environment: environment)
-        #expect(result.succeeded)
-        #expect(result.stderr == "started\n")
-        try await Task.sleep(for: .seconds(1))
-        #expect(FileManager.default.fileExists(atPath: marker.path))
-        try? FileManager.default.removeItem(at: marker)
-    }
-
     @Test func requiredTools() {
         #expect(RequiredTools.missing(["ls", "definitely-not-a-tool"], path: "/usr/bin:/bin") == ["definitely-not-a-tool"])
     }

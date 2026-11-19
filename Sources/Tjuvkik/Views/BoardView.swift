@@ -25,6 +25,12 @@ struct BoardView: View {
     var focus: FocusEntry?
     /// The rows and tiles the keyboard can focus, as laid out.
     var onFocusEntries: (([FocusEntry]) -> Void)?
+    /// Set by the glance: list items each tile skips at its top, what each has out of view, a
+    /// tile's scroll by the trackpad or wheel, and its list items as laid out.
+    var scroll: [String: Int] = [:]
+    var scrollStates: [String: TileScrollState] = [:]
+    var onScroll: ((String, Int) -> Void)?
+    var onScrollItems: (([ScrollItem]) -> Void)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -40,7 +46,9 @@ struct BoardView: View {
                 if let slot = tile.slot {
                     let size = BentoGeometry.size(columns: slot.columns, rows: slot.rows, cell: cell, board: board)
                     TileView(tile: tile, state: states[tile.id], theme: theme, index: index, isVisible: isVisible, solid: solid,
-                             onAction: onAction.map { onAction in { onAction(tile, $0) } }, menu: menu?(tile))
+                             onAction: onAction.map { onAction in { onAction(tile, $0) } }, menu: menu?(tile),
+                             scroll: scroll[tile.id] ?? 0, scrollState: scrollStates[tile.id],
+                             onScroll: onScroll.map { onScroll in { onScroll(tile.id, $0) } })
                         .frame(width: size.width, height: size.height)
                         .overlay {
                             if selected == tile.id {
@@ -71,6 +79,9 @@ struct BoardView: View {
         .coordinateSpace(name: Self.space)
         .onPreferenceChange(FocusEntriesKey.self) { entries in
             MainActor.assumeIsolated { onFocusEntries?(entries) }
+        }
+        .onPreferenceChange(ScrollItemsKey.self) { items in
+            MainActor.assumeIsolated { onScrollItems?(items) }
         }
         .environment(\.colorScheme, theme.appearance.colorScheme)
     }

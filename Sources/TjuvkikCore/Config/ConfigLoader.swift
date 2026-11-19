@@ -360,7 +360,7 @@ public enum ConfigLoader {
     }
 
     private static func sizeMessage(_ value: String) -> String {
-        "unknown size \"\(value)\", expected \"s\", \"m\", \"l\" or \"xl\""
+        "unknown size \"\(value)\", expected \(TileSize.expected) (\(TileSize.columnRange.upperBound) columns and \(TileSize.rowRange.upperBound) rows at most)"
     }
 
     /// A `background` value, or nil when it's broken (with an error).

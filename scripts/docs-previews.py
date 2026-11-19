@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TYPES = ROOT / "docs" / "types"
 OUT = TYPES / "images"
-SIZES = ["s", "m", "l"]
+SIZES = ["1x1", "2x1", "2x2"]
 
 # A tile title per type, as someone would name the panel.
 TITLES = {
