@@ -132,12 +132,11 @@ struct PeekLayer: View {
     let entries: [PeekEntry]
     /// The keyboard's focus, while it shows.
     let focus: FocusEntry?
+    /// What was used last: only its row peeks.
+    let input: GlanceInput
     let hidden: Bool
     let theme: Theme
 
-    private enum Source { case mouse, keyboard }
-
-    @State private var source = Source.keyboard
     /// The row the peek shows over.
     @State private var shown: CGRect?
     /// Until then, the next peek shows at once.
@@ -163,10 +162,6 @@ struct PeekLayer: View {
             }
         }
         .allowsHitTesting(false)
-        .onChange(of: entries.first(where: \.hovering)?.frame) { _, frame in
-            if frame != nil { source = .mouse }
-        }
-        .onChange(of: focus?.frame) { source = .keyboard }
         .task(id: target?.frame) {
             guard let frame = target?.frame else {
                 if shown != nil { warmUntil = Date().addingTimeInterval(Self.warm) }
@@ -179,11 +174,11 @@ struct PeekLayer: View {
         }
     }
 
-    /// The row the mouse or the keyboard last moved to.
+    /// The hovered row after the mouse moved, the focused one after a key.
     private var target: PeekEntry? {
         let hovered = entries.first(where: \.hovering)
-        let focused = focus.flatMap { focus in entries.first { Self.same($0.frame, focus.frame) } }
-        return source == .mouse ? hovered ?? focused : focused ?? hovered
+        guard let focus, input == .keyboard else { return hovered }
+        return entries.first { Self.same($0.frame, focus.frame) }
     }
 
     private static func same(_ a: CGRect, _ b: CGRect) -> Bool {

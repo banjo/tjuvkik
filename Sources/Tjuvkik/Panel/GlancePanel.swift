@@ -54,6 +54,9 @@ final class DimWindow: NSWindow {
 /// Acts on the first click and tracks hover although the window is never key and the app never
 /// active.
 final class GlanceHostingView<Content: View>: NSHostingView<Content> {
+    /// The pointer moved: not rows scrolling under it.
+    var onMouseMoved: () -> Void = {}
+
     required init(rootView: Content) {
         super.init(rootView: rootView)
         addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self))
@@ -65,6 +68,16 @@ final class GlanceHostingView<Content: View>: NSHostingView<Content> {
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        onMouseMoved()
+    }
+}
+
+/// The mouse or the keyboard, whichever was used last in the glance.
+enum GlanceInput {
+    case mouse, keyboard
 }
 
 @MainActor
@@ -77,6 +90,7 @@ final class GlanceModel {
     /// What the keyboard has focused, and whether it shows: only while the glance stays open.
     var focused: FocusEntry?
     var showsFocus = false
+    var input = GlanceInput.keyboard
     /// The ⌘K list, while it's open.
     var menu: ActionMenu?
     /// List items each tile has scrolled away at its top, while the glance is open.
@@ -126,6 +140,8 @@ final class GlanceController {
     private var lastFocus: (entry: FocusEntry, ordinal: Int)?
     /// The row last focused in each tile, so jumping back to a tile lands on it.
     private var tileFocus: [String: (entry: FocusEntry, ordinal: Int)] = [:]
+    /// Where the pointer was when the keyboard last took over.
+    private var keyboardMouse: CGPoint?
     private var hideGeneration = 0
     private var appearanceObservation: NSKeyValueObservation?
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -155,7 +171,7 @@ final class GlanceController {
 
     init(store: ConfigStore, panels: PanelStore) {
         self.store = store
-        panel.contentView = GlanceHostingView(rootView: GlanceView(
+        let hosting = GlanceHostingView(rootView: GlanceView(
             model: model, store: store,
             onFocusEntries: { [weak self] entries in self?.update(entries) },
             onScrollItems: { [weak self] items in self?.update(items) },
@@ -168,6 +184,13 @@ final class GlanceController {
             onAction: { [weak self] tile, action in self?.onRowAction(tile, action) },
             menu: { [weak self] tile in self?.tileMenu(tile) ?? TileMenu() }
         ))
+        // AppKit also sends moves when the view redraws under a still pointer: those don't count.
+        // Set only when it changes: each set redraws the glance.
+        hosting.onMouseMoved = { [weak self] in
+            guard let self, model.input != .mouse, NSEvent.mouseLocation != keyboardMouse else { return }
+            model.input = .mouse
+        }
+        panel.contentView = hosting
         panel.onMouseDown = { [weak self] in self?.onMouseDown() }
         model.systemIsDark = Self.isDark(NSApp.effectiveAppearance)
         // KVO may call this off the main thread.
@@ -237,6 +260,7 @@ final class GlanceController {
         }
         panel.orderFrontRegardless()
         model.isVisible = true
+        useKeyboard()
         focusFirst()
         if sticky { stick() }
         onShow()
@@ -294,6 +318,7 @@ final class GlanceController {
 
     func handle(_ key: GlanceKey) {
         guard isSticky else { return }
+        useKeyboard()
         if var menu = model.menu {
             switch key {
             case .move(.up): menu.selected = max(menu.selected - 1, 0)
@@ -355,6 +380,12 @@ final class GlanceController {
                   let next = FocusNavigation.move(from: from, direction, in: tiles) else { return }
             focus(tile: tiles[next].tile)
         }
+    }
+
+    /// The keyboard leads until the pointer moves away from where it is now.
+    private func useKeyboard() {
+        keyboardMouse = NSEvent.mouseLocation
+        if model.input != .keyboard { model.input = .keyboard }
     }
 
     /// Esc closes the ⌘K list first. True when it did.

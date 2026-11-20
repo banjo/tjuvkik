@@ -28,7 +28,7 @@ struct GlanceView: View {
                       focus: focus, onFocusEntries: onFocusEntries,
                       scroll: model.scroll, scrollStates: model.scrollStates, onScroll: onScroll, onScrollItems: onScrollItems)
                 .overlayPreferenceValue(PeekEntriesKey.self) { entries in
-                    PeekLayer(entries: entries, focus: focus, hidden: model.menu != nil || !model.isVisible, theme: theme)
+                    PeekLayer(entries: entries, focus: focus, input: model.input, hidden: model.menu != nil || !model.isVisible, theme: theme)
                 }
                 .overlay(alignment: .topLeading) {
                     if let actions = model.menu, let focus {
