@@ -106,6 +106,8 @@ Jumping to a tile, with ⌥ and an arrow, Tab or a number, lands on the row you 
 
 A bar right under the lowest tile shows the keys for the picked row, and the keys for moving between tiles.
 
+When a row's text is cut, in a rows or feed panel, picking it or holding the mouse over it shows the whole text under the row after a moment.
+
 When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. With `"focusOnOpen": "last"`, it starts on the row it was on when the glance closed, or the nearest one in its tile, and picks as above only when that tile is gone. The keys are taken from the app in front only while the glance is open.
 
 ## Panels

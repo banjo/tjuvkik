@@ -111,14 +111,12 @@ private struct RowView: View {
                 Text(icon).font(theme.font(13)).frame(width: theme.z(18))
             }
             VStack(alignment: .leading, spacing: theme.z(1)) {
-                Text(row.title)
-                    .font(theme.font(12.5, weight: .medium))
-                    .foregroundStyle(Color(row.tone == .muted ? theme.secondaryText : theme.text))
-                    .lineLimit(1)
-                if let subtitle = row.subtitle {
-                    Text(subtitle).font(theme.font(11)).foregroundStyle(Color(theme.tertiaryText)).lineLimit(1)
+                title.reportsTruncation().lineLimit(1)
+                if let subtitle {
+                    subtitle.reportsTruncation().lineLimit(1)
                 }
             }
+            .peekAnchor()
             Spacer(minLength: theme.z(4))
             if let trailing = row.trailing {
                 Text(trailing)
@@ -129,6 +127,17 @@ private struct RowView: View {
         }
         .padding(.vertical, theme.z(4))
         .clickable(RowAction(url: row.url, command: row.command, title: row.title, actions: row.actions), theme: theme, tone: row.tone)
+        .peek([PeekLine(text: title)] + (subtitle.map { [PeekLine(text: $0)] } ?? []), spacing: theme.z(1))
+    }
+
+    private var title: Text {
+        Text(row.title)
+            .font(theme.font(12.5, weight: .medium))
+            .foregroundStyle(Color(row.tone == .muted ? theme.secondaryText : theme.text))
+    }
+
+    private var subtitle: Text? {
+        row.subtitle.map { Text($0).font(theme.font(11)).foregroundStyle(Color(theme.tertiaryText)) }
     }
 }
 

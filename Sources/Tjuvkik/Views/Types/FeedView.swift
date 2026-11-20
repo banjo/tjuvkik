@@ -127,6 +127,7 @@ private struct FeedRow: View {
                         }
                         who
                             .font(theme.font(12))
+                            .reportsTruncation()
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Spacer(minLength: theme.z(4))
@@ -138,18 +139,25 @@ private struct FeedRow: View {
                                 .fixedSize()
                         }
                     }
-                    Text(FeedMessage.text(item.text, theme: theme, boldSize: 12))
-                        .font(theme.font(12))
+                    message
                         .lineSpacing(theme.z(2))
-                        .foregroundStyle(Color(theme.secondaryText))
+                        .reportsTruncation()
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .peekAnchor()
             }
             .padding(.top, isFirst ? 0 : theme.z(7))
             .padding(.bottom, theme.z(7))
         }
         .clickable(RowAction(url: item.url, title: item.text, actions: item.actions), theme: theme)
+        .peek([PeekLine(text: who.font(theme.font(12))), PeekLine(text: message, lineSpacing: theme.z(2))], spacing: theme.z(1))
+    }
+
+    private var message: Text {
+        Text(FeedMessage.text(item.text, theme: theme, boldSize: 12))
+            .font(theme.font(12))
+            .foregroundStyle(Color(theme.secondaryText))
     }
 
     /// "Sara Lind #dsp-spark": the author bold, where after it, dimmer.

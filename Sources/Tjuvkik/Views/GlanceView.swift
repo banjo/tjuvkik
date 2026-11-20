@@ -27,6 +27,9 @@ struct GlanceView: View {
                       onAction: onAction, menu: menu, onBackgroundClick: onBackgroundClick,
                       focus: focus, onFocusEntries: onFocusEntries,
                       scroll: model.scroll, scrollStates: model.scrollStates, onScroll: onScroll, onScrollItems: onScrollItems)
+                .overlayPreferenceValue(PeekEntriesKey.self) { entries in
+                    PeekLayer(entries: entries, focus: focus, hidden: model.menu != nil || !model.isVisible, theme: theme)
+                }
                 .overlay(alignment: .topLeading) {
                     if let actions = model.menu, let focus {
                         GeometryReader { geometry in
@@ -186,6 +189,7 @@ struct TileView: View {
         .scaleEffect(isVisible || reduceMotion ? 1 : 0.97)
         .animation(.easeOut(duration: 0.22).delay(Double(index) * 0.03), value: isVisible)
         .environment(\.performRow, onAction)
+        .environment(\.peekEnabled, onAction != nil && isVisible)
         .environment(\.focusTile, tile.id)
         .modifier(TileFocusEntry(tile: tile.id, radius: radius, active: onAction != nil))
         .tileMenu(menu)
