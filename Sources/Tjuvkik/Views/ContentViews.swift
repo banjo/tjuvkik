@@ -63,7 +63,9 @@ private struct SummaryView: View {
         HStack(spacing: theme.z(12)) {
             ForEach(Array(chips.enumerated()), id: \.offset) { _, chip in
                 HStack(spacing: theme.z(4)) {
-                    if let icon = chip.icon { Text(icon).font(theme.font(11.5)) }
+                    if let icon = Icon(chip.icon) {
+                        IconView(icon: icon, size: 11.5, color: theme.color(for: chip.tone, default: theme.secondaryText), theme: theme)
+                    }
                     if let value = chip.value {
                         Text(value)
                             .font(theme.font(12, weight: .semibold).monospacedDigit())
@@ -107,8 +109,9 @@ private struct RowView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: theme.z(8)) {
-            if let icon = row.icon {
-                Text(icon).font(theme.font(13)).frame(width: theme.z(18))
+            if let icon = Icon(row.icon) {
+                IconView(icon: icon, size: 13, color: theme.color(for: row.tone, default: theme.secondaryText), theme: theme)
+                    .frame(width: theme.z(18))
             }
             VStack(alignment: .leading, spacing: theme.z(1)) {
                 title.reportsTruncation().lineLimit(1)

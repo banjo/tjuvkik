@@ -73,10 +73,11 @@ public enum PanelTemplate {
         case nil:
             """
             {
-              "summary": [{ "icon": "●", "value": "2", "label": "open", "tone": "warning" }],
+              "summary": [{ "icon": "sf:exclamationmark.circle.fill", "value": "2", "label": "open", "tone": "warning" }],
               "rows": [
-                { "icon": "●", "title": "First row", "subtitle": "what it is", "trailing": "2m", "tone": "warning" },
-                { "icon": "○", "title": "Second row", "trailing": "1h" }
+                { "icon": "sf:exclamationmark.circle.fill", "title": "First row", "subtitle": "what it is", "trailing": "2m", "tone": "warning" },
+                { "icon": "spinner", "title": "Second row", "trailing": "1h" },
+                { "icon": "✅", "title": "Third row" }
               ]
             }
             """

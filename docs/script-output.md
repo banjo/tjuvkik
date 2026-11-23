@@ -73,7 +73,7 @@ Each row:
 | Field | |
 |---|---|
 | `title` | Required. |
-| `icon` | An emoji or a short text. |
+| `icon` | An emoji, a short text, an SF Symbol or a spinner. See [Icons](#icons). |
 | `subtitle` | A second, fainter line. |
 | `trailing` | On the right, like a time or count. |
 | `tone` | Colors the row. |
@@ -96,6 +96,29 @@ Shown when the panel is in `menuBar` in [config.jsonc](config.md#menu-bar).
 
 - Leave `menuBar` out to show the first `summary` chip, with the whole summary in the menu.
 - Set `"menuBar": null` to show nothing, like when nothing needs you.
+
+## Icons
+
+Every `icon`, in rows, the summary, the menu bar, its menu and feed items, takes one string:
+
+| `icon` | Draws |
+|---|---|
+| `"👀"`, `"●"` | The text as is. |
+| `"sf:hammer.fill"` | An [SF Symbol](https://developer.apple.com/sf-symbols/) by name, in the row's or chip's `tone`. |
+| `"sf:gearshape.fill:rotate"` | The symbol, moving over and over: `pulse`, `breathe`, `rotate`, `bounce` or `wiggle`. |
+| `"spinner"` | The system's loading indicator, for work in progress. |
+
+```json
+{ "rows": [
+  { "icon": "spinner", "title": "Write release notes", "tone": "accent" },
+  { "icon": "sf:hand.raised.fill:wiggle", "title": "Fix flaky login test", "tone": "warning" },
+  { "icon": "sf:checkmark.circle.fill", "title": "Bump dependencies", "tone": "success" }
+] }
+```
+
+- Symbols hold still with Reduce Motion on, and in the menu bar, where a spinner is a still `progress.indicator`.
+- The automatic menu bar line leaves symbols and spinners out of its text.
+- `tjuvkik run` warns about a symbol this Mac doesn't have and an effect it doesn't know. The tile then draws the symbol without it, or nothing.
 
 ## Row actions
 

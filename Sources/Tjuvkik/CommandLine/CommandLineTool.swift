@@ -107,10 +107,24 @@ enum CommandLineTool {
             if let menuBar = content.menuBar, !menuBar.title.isEmpty {
                 print("  menu bar: \(menuBar.title)")
             }
+            // Warnings, not errors: the tile still shows, just without the icon.
+            for problem in iconProblems(content.icons) { printError("  \(problem)") }
             return true
         case .failure(let error):
             printError("  \(error.message)")
             return false
+        }
+    }
+
+    /// Unknown effects and symbols this Mac doesn't have, once each.
+    private static func iconProblems(_ icons: [String]) -> [String] {
+        var seen = Set<String>()
+        return icons.filter { seen.insert($0).inserted }.compactMap { raw in
+            if let problem = Icon.problem(raw) { return problem }
+            if case .symbol(let name, _) = Icon(raw), NSImage(systemSymbolName: name, accessibilityDescription: nil) == nil {
+                return "icon \"\(raw)\": no SF Symbol named \"\(name)\""
+            }
+            return nil
         }
     }
 

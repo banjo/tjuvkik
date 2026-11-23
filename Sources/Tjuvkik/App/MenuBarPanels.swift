@@ -32,11 +32,46 @@ struct MenuBarPanels {
         let title = NSMutableAttributedString()
         for entry in entries where !entry.menuBar.title.isEmpty {
             if title.length > 0 { title.append(NSAttributedString(string: "  ")) }
-            var attributes: [NSAttributedString.Key: Any] = [.font: NSFont.menuBarFont(ofSize: 0)]
-            if let color = entry.menuBar.tone?.menuBarColor { attributes[.foregroundColor] = color }
-            title.append(NSAttributedString(string: entry.menuBar.title, attributes: attributes))
+            let font = NSFont.menuBarFont(ofSize: 0)
+            let color = entry.menuBar.tone?.menuBarColor
+            var attributes: [NSAttributedString.Key: Any] = [.font: font]
+            if let color { attributes[.foregroundColor] = color }
+            let icon = Icon(entry.menuBar.icon)
+            if let icon {
+                title.append(Self.string(for: icon, font: font, color: color, attributes: attributes))
+            }
+            if let text = entry.menuBar.text, !text.isEmpty {
+                title.append(NSAttributedString(string: icon == nil ? text : " \(text)", attributes: attributes))
+            }
         }
         return title
+    }
+
+    /// An icon inline in the menu bar's text. The menu bar doesn't animate, so a spinner is a still
+    /// symbol and a symbol's effect is left out.
+    private static func string(for icon: Icon, font: NSFont, color: NSColor?, attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
+        let name: String
+        switch icon {
+        case .text(let text): return NSAttributedString(string: text, attributes: attributes)
+        case .symbol(let symbol, _): name = symbol
+        case .spinner: name = "progress.indicator"
+        }
+        guard let image = symbolImage(name, pointSize: font.pointSize, color: color ?? .labelColor) else {
+            return NSAttributedString()
+        }
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = CGRect(x: 0, y: (font.capHeight - image.size.height) / 2, width: image.size.width, height: image.size.height)
+        return NSAttributedString(attachment: attachment)
+    }
+
+    /// A symbol in `color`, or a template that follows the menu's text color without one.
+    private static func symbolImage(_ name: String, pointSize: CGFloat, color: NSColor?) -> NSImage? {
+        var configuration = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        if let color { configuration = configuration.applying(.init(paletteColors: [color])) }
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(configuration)
+        image?.isTemplate = color == nil
+        return image
     }
 
     /// A section per panel with rows in its `menu`.
@@ -54,10 +89,16 @@ struct MenuBarPanels {
 
     private static func item(for row: RowsContent.Row, id: String, target: AnyObject, perform: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        let icon = Icon(row.icon)
         let title = NSMutableAttributedString(
-            string: [row.icon, row.title].compactMap { $0 }.joined(separator: "  "),
+            string: [icon?.text, row.title].compactMap { $0 }.joined(separator: "  "),
             attributes: [.font: NSFont.menuFont(ofSize: 0), .foregroundColor: row.tone?.menuBarColor ?? NSColor.labelColor]
         )
+        switch icon {
+        case .symbol(let name, _): item.image = symbolImage(name, pointSize: NSFont.menuFont(ofSize: 0).pointSize, color: row.tone?.menuBarColor)
+        case .spinner: item.image = symbolImage("progress.indicator", pointSize: NSFont.menuFont(ofSize: 0).pointSize, color: row.tone?.menuBarColor)
+        case .text, nil: break
+        }
         if let trailing = row.trailing {
             title.append(NSAttributedString(string: "   \(trailing)", attributes: [
                 .font: NSFont.menuFont(ofSize: 0), .foregroundColor: NSColor.secondaryLabelColor,

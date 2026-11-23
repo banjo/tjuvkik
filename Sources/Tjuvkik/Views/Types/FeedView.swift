@@ -175,9 +175,8 @@ private struct FeedAvatarView: View {
     let theme: Theme
 
     var body: some View {
-        if let icon = item.icon, !icon.isEmpty {
-            Text(icon)
-                .font(theme.font(diameter * 0.5))
+        if let icon = Icon(item.icon) {
+            IconView(icon: icon, size: diameter * 0.5, color: Color(theme.secondaryText), theme: theme)
                 .frame(width: theme.z(diameter), height: theme.z(diameter))
                 .background(Color(theme.well), in: RoundedRectangle(cornerRadius: theme.z(diameter * 0.27), style: .continuous))
         } else {

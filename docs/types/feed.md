@@ -29,7 +29,7 @@ Each item:
 | `text` | Required. The message. `**bold**` is drawn brighter, for names and titles. |
 | `author` | Who said it. Without `avatar` or `icon`, the tile draws their initials on a color picked from the name, the same every time. |
 | `avatar` | An image URL, drawn round. The initials show while it loads, and if it can't. |
-| `icon` | An emoji drawn in a square instead, for bots and services: `🤖`, `❌`. |
+| `icon` | Drawn in a square instead, for bots and services: `🤖`, `sf:hammer.fill` or `spinner`. See [Icons](../script-output.md#icons). |
 | `where` | Where it was said, after the author: `#dsp-spark`, `DM`, `logbook #1284`. |
 | `time` | When it was said. ISO 8601 (`2026-11-16T13:12:00Z`, or `2026-11-16T14:12` in your time zone) or a Unix timestamp. Shown relative: `now`, `5m`, `2h`, `Sun` within the week, `12 Nov`. Anything else is shown as is. |
 | `unread` | `true` puts a dot before the author. |

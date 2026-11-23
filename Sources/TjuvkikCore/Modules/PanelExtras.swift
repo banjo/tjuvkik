@@ -35,7 +35,8 @@ public struct PanelExtras: Equatable, Sendable, Decodable {
         case .custom(let menuBar): return menuBar
         case .automatic:
             guard let summary, let first = summary.first else { return nil }
-            let line = summary.map { [$0.icon, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
+            // One line of text, so symbols and spinners are left out of it.
+            let line = summary.map { [Icon($0.icon)?.text, $0.value, $0.label].compactMap { $0 }.joined(separator: " ") }.joined(separator: "  ·  ")
             return RowsContent.MenuBar(icon: first.icon, text: first.value, tone: first.tone, menu: [RowsContent.Row(title: line)])
         }
     }

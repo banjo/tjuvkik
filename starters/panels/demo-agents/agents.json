@@ -1,11 +1,11 @@
 {
   "hero": { "value": "2", "label": "agents need you", "tone": "warning" },
   "rows": [
-    { "icon": "✋", "title": "Fix flaky login test", "subtitle": "web:2 · claude", "trailing": "3m", "tone": "warning", "note": "Allow: npm run test:e2e?" },
-    { "icon": "❌", "title": "Migrate billing to v2 API", "subtitle": "api:1 · codex", "trailing": "12m", "tone": "error", "note": "Build failed: 2 type errors" },
-    { "icon": "⚙️", "title": "Write release notes", "subtitle": "docs:1 · opencode", "trailing": "working", "tone": "accent" },
-    { "icon": "✅", "title": "Bump dependencies", "subtitle": "web:3 · claude", "trailing": "1h", "tone": "info", "note": "Done: 14 packages updated" },
-    { "icon": "💤", "title": "Refactor settings page", "subtitle": "app:1 · claude", "trailing": "2h", "tone": "muted" }
+    { "icon": "sf:hand.raised.fill:wiggle", "title": "Fix flaky login test", "subtitle": "web:2 · claude", "trailing": "3m", "tone": "warning", "note": "Allow: npm run test:e2e?" },
+    { "icon": "sf:xmark.octagon.fill", "title": "Migrate billing to v2 API", "subtitle": "api:1 · codex", "trailing": "12m", "tone": "error", "note": "Build failed: 2 type errors" },
+    { "icon": "spinner", "title": "Write release notes", "subtitle": "docs:1 · opencode", "trailing": "working", "tone": "accent" },
+    { "icon": "sf:checkmark.circle.fill", "title": "Bump dependencies", "subtitle": "web:3 · claude", "trailing": "1h", "tone": "info", "note": "Done: 14 packages updated" },
+    { "icon": "sf:moon.zzz.fill", "title": "Refactor settings page", "subtitle": "app:1 · claude", "trailing": "2h", "tone": "muted" }
   ],
-  "summary": [{ "value": "2", "label": "need you", "tone": "warning" }]
+  "summary": [{ "icon": "sf:hand.raised.fill", "value": "2", "label": "need you", "tone": "warning" }]
 }

@@ -9,7 +9,7 @@ public struct FeedContent: Equatable, Sendable, Decodable {
         public var author: String?
         /// An image URL, drawn round in place of the initials.
         public var avatar: String?
-        /// An emoji drawn in a square instead of the initials, for bots and services.
+        /// An emoji or `sf:` symbol drawn in a square instead of the initials, for bots and services.
         public var icon: String?
         /// Where it was said, like "#dsp-spark" or "logbook #1284". `where` in the JSON.
         public var place: String?
