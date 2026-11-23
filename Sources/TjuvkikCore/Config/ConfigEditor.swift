@@ -78,6 +78,14 @@ public struct ConfigEditor {
         try update(["jumpKey"], key == .option ? nil : .string(key.rawValue))
     }
 
+    public mutating func setView(_ view: Config.View) throws(JSONCDocument.ParseError) {
+        try update(["view"], view == .bento ? nil : .string(view.rawValue))
+    }
+
+    public mutating func setSearch(_ on: Bool) throws(JSONCDocument.ParseError) {
+        try update(["search"], on ? nil : .bool(false))
+    }
+
     // MARK: Theme
 
     public mutating func setTheme(_ name: String) throws(JSONCDocument.ParseError) {

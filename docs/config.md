@@ -17,6 +17,7 @@ The settings window (Settings…, ⌘,) writes this file for you. It changes onl
   "dim": false,
   "focusOnOpen": "urgent",
   "jumpKey": "option",
+  "search": true,
   "menuBar": null,
   "pause": { "whenLocked": true, "onLowPower": true },
   "panels": [
@@ -31,7 +32,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 
 | Key | Default | |
 |---|---|---|
-| `view` | `"bento"` | Only `bento` for now. |
+| `view` | `"bento"` | `bento` shows the board, `spotlight` a list with a preview. See [Spotlight](#spotlight). |
 | `layout` | `"framed"` | Only `framed` for now. |
 | `theme` | `"dark-glass"` | `dark-glass`, `light-glass`, `dracula`, or a file in `themes/`. Or `{ "light": …, "dark": … }` to follow the system's appearance. See [Themes](themes.md#light-and-dark). |
 | `trigger` | `{ "key": "fn" }` | What opens the glance. See [Trigger](#trigger). |
@@ -39,6 +40,7 @@ Saved changes apply within a second. Comments and trailing commas are fine. If a
 | `dim` | `false` | Darken the screen behind the glance. See [Dim](#dim). |
 | `focusOnOpen` | `"urgent"` | Which row the keyboard starts on. See [Keyboard](#keyboard). |
 | `jumpKey` | `"option"` | Held with an arrow, it jumps to the next tile. See [Keyboard](#keyboard). |
+| `search` | `true` | Spotlight has a search field. See [Spotlight](#spotlight). |
 | `menuBar` | none | Tiles from `panels`, by id, to show in the menu bar: `"agents"` or `["agents", "github"]`. |
 | `pause` | both `true` | When background runs stop. See [Pause](#pause). |
 | `notifications` | on | Sound, quiet hours and whether to notify while glancing. See [Notifications](#notifications). |
@@ -82,7 +84,7 @@ Set `key` or `shortcut`, not both. Caps Lock can't be a key, since macOS locks i
 - Esc, the trigger again, a click outside (unless `closeOnClickOutside` is `false`), or switching Space or app closes it.
 - With right ⌘, ⌘Space may belong to Spotlight, so click instead.
 
-The glance takes clicks whenever it's open, but never takes keyboard focus from the app in front.
+The glance takes clicks whenever it's open, but never takes keyboard focus from the app in front. The one exception is [Spotlight](#spotlight) with its search field, which takes keys while it's open so you can type.
 
 ### Keyboard
 
@@ -109,6 +111,34 @@ A bar right under the lowest tile shows the keys for the picked row, and the key
 When a row's text is cut, in a rows or feed panel, picking it or holding the mouse over it shows the whole text under the row after a moment.
 
 When the glance opens, the first row picked is an error row, then a warning row, in a tile with `"focus": true`; then one anywhere; then the first row of a `focus` tile; then the first row. With `"focusOnOpen": "last"`, it starts on the row it was on when the glance closed, or the nearest one in its tile, and picks as above only when that tile is gone. The keys are taken from the app in front only while the glance is open.
+
+## Spotlight
+
+```jsonc
+"view": "spotlight"
+```
+
+The trigger opens a list instead of the board. The first tab, All, lists the first five rows of every panel on the board, under each panel's name, and then how many more it has: pick that row to open the panel's tab. While you search, All lists every match. After All comes a tab for each panel, in `panels` order, with all its rows under their groups.
+
+Spotlight lists what each panel type has: rows, table rows, timeline events, feed items, checklist steps, key-value pairs, grid rows, meters, stats, and the lines of a cli panel's output (newest first for a tail). A panel with nothing to list, like a chart or markdown, is a single row with its name, or says it's loading or what failed.
+
+Beside the list, a preview shows the picked row: its whole title and subtitle, its `note`, what the list leaves out (a table row's cells under their column titles, a feed item's author and time, a checklist step's state), the link or command Enter runs, and its actions with their keys. A row that stands for a whole panel shows the panel, drawn as on the board.
+
+With `"search": true`, the default, Spotlight has a search field. Typing filters every tab at once: a row matches when each word you type is in its title, subtitle, trailing text, group or panel name, ignoring case and accents. Each tab shows how many rows match. To let you type, Spotlight takes keyboard focus from the app in front while it stays open, without switching apps.
+
+| Key | |
+|---|---|
+| ↑ ↓ | The previous and next row. |
+| Tab, ⇧Tab | The next and previous tab. ← and → do the same while the search field is empty. |
+| ⌥ and ↑ ↓ | The first row of the previous or next panel, in All. `jumpKey` sets the modifier. |
+| Enter | What clicking the row does. ⌥Enter opens its `url`. |
+| ⌘K, ⌘C, ⌘R, ⌘O, ⌘ and a key | As on the board. ⌘C copies the selected text in the search field instead, if there is some. |
+| ⌘1–⌘9, ⌘0 | That panel's tab; ⌘0 is All. |
+| Esc | Closes the ⌘K list, then clears the search, then closes Spotlight. |
+
+With `"search": false` there's no field, and Spotlight never takes keyboard focus: the keys work as on the board, and 1–9 pick a panel's tab.
+
+In `hold` mode, press Space or click to keep Spotlight open before you type, as with the board. Settings → General → View sets both.
 
 ## Panels
 

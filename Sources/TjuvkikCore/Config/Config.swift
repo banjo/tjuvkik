@@ -5,6 +5,7 @@ public struct Config: Equatable, Sendable {
     public enum View: String, CaseIterable, Sendable { case bento, spotlight }
     public enum Layout: String, CaseIterable, Sendable { case framed, fullscreen, edges }
 
+    /// What the trigger shows: the board, or Spotlight's list and preview.
     public var view: View
     public var layout: Layout
     /// The theme in light mode, and in dark mode. The same theme twice when config.jsonc names one.
@@ -31,6 +32,9 @@ public struct Config: Equatable, Sendable {
     public var focusOnOpen = FocusOnOpen.urgent
     /// The modifier that, with an arrow, moves the keyboard focus to the next tile that way.
     public var jumpKey = JumpKey.option
+    /// Spotlight has a search field. Typing in it takes the keyboard from the app in front while
+    /// Spotlight stays open.
+    public var search = true
 
     public func theme(dark: Bool) -> Theme { dark ? darkTheme : lightTheme }
 

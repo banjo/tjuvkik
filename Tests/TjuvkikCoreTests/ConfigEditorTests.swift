@@ -61,6 +61,20 @@ struct ConfigEditorTests {
         #expect(try edit(text) { try $0.setJumpKey(.option) } == "{\n}")
     }
 
+    @Test func viewAndSearch() throws {
+        let text = try edit("{\n}") {
+            try $0.setView(.spotlight)
+            try $0.setSearch(false)
+        }
+        let config = try load(["config.json": text]).config
+        #expect(config.view == .spotlight)
+        #expect(!config.search)
+        #expect(try edit(text) {
+            try $0.setView(.bento)
+            try $0.setSearch(true)
+        } == "{\n}")
+    }
+
     @Test func pause() throws {
         let text = try edit("{\n  \"view\": \"bento\",\n}") { try $0.setPause(whenLocked: false, onLowPower: true) }
         #expect(text == """

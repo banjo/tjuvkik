@@ -9,7 +9,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let pause = PauseMonitor()
     private let notifier = Notifier()
     private let trigger = GlanceTrigger()
-    private lazy var glance = GlanceController(store: store, panels: panels)
+    private lazy var board = GlanceController(store: store, panels: panels)
+    private lazy var spotlight = SpotlightController(store: store, panels: panels)
+    /// What the trigger opens, from `"view"`.
+    private lazy var glance: any GlanceSurface = board
     private lazy var settings = SettingsWindowController(model: SettingsModel(store: store, panels: panels))
     private lazy var onboarding = OnboardingWindowController(model: settings.model)
     private var permissionPoll: Timer?
@@ -32,17 +35,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             glance.show(sticky: trigger.trigger.mode != .hold)
             settings.model.lastTriggered = Date()
         }
-        trigger.onHide = { [glance] in glance.hide() }
-        trigger.onPin = { [glance] in glance.stick() }
-        trigger.onKey = { [glance] key in glance.handle(key) }
-        trigger.onEscape = { [glance] in glance.escape() }
-        glance.onRowKeys = { [trigger] keys in trigger.setRowKeys(keys) }
-        glance.onCommand = { [weak self] tile, row, kind in self?.perform(kind, row: row, in: tile) }
-        glance.onMouseDown = { [trigger] in trigger.pin() }
-        // Hiding always goes through the gesture, so its state stays right.
-        glance.onDismiss = { [trigger] in trigger.dismiss() }
-        glance.onRowAction = { [weak self] tile, action in self?.perform(action, in: tile) }
-        glance.tileMenu = { [weak self] tile in self?.menu(for: tile) ?? TileMenu() }
+        trigger.onHide = { [weak self] in self?.glance.hide() }
+        trigger.onPin = { [weak self] in self?.glance.stick() }
+        trigger.onKey = { [weak self] key in self?.glance.handle(key) }
+        trigger.onEscape = { [weak self] in self?.glance.escape() ?? false }
+        wire(board)
+        wire(spotlight)
         store.onChange = { [weak self] config in self?.apply(config) }
         pause.onChange = { [weak self] in
             guard let self else { return }
@@ -63,11 +61,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         notifier.start()
         panels.start()
         apply(store.config)
-        glance.onShow = { [panels] in
-            panels.glanceOpen = true
-            panels.refreshDue()
-        }
-        glance.onHide = { [panels] in panels.glanceOpen = false }
         updateIcon()
         observeMenuBarPanel()
         observeErrors()
@@ -92,9 +85,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         terminationSignal = source
     }
 
+    /// The same for the board and Spotlight.
+    private func wire(_ surface: any GlanceSurface) {
+        surface.onRowKeys = { [trigger] keys in trigger.setRowKeys(keys) }
+        surface.onCommand = { [weak self] tile, row, kind in self?.perform(kind, row: row, in: tile) }
+        surface.onMouseDown = { [trigger] in trigger.pin() }
+        // Hiding always goes through the gesture, so its state stays right.
+        surface.onDismiss = { [trigger] in trigger.dismiss() }
+        surface.onRowAction = { [weak self] tile, action in self?.perform(action, in: tile) }
+        surface.tileMenu = { [weak self] tile in self?.menu(for: tile) ?? TileMenu() }
+        surface.onShow = { [panels] in
+            panels.glanceOpen = true
+            panels.refreshDue()
+        }
+        surface.onHide = { [panels] in panels.glanceOpen = false }
+    }
+
     private func apply(_ config: Config) {
+        let surface: any GlanceSurface = config.view == .spotlight ? spotlight : board
+        if surface !== glance {
+            trigger.dismiss()
+            glance = surface
+        }
         trigger.configure(config.trigger)
         trigger.jumpKey = config.jumpKey
+        // Spotlight's search field reads the keys itself.
+        trigger.navigatesWithHotKeys = config.view == .bento || !config.search
         glance.closesOnClickOutside = config.trigger.closeOnClickOutside
         startTrigger()
         panels.update(config.tiles)

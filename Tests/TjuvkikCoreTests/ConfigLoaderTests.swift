@@ -135,10 +135,17 @@ struct ConfigLoaderTests {
     }
 
     @Test func laterValuesFallBackWithAWarning() throws {
-        let loaded = try load(["config.json": #"{ "view": "spotlight", "layout": "edges" }"#])
-        #expect(loaded.config.view == .bento)
+        let loaded = try load(["config.json": #"{ "layout": "edges" }"#])
         #expect(loaded.config.layout == .framed)
-        #expect(loaded.warnings.map(\.path) == ["view", "layout"])
+        #expect(loaded.warnings.map(\.path) == ["layout"])
+    }
+
+    @Test func spotlightView() throws {
+        let loaded = try load(["config.json": #"{ "view": "spotlight" }"#])
+        #expect(loaded.config.view == .spotlight)
+        #expect(loaded.config.search)
+        #expect(loaded.warnings.isEmpty)
+        #expect(try load(["config.json": #"{ "search": false }"#]).config.search == false)
     }
 
     @Test func syntaxErrorIsReported() {

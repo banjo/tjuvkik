@@ -2,11 +2,13 @@ import AppKit
 import SwiftUI
 import TjuvkikCore
 
-/// The glance window: borderless, never takes focus, and shows over every Space and full-screen
-/// app. It takes clicks while it shows, and lets them through while it's hidden.
+/// The glance window: borderless, and shows over every Space and full-screen app. It takes clicks
+/// while it shows, and lets them through while it's hidden. It never activates Tjuvkik, and takes
+/// keyboard focus only while `takesKeyboard`, for Spotlight's search field.
 final class GlancePanel: NSPanel {
     /// Before a click inside is handled, so a held glance is pinned before the click acts.
     var onMouseDown: () -> Void = {}
+    var takesKeyboard = false
 
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -21,7 +23,7 @@ final class GlancePanel: NSPanel {
         animationBehavior = .none
     }
 
-    override var canBecomeKey: Bool { false }
+    override var canBecomeKey: Bool { takesKeyboard }
     override var canBecomeMain: Bool { false }
 
     override func sendEvent(_ event: NSEvent) {
@@ -124,8 +126,7 @@ enum GlanceKey {
 
 @MainActor
 final class GlanceController {
-    private let panel = GlancePanel()
-    private let dim = DimWindow()
+    private var window: GlanceWindow!
     private let model = GlanceModel()
     private let store: ConfigStore
     /// The focus targets as laid out, in board order.
@@ -142,24 +143,22 @@ final class GlanceController {
     private var tileFocus: [String: (entry: FocusEntry, ordinal: Int)] = [:]
     /// Where the pointer was when the keyboard last took over.
     private var keyboardMouse: CGPoint?
-    private var hideGeneration = 0
-    private var appearanceObservation: NSKeyValueObservation?
-    private var workspaceObservers: [any NSObjectProtocol] = []
-    private var outsideClicks: Any?
-    private var isShown = false
+    private var isShown: Bool { window.isShown }
     /// True while the glance stays open on its own: toggled, or pinned.
-    private(set) var isSticky = false
+    var isSticky: Bool { window.isSticky }
     /// A click outside, or between the tiles, dismisses a sticky glance.
-    var closesOnClickOutside = true
-    /// Tjuvkik was the active app when the glance stuck, as after setup: leaving it doesn't
-    /// count as switching apps.
-    private var stuckWhileActive = false
+    var closesOnClickOutside: Bool {
+        get { window.closesOnClickOutside }
+        set { window.closesOnClickOutside = newValue }
+    }
 
     var onShow: () -> Void = {}
     var onHide: () -> Void = {}
     var onMouseDown: () -> Void = {}
     /// A click outside, or a Space or app switch.
-    var onDismiss: () -> Void = {}
+    var onDismiss: () -> Void = {} {
+        didSet { window.onDismiss = onDismiss }
+    }
     /// A click on a row with a `url` or `command`.
     var onRowAction: (Tile, RowAction) -> Void = { _, _ in }
     /// A keyboard command on the focused row, or its tile when the row is nil.
@@ -190,56 +189,14 @@ final class GlanceController {
             guard let self, model.input != .mouse, NSEvent.mouseLocation != keyboardMouse else { return }
             model.input = .mouse
         }
-        panel.contentView = hosting
-        panel.onMouseDown = { [weak self] in self?.onMouseDown() }
-        model.systemIsDark = Self.isDark(NSApp.effectiveAppearance)
-        // KVO may call this off the main thread.
-        appearanceObservation = NSApp.observe(\.effectiveAppearance, options: [.new]) { @Sendable [weak self] _, _ in
-            Task { @MainActor in
-                guard let self else { return }
-                self.model.systemIsDark = Self.isDark(NSApp.effectiveAppearance)
-            }
-        }
-        let workspace = NSWorkspace.shared.notificationCenter
-        workspaceObservers = [
-            workspace.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated {
-                    guard let self, self.isShown else { return }
-                    self.onDismiss()
-                }
-            },
-            workspace.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
-                let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
-                let isSelf = app?.processIdentifier == ProcessInfo.processInfo.processIdentifier
-                MainActor.assumeIsolated {
-                    guard let self, self.isSticky, !isSelf else { return }
-                    if self.stuckWhileActive {
-                        self.stuckWhileActive = false
-                        return
-                    }
-                    self.onDismiss()
-                }
-            },
-        ]
-    }
-
-    /// At once with Reduce Motion on.
-    private func fade(_ window: NSWindow, to alpha: CGFloat, duration: TimeInterval) {
-        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return window.alphaValue = alpha }
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = duration
-            window.animator().alphaValue = alpha
-        }
-    }
-
-    private static func isDark(_ appearance: NSAppearance) -> Bool {
-        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        window = GlanceWindow(content: hosting)
+        window.panel.onMouseDown = { [weak self] in self?.onMouseDown() }
+        window.onAppearanceChange = { [model] dark in model.systemIsDark = dark }
+        model.systemIsDark = window.systemIsDark
     }
 
     func show(sticky: Bool) {
         guard let screen = FocusedScreen.current() else { return }
-        hideGeneration += 1
-        isShown = true
         let config = store.config
         let board = BentoGeometry.board(config.grid, theme: config.theme(dark: model.systemIsDark))
         let framed = GlancePlacement.framed(
@@ -248,17 +205,7 @@ final class GlanceController {
             zoom: config.zoom
         )
         model.zoom = framed.zoom
-        panel.setFrame(framed.rect, display: false)
-        panel.alphaValue = 1
-        panel.ignoresMouseEvents = false
-        if config.dim > 0 {
-            dim.setFrame(screen.frame, display: false)
-            dim.orderFrontRegardless()
-            fade(dim, to: config.dim, duration: 0.15)
-        } else {
-            dim.orderOut(nil)
-        }
-        panel.orderFrontRegardless()
+        window.show(framed.rect, on: screen, dim: config.dim)
         model.isVisible = true
         useKeyboard()
         focusFirst()
@@ -268,50 +215,22 @@ final class GlanceController {
 
     /// After a pin: the glance stays open until a click outside or a Space or app switch.
     func stick() {
-        guard isShown, !isSticky else { return }
-        isSticky = true
+        guard window.stick() else { return }
         model.showsFocus = true
-        stuckWhileActive = NSApp.isActive
-        guard closesOnClickOutside, outsideClicks == nil else { return }
-        // Only clicks that go to other apps reach a global monitor: exactly the ones outside.
-        outsideClicks = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { @Sendable [weak self] _ in
-            Task { @MainActor in
-                guard let self, self.isSticky else { return }
-                self.onDismiss()
-            }
-        }
     }
 
     func hide() {
-        hideGeneration += 1
         if isShown, let focused = model.focused { lastFocus = (focused, focusOrdinal) }
-        isShown = false
-        isSticky = false
         model.showsFocus = false
         model.menu = nil
         model.scroll = [:]
         scrolledByKey = nil
-        stuckWhileActive = false
-        panel.ignoresMouseEvents = true
-        if let outsideClicks { NSEvent.removeMonitor(outsideClicks) }
-        outsideClicks = nil
-        onHide()
-        let generation = hideGeneration
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
-            panel.animator().alphaValue = 0
-            if dim.isVisible { dim.animator().alphaValue = 0 }
-        } completionHandler: {
-            MainActor.assumeIsolated {
-                // A show during the fade wins.
-                guard generation == self.hideGeneration else { return }
-                self.panel.orderOut(nil)
-                self.dim.orderOut(nil)
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) { self.model.isVisible = false }
-            }
+        window.hide { [model] in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { model.isVisible = false }
         }
+        onHide()
     }
 
     // MARK: Keyboard

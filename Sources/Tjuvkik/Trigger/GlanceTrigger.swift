@@ -37,6 +37,14 @@ final class GlanceTrigger {
     private static let rowKeyID: UInt32 = 200
     private var rowKeys: [String] = []
     private var takesNavigationKeys = false
+    /// False while the glance reads the keyboard itself, as Spotlight's search field does: the
+    /// navigation keys are then left to it. Esc and the trigger are still taken.
+    var navigatesWithHotKeys = true {
+        didSet {
+            guard !navigatesWithHotKeys, takesNavigationKeys else { return }
+            releaseNavigationKeys()
+        }
+    }
     /// The navigation keys as registered, by their offset from `navigationID`.
     private var registeredKeys: [(keyCode: Int, modifiers: Int, key: GlanceKey)] = []
     /// Held with an arrow, it jumps to the next tile that way.
@@ -194,6 +202,7 @@ final class GlanceTrigger {
     /// Arrows, Tab, Enter, Space, ⌘R, ⌘O and 1–9 move around the glance while it stays open. They're
     /// taken from the app in front only then.
     private func takeNavigationKeys() {
+        guard navigatesWithHotKeys else { return }
         takesNavigationKeys = true
         registeredKeys = navigationKeys
         for (offset, entry) in registeredKeys.enumerated() {

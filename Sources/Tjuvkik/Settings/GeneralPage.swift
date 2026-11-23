@@ -32,6 +32,29 @@ struct GeneralPage: View {
                 }
             }
 
+            Section {
+                Picker("Show", selection: Binding(
+                    get: { config.view },
+                    set: { view in model.change { try $0.setView(view) } }
+                )) {
+                    Text("Board").tag(Config.View.bento)
+                    Text("Spotlight").tag(Config.View.spotlight)
+                }
+                .pickerStyle(.segmented)
+                Toggle("Search in Spotlight", isOn: Binding(
+                    get: { config.search },
+                    set: { on in model.change { try $0.setSearch(on) } }
+                ))
+                .disabled(config.view != .spotlight)
+            } header: {
+                Text("View")
+            } footer: {
+                Text(config.view == .spotlight
+                    ? "Every panel's rows in one list, with a tab per panel and the picked row's panel beside it. To type, Spotlight takes the keyboard from the app in front while it's open."
+                    : "The panels as tiles on a grid.")
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Glance") {
                 Picker("Dim the screen behind it", selection: Binding(
                     get: { config.dim },

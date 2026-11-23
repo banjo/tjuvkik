@@ -19,12 +19,9 @@ public enum ConfigLoader {
 
         var view = Config.View.bento
         if let value = raw.view {
-            switch Config.View(rawValue: value) {
-            case .bento: break
-            case .spotlight: files.warning(file, "view", "\"spotlight\" isn't available yet, using \"bento\"")
-            case nil: files.error(file, "view", "unknown view \"\(value)\", expected \"bento\" or \"spotlight\"")
+            if let parsed = Config.View(rawValue: value) { view = parsed } else {
+                files.error(file, "view", "unknown view \"\(value)\", expected \"bento\" or \"spotlight\"")
             }
-            view = .bento
         }
 
         var layout = Config.Layout.framed
@@ -139,7 +136,7 @@ public enum ConfigLoader {
             view: view, layout: layout, lightThemeName: lightName, darkThemeName: darkName, lightTheme: light, darkTheme: dark,
             trigger: trigger, launchAtLogin: raw.launchAtLogin ?? true, tiles: tiles, menuBar: menuBar,
             pause: pause, notifications: notifications, grid: grid, zoom: zoom, dim: dim, focusOnOpen: focusOnOpen,
-            jumpKey: jumpKey
+            jumpKey: jumpKey, search: raw.search ?? true
         )
         return .success(LoadedConfig(config: config, warnings: files.issues))
     }

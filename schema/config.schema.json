@@ -13,7 +13,7 @@
         "spotlight"
       ],
       "default": "bento",
-      "description": "What holding fn shows. \"spotlight\" comes later."
+      "description": "What the trigger shows. bento: the board of tiles. spotlight: a list of every panel's rows, a tab per panel, with the picked row's panel beside it."
     },
     "layout": {
       "enum": [
@@ -180,6 +180,11 @@
       ],
       "default": "option",
       "description": "Held with an arrow, it jumps to the next tile that way instead of the next row. Tab and Shift-Tab go to the next and previous tile either way. none: only Tab."
+    },
+    "search": {
+      "type": "boolean",
+      "default": true,
+      "description": "Spotlight has a search field. While Spotlight stays open you type in it, so it takes the keyboard from the app in front until it closes. false: no field, and the keys work as in the board."
     },
     "menuBar": {
       "anyOf": [

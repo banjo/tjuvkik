@@ -35,7 +35,8 @@ public enum DefaultConfig {
     {
       "$schema": "./schemas/config.schema.json",
 
-      // "bento" for now. "spotlight" comes later.
+      // "bento" shows the board. "spotlight" lists every panel's rows with a search field, and
+      // shows the picked row's panel beside the list.
       "view": "bento",
       // "framed" for now. "fullscreen" and "edges" come later.
       "layout": "framed",
