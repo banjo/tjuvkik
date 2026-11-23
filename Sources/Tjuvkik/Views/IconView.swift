@@ -24,20 +24,35 @@ struct IconView: View {
     }
 }
 
-/// The system spinner's look, its eight spokes turning a step at a time. Drawn, not an AppKit
-/// `ProgressView`, so it takes the tone and shows in `tjuvkik preview` too.
+/// The system spinner's look: eight spokes, fading behind the brightest one as it steps round.
+/// Drawn, not an AppKit `ProgressView`, so it takes the tone and shows in `tjuvkik preview` too.
+/// The `progress.indicator` symbol can't do this: its spokes are all alike in one color, so
+/// turning it by a spoke looks the same.
 private struct SpinnerView: View {
     let size: CGFloat
     let color: Color
     let theme: Theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 12)) { context in
+        let side = theme.z(size * 0.95)
+        TimelineView(.animation(minimumInterval: 1 / 12, paused: reduceMotion)) { context in
             let step = Int(context.date.timeIntervalSinceReferenceDate * 12) % 8
-            Image(systemName: "progress.indicator")
-                .font(theme.font(size * 0.92, weight: .medium))
-                .foregroundStyle(color)
-                .rotationEffect(.degrees(Double(step) * 45))
+            Canvas { canvas, area in
+                let center = CGPoint(x: area.width / 2, y: area.height / 2)
+                let radius = min(area.width, area.height) / 2
+                let width = max(radius * 0.22, 1.2)
+                for spoke in 0..<8 {
+                    // The lead spoke is solid; each one behind it is fainter.
+                    let behind = (step - spoke + 8) % 8
+                    let angle = Double(spoke) * .pi / 4 - .pi / 2
+                    var path = Path()
+                    path.move(to: CGPoint(x: center.x + cos(angle) * radius * 0.45, y: center.y + sin(angle) * radius * 0.45))
+                    path.addLine(to: CGPoint(x: center.x + cos(angle) * (radius - width / 2), y: center.y + sin(angle) * (radius - width / 2)))
+                    canvas.stroke(path, with: .color(color.opacity(1 - Double(behind) * 0.1)), style: StrokeStyle(lineWidth: width, lineCap: .round))
+                }
+            }
+            .frame(width: side, height: side)
         }
     }
 }
