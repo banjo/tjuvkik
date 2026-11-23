@@ -1,5 +1,15 @@
 # tjuvkik
 
+## 0.1.6
+
+### Patch Changes
+
+- aecff0e: Row groups can have a label: `"groups": { "Reviews": { "label": "1 waiting", "tone": "warning" } }` shows it in a pill at the right of the heading, after a line from the name.
+- b602b14: An `icon` can be an SF Symbol in the row's tone, `"sf:hammer.fill"`, one that moves, `"sf:gearshape.fill:rotate"`, or a loading spinner, `"spinner"`. Emoji and text work as before. `tjuvkik run` warns about symbols and effects it doesn't know.
+- d0de73a: A `"spinner"` in the menu bar turns too, like the one in the tile. It holds still with Reduce Motion on.
+- 8529133: The `"spinner"` icon visibly turns: its spokes fade behind the brightest one, like the system's spinner. Before, all spokes looked alike, so it seemed to stand still.
+- 6ef4d49: Run Now and ⌘R restart a stream panel, and so does a row's command or action, so a stream tile shows what the command changed at once instead of on its next line. Settings → Board's Run Now works for stream panels too.
+
 ## 0.1.5
 
 ### Patch Changes
