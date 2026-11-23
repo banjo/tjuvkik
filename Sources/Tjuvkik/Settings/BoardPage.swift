@@ -297,7 +297,6 @@ private struct TileForm: View {
         Section {
             HStack {
                 Button("Run Now") { model.panels.runNow(entry.resolvedID) }
-                    .disabled(tile?.mode == .stream)
                 Spacer()
                 Button("Open panel.jsonc") { SettingsFiles.open(SettingsFiles.panelFile(entry.panel, in: model.store.directory)) }
                 Button("Show in Finder") { SettingsFiles.reveal(SettingsFiles.panelFile(entry.panel, in: model.store.directory)) }

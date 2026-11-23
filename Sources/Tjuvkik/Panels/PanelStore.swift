@@ -17,6 +17,8 @@ final class PanelStore {
         fileprivate(set) var lastRun: Date?
         fileprivate var stream: CommandStream?
         fileprivate var streamStarted: Date?
+        /// Counts stream starts, so a stopped stream's late lines are dropped.
+        fileprivate var streamRun = 0
         fileprivate var restartDelay: Double = 1
         fileprivate var restartAt: Date?
         /// A cli stream's latest lines.
@@ -95,13 +97,21 @@ final class PanelStore {
         }
     }
 
-    /// Runs an interval tile now, whatever its schedule, or reads a file tile again. Not a stream tile.
+    /// Runs an interval tile now, whatever its schedule, reads a file tile again, or restarts a stream tile.
     func runNow(_ id: String) {
-        guard let environment, let tile = tiles.first(where: { $0.id == id }), let state = states[id], !state.running, !isBlocked(tile) else { return }
+        guard let environment, let tile = tiles.first(where: { $0.id == id }), let state = states[id], !isBlocked(tile) else { return }
+        if tile.mode == .stream, tile.file == nil {
+            state.stream?.stop()
+            states[id]?.lines = []
+            states[id]?.restartDelay = 1
+            stream(tile, environment: environment)
+            return
+        }
+        guard !state.running else { return }
         if let file = tile.file {
             states[id]?.fileDate = nil
             read(file, for: tile)
-        } else if tile.mode == .interval {
+        } else {
             run(tile, environment: environment)
         }
     }
@@ -164,6 +174,8 @@ final class PanelStore {
     private func stream(_ tile: Tile, environment: [String: String]) {
         let key = tile.id
         let signature = Self.signature(tile)
+        let run = (states[key]?.streamRun ?? 0) + 1
+        states[key]?.streamRun = run
         states[key]?.running = true
         states[key]?.streamStarted = Date()
         states[key]?.restartAt = nil
@@ -171,13 +183,13 @@ final class PanelStore {
             tile.command, in: tile.directory, environment: Self.environment(environment, tile, run: "stream"),
             onLine: { line in
                 Task { @MainActor [weak self] in
-                    guard let self, self.states[key]?.signature == signature else { return }
+                    guard let self, self.states[key]?.signature == signature, self.states[key]?.streamRun == run else { return }
                     self.receive(line, in: key, tile: tile)
                 }
             },
             onExit: { exit in
                 Task { @MainActor [weak self] in
-                    guard let self, self.states[key]?.signature == signature, !exit.stopped else { return }
+                    guard let self, self.states[key]?.signature == signature, self.states[key]?.streamRun == run, !exit.stopped else { return }
                     self.streamExited(key, exit: exit)
                 }
             }

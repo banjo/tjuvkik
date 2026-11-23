@@ -105,7 +105,7 @@ Don't put tokens in options: `config.jsonc` often ends up in a dotfiles repo. Re
 ## Modes
 
 - **`interval`** runs the command every `every`.
-- **`stream`** keeps the command running. A script prints one JSON document per line, each time something changes, and the tile updates at once. A cli panel shows the latest lines, like `tail -f`. `every` and `timeout` don't apply.
+- **`stream`** keeps the command running. A script prints one JSON document per line, each time something changes, and the tile updates at once. A cli panel shows the latest lines, like `tail -f`. `every` and `timeout` don't apply. Run Now, ⌘R and a row's command restart it, so a script can read its state again.
 
 ## Background
 
