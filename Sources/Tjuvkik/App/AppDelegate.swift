@@ -13,6 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var settings = SettingsWindowController(model: SettingsModel(store: store, panels: panels))
     private lazy var onboarding = OnboardingWindowController(model: settings.model)
     private var permissionPoll: Timer?
+    /// Steps a spinner in the menu bar round while one shows.
+    private var spinnerTimer: Timer?
+    private var spinnerStep = 0
     private var terminationSignal: (any DispatchSourceSignal)?
     private var launchAtLoginError: String?
 
@@ -132,7 +135,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// replaces the grid: "❓ 2  ⇡ 3".
     private func updateIcon() {
         guard let button = statusItem?.button else { return }
-        let title = menuBarPanels.title
+        let panels = menuBarPanels
+        let title = panels.title(spinnerStep: spinnerStep)
+        updateSpinner(spins: panels.spins)
         let symbol: String? = !store.errors.isEmpty ? "exclamationmark.triangle" : (title.length == 0 ? "square.grid.2x2" : nil)
         let icon = symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: "Tjuvkik") }
         icon?.isTemplate = true
@@ -141,6 +146,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.attributedTitle = title.length > 0 && icon != nil
             ? NSAttributedString(string: " ").appending(title)
             : title
+    }
+
+    /// Runs the spinner's timer while the menu bar shows one, at the spinner's 12 steps a second.
+    /// With Reduce Motion on it holds still.
+    private func updateSpinner(spins: Bool) {
+        let spins = spins && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if spins == (spinnerTimer != nil) { return }
+        spinnerTimer?.invalidate()
+        spinnerTimer = nil
+        guard spins else { return }
+        let timer = Timer(timeInterval: 1.0 / 12, repeats: true) { _ in
+            MainActor.assumeIsolated {
+                self.spinnerStep = (self.spinnerStep + 1) % 8
+                self.updateIcon()
+            }
+        }
+        // Common modes, so it keeps turning while the menu is open.
+        RunLoop.main.add(timer, forMode: .common)
+        spinnerTimer = timer
     }
 
     /// Starts watching the trigger. A key needs Input Monitoring: ask, and start once it's granted.

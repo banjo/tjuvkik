@@ -28,7 +28,15 @@ struct MenuBarPanels {
     }
 
     /// "❓ 2  ⇡ 3", each part in its tone.
-    var title: NSAttributedString {
+    var title: NSAttributedString { title(spinnerStep: 0) }
+
+    /// Whether the menu bar shows a spinner, so it has to be stepped round.
+    var spins: Bool {
+        entries.contains { !$0.menuBar.title.isEmpty && Icon($0.menuBar.icon) == .spinner }
+    }
+
+    /// The title, with spinners' lead spoke at `spinnerStep`, of 8.
+    func title(spinnerStep: Int) -> NSAttributedString {
         let title = NSMutableAttributedString()
         for entry in entries where !entry.menuBar.title.isEmpty {
             if title.length > 0 { title.append(NSAttributedString(string: "  ")) }
@@ -38,7 +46,7 @@ struct MenuBarPanels {
             if let color { attributes[.foregroundColor] = color }
             let icon = Icon(entry.menuBar.icon)
             if let icon {
-                title.append(Self.string(for: icon, font: font, color: color, attributes: attributes))
+                title.append(Self.string(for: icon, font: font, color: color, attributes: attributes, spinnerStep: spinnerStep))
             }
             if let text = entry.menuBar.text, !text.isEmpty {
                 title.append(NSAttributedString(string: icon == nil ? text : " \(text)", attributes: attributes))
@@ -47,22 +55,45 @@ struct MenuBarPanels {
         return title
     }
 
-    /// An icon inline in the menu bar's text. The menu bar doesn't animate, so a spinner is a still
-    /// symbol and a symbol's effect is left out.
-    private static func string(for icon: Icon, font: NSFont, color: NSColor?, attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
-        let name: String
+    /// An icon inline in the menu bar's text. A spinner's lead spoke is at `spinnerStep`; a
+    /// symbol's effect is left out.
+    private static func string(for icon: Icon, font: NSFont, color: NSColor?, attributes: [NSAttributedString.Key: Any],
+                               spinnerStep: Int) -> NSAttributedString {
+        let image: NSImage?
         switch icon {
         case .text(let text): return NSAttributedString(string: text, attributes: attributes)
-        case .symbol(let symbol, _): name = symbol
-        case .spinner: name = "progress.indicator"
+        case .symbol(let symbol, _): image = symbolImage(symbol, pointSize: font.pointSize, color: color ?? .labelColor)
+        case .spinner: image = spinnerImage(step: spinnerStep, pointSize: font.pointSize, color: color ?? .labelColor)
         }
-        guard let image = symbolImage(name, pointSize: font.pointSize, color: color ?? .labelColor) else {
-            return NSAttributedString()
-        }
+        guard let image else { return NSAttributedString() }
         let attachment = NSTextAttachment()
         attachment.image = image
         attachment.bounds = CGRect(x: 0, y: (font.capHeight - image.size.height) / 2, width: image.size.width, height: image.size.height)
         return NSAttributedString(attachment: attachment)
+    }
+
+    /// The spinner as `SpinnerView` draws it: eight spokes, fading behind the one at `step`. A
+    /// template without `color`, so it follows the menu's text color.
+    private static func spinnerImage(step: Int, pointSize: CGFloat, color: NSColor?) -> NSImage {
+        let side = (pointSize * 1.05).rounded()
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: true) { rect in
+            let radius = rect.width / 2
+            let width = max(radius * 0.22, 1.2)
+            for spoke in 0..<8 {
+                let behind = (step - spoke + 8) % 8
+                let angle = Double(spoke) * .pi / 4 - .pi / 2
+                let path = NSBezierPath()
+                path.lineWidth = width
+                path.lineCapStyle = .round
+                path.move(to: NSPoint(x: rect.midX + cos(angle) * radius * 0.45, y: rect.midY + sin(angle) * radius * 0.45))
+                path.line(to: NSPoint(x: rect.midX + cos(angle) * (radius - width / 2), y: rect.midY + sin(angle) * (radius - width / 2)))
+                (color ?? .black).withAlphaComponent(1 - Double(behind) * 0.1).setStroke()
+                path.stroke()
+            }
+            return true
+        }
+        image.isTemplate = color == nil
+        return image
     }
 
     /// A symbol in `color`, or a template that follows the menu's text color without one.
@@ -96,7 +127,7 @@ struct MenuBarPanels {
         )
         switch icon {
         case .symbol(let name, _): item.image = symbolImage(name, pointSize: NSFont.menuFont(ofSize: 0).pointSize, color: row.tone?.menuBarColor)
-        case .spinner: item.image = symbolImage("progress.indicator", pointSize: NSFont.menuFont(ofSize: 0).pointSize, color: row.tone?.menuBarColor)
+        case .spinner: item.image = spinnerImage(step: 0, pointSize: NSFont.menuFont(ofSize: 0).pointSize, color: row.tone?.menuBarColor)
         case .text, nil: break
         }
         if let trailing = row.trailing {

@@ -120,7 +120,7 @@ Every `icon`, in rows, the summary, the menu bar, its menu and feed items, takes
 ] }
 ```
 
-- Symbols hold still with Reduce Motion on, and in the menu bar, where a spinner is a still `progress.indicator`.
+- Symbols and spinners hold still with Reduce Motion on. In the menu bar, symbols hold still and a spinner turns; in its menu, a spinner holds still too.
 - The automatic menu bar line leaves symbols and spinners out of its text.
 - `tjuvkik run` warns about a symbol this Mac doesn't have and an effect it doesn't know. The tile then draws the symbol without it, or nothing.
 
