@@ -37,7 +37,13 @@ struct GlanceCommand: Equatable {
             for action in row.actions.actions {
                 commands.append(GlanceCommand(title: action.title, keys: action.key.map { "⌘\($0.uppercased())" } ?? "", kind: .action(action)))
             }
-            commands.append(GlanceCommand(title: row.hasURL ? "Copy Link" : "Copy Title", keys: "⌘C", kind: .copy))
+            // Left out of the list when one of the row's actions already copies the same, or has
+            // its name. ⌘C still copies.
+            let copied = row.hasURL ? row.url : row.title
+            let title = row.hasURL ? "Copy Link" : "Copy Title"
+            if !row.actions.actions.contains(where: { $0.copy == copied || $0.title == title }) {
+                commands.append(GlanceCommand(title: title, keys: "⌘C", kind: .copy))
+            }
         }
         commands += [
             GlanceCommand(title: "Refresh", keys: "⌘R", kind: .refresh),
