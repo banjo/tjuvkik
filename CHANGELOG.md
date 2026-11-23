@@ -1,5 +1,13 @@
 # tjuvkik
 
+## 0.1.7
+
+### Patch Changes
+
+- 1b8e8f8: ⌘K no longer lists Copy Link twice when one of the row's actions already copies its link.
+- 9b1f835: The picked row follows its row when a panel updates, also when its title or actions change, such as a terminal that starts working or gets pinned. Before, the pick stayed where it was and landed on another row.
+- ad8408e: Spotlight: `"view": "spotlight"` opens a list instead of the board, with an All tab for every panel's rows and a tab per panel. Beside it, a preview shows the picked row in full, with what Enter does and its actions. A search field filters every tab as you type; turn it off with `"search": false`. Settings → General → View sets both.
+
 ## 0.1.6
 
 ### Patch Changes
