@@ -125,7 +125,8 @@ public enum SpotlightSearch {
         var seen: [String: Int] = [:]
         return items.map { item in
             var item = item
-            let key = "\(item.tile)\u{1F}\(item.url ?? item.command ?? item.title)"
+            let target = [item.url, item.command].compactMap { $0 }.first { !$0.isEmpty } ?? item.title
+            let key = "\(item.tile)\u{1F}\(target)"
             let ordinal = seen[key, default: 0]
             seen[key] = ordinal + 1
             item.id = "\(key)\u{1F}\(ordinal)"

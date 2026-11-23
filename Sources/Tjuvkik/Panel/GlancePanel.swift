@@ -348,14 +348,20 @@ final class GlanceController {
 
     private func focus(_ index: Int) {
         let entry = targets[index]
-        focusOrdinal = targets[..<index].count { $0.tile == entry.tile && $0.action == entry.action }
+        focusOrdinal = targets[..<index].count { $0.tile == entry.tile && $0.action?.identity == entry.action?.identity }
         focusedEntry = entry
     }
 
     private var focusedEntry: FocusEntry? {
         get { model.focused }
         set {
-            if newValue?.tile != model.focused?.tile || newValue?.action != model.focused?.action { model.menu = nil }
+            if newValue?.tile != model.focused?.tile || newValue?.action?.identity != model.focused?.action?.identity {
+                model.menu = nil
+            } else if newValue?.action != model.focused?.action, let menu = model.menu {
+                // The same row with new actions: the list shows them.
+                let commands = GlanceCommand.all(for: newValue?.action)
+                model.menu = ActionMenu(commands: commands, selected: min(menu.selected, max(commands.count - 1, 0)))
+            }
             model.focused = newValue
             onRowKeys(newValue?.action?.actions.actions.compactMap(\.key) ?? [])
         }
@@ -363,13 +369,13 @@ final class GlanceController {
 
     private var focusedIndex: Int? {
         guard let focused = model.focused else { return nil }
-        return targets.indices.filter { targets[$0].tile == focused.tile && targets[$0].action == focused.action }.dropFirst(focusOrdinal).first
+        return targets.indices.filter { targets[$0].tile == focused.tile && targets[$0].action?.identity == focused.action?.identity }.dropFirst(focusOrdinal).first
     }
 
     /// The same row, or the nearest one in its tile when it changed.
     private func index(like entry: FocusEntry, ordinal: Int) -> Int? {
         let inTile = targets.indices.filter { targets[$0].tile == entry.tile }
-        if let same = inTile.filter({ targets[$0].action == entry.action }).dropFirst(ordinal).first { return same }
+        if let same = inTile.filter({ targets[$0].action?.identity == entry.action?.identity }).dropFirst(ordinal).first { return same }
         return inTile.min { abs(targets[$0].frame.midY - entry.frame.midY) < abs(targets[$1].frame.midY - entry.frame.midY) }
     }
 

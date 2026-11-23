@@ -14,6 +14,9 @@ struct RowAction: Equatable {
     /// A click does something.
     var clicks: Bool { hasCommand || hasURL }
     var isEmpty: Bool { !clicks && actions.actions.isEmpty }
+    /// Which row it is, while its title, tone or actions change: its url, else its command, else
+    /// its title.
+    var identity: String { hasURL ? url! : hasCommand ? command! : title }
 }
 
 extension EnvironmentValues {
