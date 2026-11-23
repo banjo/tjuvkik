@@ -42,6 +42,16 @@ struct ScriptOutputTests {
         #expect(content.rows[0].note == "Bash: rm -rf node_modules")
     }
 
+    @Test func groupLabels() throws {
+        let content = try parse("""
+        { "groups": { "queenbolt": { "label": "1 waiting", "tone": "warning" }, "dotfiles": { "label": "2" } },
+          "rows": [{ "title": "a", "group": "queenbolt" }] }
+        """).get()
+        #expect(content.groups["queenbolt"] == .init(label: "1 waiting", tone: .warning))
+        #expect(content.groups["dotfiles"] == .init(label: "2"))
+        #expect(try parse(#"{ "rows": [] }"#).get().groups.isEmpty)
+    }
+
     @Test func onlyRowsAreRequired() throws {
         let content = try parse(#"{ "rows": [{ "title": "a" }] }"#).get()
         #expect(content.hero == nil)

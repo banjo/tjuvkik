@@ -98,6 +98,17 @@ public struct RowsContent: Equatable, Sendable, Decodable {
         public var tone: Tone?
     }
 
+    /// What a group's heading shows beside its name, like "1 waiting".
+    public struct GroupLabel: Equatable, Sendable, Decodable {
+        public var label: String?
+        public var tone: Tone?
+
+        public init(label: String? = nil, tone: Tone? = nil) {
+            self.label = label
+            self.tone = tone
+        }
+    }
+
     public struct Row: Equatable, Sendable, Decodable {
         public var icon: String?
         public var title: String
@@ -180,24 +191,29 @@ public struct RowsContent: Equatable, Sendable, Decodable {
     /// 0 to 1.
     public var progress: Double?
     public var rows: [Row]
+    /// Labels for the group headings, by group name. A group without one gets just its name.
+    public var groups: [String: GroupLabel]
     public var menuBarSetting: MenuBarSetting
     public var notify: [PanelNotification] = []
 
-    public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row], menuBar: MenuBarSetting = .automatic) {
+    public init(hero: Hero? = nil, summary: [Chip]? = nil, progress: Double? = nil, rows: [Row], groups: [String: GroupLabel] = [:],
+                menuBar: MenuBarSetting = .automatic) {
         self.hero = hero
         self.summary = summary
         self.progress = progress
         self.rows = rows
+        self.groups = groups
         self.menuBarSetting = menuBar
     }
 
-    private enum CodingKeys: String, CodingKey { case hero, progress, rows }
+    private enum CodingKeys: String, CodingKey { case hero, progress, rows, groups }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         hero = try container.decodeIfPresent(Hero.self, forKey: .hero)
         progress = try container.decodeIfPresent(Double.self, forKey: .progress)
         rows = try container.decode([Row].self, forKey: .rows)
+        groups = try container.decodeIfPresent([String: GroupLabel].self, forKey: .groups) ?? [:]
         let extras = try PanelExtras(from: decoder)
         summary = extras.summary
         menuBarSetting = extras.menuBarSetting

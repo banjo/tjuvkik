@@ -38,6 +38,9 @@ Every field:
       "url": "https://github.com/acme/app/pull/1284"
     }
   ],
+  "groups": {
+    "Reviews": { "label": "1 waiting", "tone": "warning" }
+  },
   "menuBar": {
     "icon": "👀",
     "text": "2",
@@ -65,6 +68,7 @@ Only `rows`, each row's `title` and the hero's `value` are required. A `stream` 
 | `summary` | A line of small counts. Each has `icon`, `value`, `label` and `tone`, all optional. |
 | `progress` | A bar, from 0 to 1. |
 | `rows` | As many as fit, in order. |
+| `groups` | A label for a group's heading, by its name: `label` and `tone`. Shown in a pill at the right, after a line from the name. A group without one gets just its name. |
 | `menuBar` | What the panel shows in the menu bar. See [Menu bar](#menu-bar). |
 | `notify` | macOS notifications, one per `id`. See [Notifications](notifications.md). |
 

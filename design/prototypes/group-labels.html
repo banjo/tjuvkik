@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tjuvkik — group labels</title>
+<style>
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* dark-glass, as in Theme.swift */
+  --ink: 255, 255, 255;
+  --panel: rgba(30, 31, 41, 0.55);
+  --well: rgba(0, 0, 0, 0.28);
+  --fg: #f8f8f2;
+  --muted: rgba(248, 248, 242, 0.58);
+  --faint: rgba(248, 248, 242, 0.36);
+  --line: rgba(255, 255, 255, 0.08);
+  --warning: #ffb86c;
+  --error: #ff6e6e;
+  --success: #50fa7b;
+  --info: #8be9fd;
+  --accent: #bd93f9;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: #111; color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Desktop (context, not judged) ---------- */
+.desk {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 12% 88%, #6b3fa0 0%, transparent 60%),
+    radial-gradient(1000px 700px at 88% 8%, #1f6f8b 0%, transparent 55%),
+    radial-gradient(900px 900px at 72% 96%, #b4466b 0%, transparent 55%),
+    #1b1530;
+}
+.menubar {
+  position: fixed; top: 0; left: 0; right: 0; height: 32px; z-index: 5;
+  display: flex; align-items: center; gap: 18px; padding: 0 16px;
+  font-size: 13px; color: #fff;
+  background: rgba(20, 16, 36, 0.35);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+}
+.menubar .spacer { flex: 1; }
+.notch { position: fixed; top: 0; left: 50%; width: 196px; height: 32px; margin-left: -98px; z-index: 6; background: #000; border-radius: 0 0 12px 12px; }
+.backdrop { position: fixed; inset: 0; background: rgba(10, 8, 20, 0.28); }
+
+/* ---------- Board ---------- */
+.board {
+  position: fixed; top: 12vh; left: 50%; transform: translateX(-50%);
+  width: min(1080px, calc(100vw - 48px)); height: min(580px, 68vh);
+  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px;
+}
+.tile {
+  position: relative; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; padding: 12px;
+  border-radius: 16px; overflow: hidden;
+  background: var(--panel);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8); backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow: 0 0 0 1px var(--line) inset, 0 18px 40px rgba(0, 0, 0, 0.18);
+  animation: tile-in 220ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * 30ms);
+}
+@keyframes tile-in { from { opacity: 0; transform: scale(0.97); } }
+@media (prefers-reduced-motion: reduce) {
+  .tile { animation-name: tile-fade; }
+  @keyframes tile-fade { from { opacity: 0; } }
+}
+.tile-h { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex: none; }
+.tile-h .title { font-size: 12px; font-weight: 600; color: var(--muted); }
+.tile-h .kind { flex: none; font: 500 9.5px/1 var(--mono); color: var(--faint); padding: 2px 5px; border-radius: 4px; background: var(--well); }
+.tile-h .every { margin-left: auto; flex: none; font-size: 10.5px; color: var(--faint); }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.more { margin-top: auto; padding-top: 4px; font-size: 10.5px; color: var(--faint); text-align: center; }
+
+/* Tones */
+[data-tone=warning] { --tone: var(--warning); }
+[data-tone=error] { --tone: var(--error); }
+[data-tone=success] { --tone: var(--success); }
+[data-tone=info] { --tone: var(--info); }
+[data-tone=accent] { --tone: var(--accent); }
+[data-tone=muted] { --tone: var(--faint); }
+
+/* ---------- Rows, as RowsView draws them ---------- */
+.summary { display: flex; gap: 12px; margin-bottom: 6px; font-size: 11.5px; color: var(--muted); }
+.summary b { font-weight: 600; font-size: 12px; color: var(--tone, var(--fg)); font-variant-numeric: tabular-nums; margin: 0 2px; }
+.row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.row .ic { flex: none; width: 18px; text-align: center; font-size: 13px; }
+.row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.row .t { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row[data-tone=muted] .t { color: var(--muted); }
+.row .s { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .tr { flex: none; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--tone, var(--faint)); }
+.note {
+  margin: 0 0 2px 26px; padding: 4px 8px; border-radius: 6px;
+  font: 11px var(--mono); color: var(--tone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+}
+
+/* The heading, as today: small caps, faint. */
+.gh { display: flex; align-items: center; gap: 6px; padding-top: 6px; min-width: 0; }
+.gh:first-child { padding-top: 0; }
+.gh .n { flex: none; max-width: 70%; font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh .l { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* 2. Right: the label at the far end of the heading line. */
+.v-right .gh .l { margin-left: auto; font-size: 10.5px; color: var(--tone, var(--faint)); }
+
+/* 3. Chip: a small pill right after the name. */
+.v-chip .gh .l {
+  font-size: 9.5px; font-weight: 600; line-height: 1; padding: 2px 6px; border-radius: 99px;
+  color: var(--tone, var(--muted)); background: color-mix(in srgb, var(--tone, rgb(var(--ink))) 14%, transparent);
+}
+
+/* 4. Rule: a hairline from the name to the label. */
+.v-rule .gh .rule { flex: 1; min-width: 12px; height: 1px; background: var(--line); }
+.v-rule .gh .l { font-size: 10.5px; color: var(--tone, var(--faint)); }
+
+/* 6. Chip + rule: a hairline from the name to a pill at the right. */
+.v-chiprule .gh .rule { flex: 1; min-width: 12px; height: 1px; background: var(--line); }
+.v-chiprule .gh .l {
+  font-size: 9.5px; font-weight: 600; line-height: 1; padding: 2px 6px; border-radius: 99px;
+  color: var(--tone, var(--muted)); background: color-mix(in srgb, var(--tone, rgb(var(--ink))) 14%, transparent);
+}
+
+/* 5. Inline: the label in the heading's own type, after a dot. */
+.v-inline .gh .l { font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tone, var(--faint)); opacity: 0.9; }
+.v-inline .gh .l::before { content: "· "; color: var(--faint); }
+
+/* ---------- Spec drawer + hint (harness chrome, not judged) ---------- */
+.spec {
+  position: fixed; top: 44px; right: 12px; bottom: 76px; width: 400px; z-index: 2147483640;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px;
+  border-radius: 14px; background: rgba(10, 10, 10, 0.86);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.7);
+  transform: translateX(calc(100% + 24px)); transition: transform 240ms var(--ease-out);
+}
+.spec[data-open] { transform: none; }
+.spec h2 { margin: 0; font-size: 14px; color: #fff; }
+.spec p { margin: 0; }
+.spec pre {
+  flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05); font: 11.5px/1.55 var(--mono); color: #e6e6e6; white-space: pre;
+}
+.spec pre .k { color: #8be9fd; }
+.spec pre .s { color: #f1fa8c; }
+.spec pre .c { color: #6272a4; }
+.hint {
+  position: fixed; left: 20px; bottom: 24px; z-index: 2147483646; max-width: 360px;
+  padding: 10px 14px; border-radius: 14px; background: rgba(10, 10, 10, 0.78);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  font-size: 12px; line-height: 1.45; color: rgba(255, 255, 255, 0.62); user-select: none; -webkit-user-select: none;
+}
+.hint b { color: #fff; font-weight: 600; }
+.hint kbd { font: 500 10.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: rgba(255, 255, 255, 0.12); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .spec { transition: none; } }
+
+/* ---------- Picker ---------- */
+.proto-picker {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 2147483647;
+  display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 8px 24px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.12);
+  font-size: 13px; line-height: 1; user-select: none; -webkit-user-select: none;
+}
+.proto-picker-highlight { position: absolute; top: 4px; left: 0; height: 28px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); will-change: transform; }
+.proto-picker[data-ready] .proto-picker-highlight { transition: transform 250ms var(--ease-out), width 250ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .proto-picker[data-ready] .proto-picker-highlight { transition: none; } }
+.proto-picker-item {
+  position: relative; display: flex; align-items: center; height: 28px; padding: 0 12px;
+  border: 0; border-radius: 999px; background: transparent; color: rgba(255, 255, 255, 0.55);
+  font: inherit; cursor: pointer; transition: color 150ms ease-out;
+}
+.proto-picker-item:hover { color: rgba(255, 255, 255, 0.85); }
+.proto-picker-item:active { transform: scale(0.97); }
+.proto-picker-item:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.4); outline-offset: 2px; }
+.proto-picker-item[data-active] { color: #fff; }
+.proto-picker-divider { width: 1px; height: 16px; margin: 0 4px; background: rgba(255, 255, 255, 0.12); }
+.proto-picker-replay { padding: 0 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="desk"></div>
+<div class="menubar"><span></span><b>Ghostty</b><span>File</span><span>Edit</span><span>View</span><span class="spacer"></span><span>✋ 1&nbsp;&nbsp;⏳ 2</span><span>Mon 23 Nov 10:12</span></div>
+<div class="notch"></div>
+<div class="backdrop"></div>
+<main class="board" id="stage"></main>
+
+<aside class="spec" id="spec"></aside>
+<div class="hint" id="hint"></div>
+
+<nav class="proto-picker" aria-label="Prototype variants">
+  <span class="proto-picker-highlight" aria-hidden="true"></span>
+  <button class="proto-picker-item" data-active aria-current="true">Today</button>
+  <button class="proto-picker-item">Right</button>
+  <button class="proto-picker-item">Chip</button>
+  <button class="proto-picker-item">Rule</button>
+  <button class="proto-picker-item">Inline</button>
+  <button class="proto-picker-item">Chip + rule</button>
+  <span class="proto-picker-divider" aria-hidden="true"></span>
+  <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+</nav>
+
+<script>
+// The Terminals panel from agents.jq, with a label per group. Queenbolt has one agent waiting,
+// to show a toned label.
+const GROUPS = {
+  Recent: { label: '2 working', tone: 'accent' },
+  dotfiles: { label: '1 running' },
+  calendar: { label: '1 running' },
+  'pr-bot-playground': { label: '3 idle', tone: 'muted' },
+  'vgcs-dsp-queenbolt': { label: '1 waiting', tone: 'warning' },
+};
+
+const ROWS = [
+  { group: 'Recent', icon: '⏳', title: 'Laddningsikoner i terminal watcher', subtitle: 'tjuvkik:ai · opencode', trailing: 'working', tone: 'accent' },
+  { group: 'Recent', icon: '⏳', title: 'Terminal watcher: senaste agenter först', subtitle: 'tjuvkik:ai · opencode', trailing: 'working', tone: 'accent' },
+  { group: 'Recent', icon: '🤖', title: 'AI-orkestrerare för sessioner i dotfiles', subtitle: 'dotfiles:Tab #5 · opencode', trailing: '1m', tone: 'muted' },
+  { group: 'dotfiles', icon: '🏃', title: 'n', subtitle: 'main · terminal', trailing: 'running' },
+  { group: 'dotfiles', icon: '🤖', title: 'Spåra klara tasks för testare inför release', subtitle: 'Tab #5 · opencode', trailing: '2d', tone: 'muted' },
+  { group: 'calendar', icon: '🏃', title: 'n', subtitle: 'main · terminal', trailing: 'running' },
+  { group: 'calendar', icon: '🤖', title: 'Prompt booked event getBooking fallback', subtitle: 'ai · opencode', trailing: '2d', tone: 'muted' },
+  { group: 'vgcs-dsp-queenbolt', icon: '✋', title: 'Spåra klara tasks för testare inför release', subtitle: 'ai · opencode', trailing: '4m', tone: 'warning', note: 'Bash: pnpm extract-intl' },
+  { group: 'vgcs-dsp-queenbolt', icon: '🤖', title: 'PR-bot config i queenbolt', subtitle: 'ai · opencode', trailing: '9d', tone: 'muted' },
+  { group: 'pr-bot-playground', icon: '🤖', title: 'Modulär AI-reviewer i PR-boten', subtitle: 'ai · opencode', trailing: '2d', tone: 'muted' },
+  { group: 'pr-bot-playground', icon: '🤖', title: 'Prod-loggar och avveckling av EC2', subtitle: 'ai · opencode', trailing: '3d', tone: 'muted' },
+  { group: 'pr-bot-playground', icon: '🤖', title: 'Prod loggar för minnesfel', subtitle: 'ai · opencode', trailing: '9d', tone: 'muted' },
+];
+
+const SUMMARY = [
+  { icon: '✋', value: 1, label: 'waiting', tone: 'warning' },
+  { icon: '⏳', value: 2, label: 'working', tone: 'accent' },
+  { icon: '🏃', value: 2, label: 'running' },
+];
+
+const VARIANTS = [
+  { cls: 'v-today', name: 'Today', about: 'Groups have a heading and nothing else. Shown for comparison.' },
+  { cls: 'v-right', name: 'Right', about: 'The label sits at the far end of the heading line, where the rows put their trailing text. It lines up with the times under it.' },
+  { cls: 'v-chip', name: 'Chip', about: 'A small pill right after the name. Stands out the most, and the tone reads at a glance.' },
+  { cls: 'v-rule', name: 'Rule', about: 'A hairline from the name to the label, at the right. Splits projects most clearly, at the cost of a line of noise per group.' },
+  { cls: 'v-inline', name: 'Inline', about: 'The label in the heading\'s own small caps, after a dot. The quietest: it reads as one heading.' },
+  { cls: 'v-chiprule', name: 'Chip + rule', about: 'A hairline from the name to a pill at the right. The rule splits the projects, the pill carries the tone and lines up with the times under it.' },
+];
+
+const heading = (name, withLabel, cls) => {
+  const g = GROUPS[name];
+  const label = withLabel && g?.label
+    ? `${cls === 'v-rule' || cls === 'v-chiprule' ? '<span class="rule"></span>' : ''}<span class="l" ${g.tone ? `data-tone="${g.tone}"` : ''}>${g.label}</span>`
+    : '';
+  return `<div class="gh"><span class="n">${name}</span>${label}</div>`;
+};
+
+const row = r => `
+  <div class="row" data-tone="${r.tone || ''}">
+    <span class="ic">${r.icon}</span>
+    <span class="tx"><span class="t">${r.title}</span><span class="s">${r.subtitle}</span></span>
+    <span class="tr">${r.trailing}</span>
+  </div>${r.note ? `<div class="note" data-tone="${r.tone}">${r.note}</div>` : ''}`;
+
+// Rows that fit, like FittingStack: a heading counts as a row.
+const rows = (v, limit) => {
+  let out = '', used = 0, shown = 0;
+  for (let i = 0; i < ROWS.length; i++) {
+    const r = ROWS[i];
+    const cost = (i === 0 || ROWS[i - 1].group !== r.group ? 0.6 : 0) + 1 + (r.note ? 0.7 : 0);
+    if (used + cost > limit) break;
+    if (i === 0 || ROWS[i - 1].group !== r.group) out += heading(r.group, v.cls !== 'v-today', v.cls);
+    out += row(r);
+    used += cost; shown++;
+  }
+  const more = ROWS.length - shown;
+  return out + (more > 0 ? `<div class="more">↓ ${more} more</div>` : '');
+};
+
+const summary = `<div class="summary">${SUMMARY.map(s => `<span data-tone="${s.tone || ''}">${s.icon}<b>${s.value}</b>${s.label}</span>`).join('')}</div>`;
+
+const tile = (i, slot, title, body) => `
+  <section class="tile" style="${slot}; --i:${i}">
+    <header class="tile-h"><span class="title">${title}</span><span class="kind">rows</span><span class="every">live</span></header>
+    <div class="body">${body}</div>
+  </section>`;
+
+// The private board's 2×3 and the work board's 2×2, side by side.
+const variants = VARIANTS.map(v => () => `
+  ${tile(0, 'grid-column: 1 / span 2; grid-row: 1 / span 3', 'Terminals · 2×3', `<div class="${v.cls}">${summary}${rows(v, 15)}</div>`)}
+  ${tile(1, 'grid-column: 3 / span 2; grid-row: 1 / span 2', 'Terminals · 2×2', `<div class="${v.cls}">${summary}${rows(v, 9)}</div>`)}
+`);
+
+const JSON_SPEC = `<span class="c">// A label per group, once, beside rows.</span>
+{
+  <span class="k">"summary"</span>: [ … ],
+  <span class="k">"groups"</span>: {
+    <span class="k">"Recent"</span>: { <span class="k">"label"</span>: <span class="s">"2 working"</span>, <span class="k">"tone"</span>: <span class="s">"accent"</span> },
+    <span class="k">"vgcs-dsp-queenbolt"</span>: { <span class="k">"label"</span>: <span class="s">"1 waiting"</span>, <span class="k">"tone"</span>: <span class="s">"warning"</span> },
+    <span class="k">"pr-bot-playground"</span>: { <span class="k">"label"</span>: <span class="s">"3 idle"</span>, <span class="k">"tone"</span>: <span class="s">"muted"</span> }
+  },
+  <span class="k">"rows"</span>: [
+    { <span class="k">"group"</span>: <span class="s">"Recent"</span>, <span class="k">"title"</span>: <span class="s">"Laddningsikoner i …"</span>, … },
+    …
+  ]
+}
+
+<span class="c">// In agents.jq, counted from the rows:</span>
+groups: (
+  [$recent[] | . + {group: "Recent"}]
+  + [$projects[][] | . + {group: .session}]
+  | group_by(.group)
+  | map({key: .[0].group, value: {
+      label: "\\(length)",
+      tone: (if any(.state == "blocked")
+             then "warning" else null end)
+    }})
+  | from_entries
+)`;
+
+// ---------- Spec drawer and hint ----------
+const spec = document.getElementById('spec');
+const hint = document.getElementById('hint');
+let specOpen = new URLSearchParams(location.search).get('json') === '1';
+function renderSpec(i) {
+  const v = VARIANTS[i];
+  spec.innerHTML = `<h2>"groups"</h2><p>An optional map from a group's name to its <code>label</code> and <code>tone</code>. A group without an entry gets a plain heading, as today. The label is cut before the name is.</p><pre>${JSON_SPEC}</pre>`;
+  spec.toggleAttribute('data-open', specOpen);
+  hint.innerHTML = `<b>${v.name}</b> · ${v.about}<br><kbd>J</kbd> ${specOpen ? 'hide' : 'show'} the JSON a script prints`;
+}
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.key.toLowerCase() !== 'j') return;
+  specOpen = !specOpen;
+  const url = new URL(location);
+  url.searchParams.set('json', specOpen ? '1' : '0');
+  history.replaceState(null, '', url);
+  renderSpec(current);
+});
+
+// ---------- Picker wiring ----------
+const stage = document.getElementById('stage');
+const picker = document.querySelector('.proto-picker');
+const highlight = picker.querySelector('.proto-picker-highlight');
+const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+const replay = picker.querySelector('.proto-picker-replay');
+let current = 0;
+
+function moveHighlight() {
+  const el = items[current];
+  highlight.style.width = el.offsetWidth + 'px';
+  highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+}
+
+function mount(i) {
+  stage.innerHTML = '';
+  requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+}
+
+function setActive(i) {
+  if (i < 0 || i >= variants.length) return;
+  current = i;
+  items.forEach((el, j) => {
+    el.toggleAttribute('data-active', j === i);
+    if (j === i) el.setAttribute('aria-current', 'true');
+    else el.removeAttribute('aria-current');
+  });
+  moveHighlight();
+  const url = new URL(location);
+  url.searchParams.set('v', i + 1);
+  history.replaceState(null, '', url);
+  mount(i);
+  renderSpec(i);
+}
+
+items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+replay?.addEventListener('click', () => mount(current));
+window.addEventListener('resize', moveHighlight);
+
+document.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const num = parseInt(e.key, 10);
+  if (num >= 1 && num <= variants.length) setActive(num - 1);
+  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  else if (e.key === 'r' || e.key === 'R') mount(current);
+});
+
+setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+</script>
+</body>
+</html>

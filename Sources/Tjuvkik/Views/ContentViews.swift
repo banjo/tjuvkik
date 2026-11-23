@@ -37,11 +37,7 @@ struct RowsView: View {
                 // The first row in view gets its group's heading too, so a scrolled list says
                 // what it's in.
                 if let group = row.group, index == 0 || index == scroll || content.rows[index - 1].group != group {
-                    Text(group.uppercased())
-                        .font(theme.font(9.5, weight: .semibold))
-                        .tracking(theme.z(0.6))
-                        .foregroundStyle(Color(theme.tertiaryText))
-                        .lineLimit(1)
+                    GroupHeading(name: group, label: content.groups[group], theme: theme)
                         .padding(.top, index == 0 || index == scroll ? 0 : theme.z(6))
                         .scrollItem(index)
                 }
@@ -76,6 +72,39 @@ private struct SummaryView: View {
                     }
                 }
                 .lineLimit(1)
+            }
+        }
+    }
+}
+
+/// A group's name, and with a label a hairline to it in a pill at the right: `DOTFILES ──── 1 running`.
+private struct GroupHeading: View {
+    let name: String
+    let label: RowsContent.GroupLabel?
+    let theme: Theme
+
+    var body: some View {
+        HStack(spacing: theme.z(6)) {
+            Text(name.uppercased())
+                .font(theme.font(9.5, weight: .semibold))
+                .tracking(theme.z(0.6))
+                .foregroundStyle(Color(theme.tertiaryText))
+                .lineLimit(1)
+            if let text = label?.label, !text.isEmpty {
+                let tone = label?.tone
+                let color = theme.color(for: tone, default: theme.secondaryText)
+                Rectangle()
+                    .fill(Color(theme.line))
+                    .frame(minWidth: theme.z(12), maxWidth: .infinity)
+                    .frame(height: 1)
+                Text(text)
+                    .font(theme.font(9.5, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(color)
+                    .lineLimit(1)
+                    .padding(.horizontal, theme.z(6))
+                    .padding(.vertical, theme.z(2))
+                    .background(theme.background(for: tone, color: tone == nil || tone == .normal ? Color(theme.text) : color, opacity: 0.14), in: Capsule())
+                    .fixedSize()
             }
         }
     }
