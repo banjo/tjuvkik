@@ -1,0 +1,461 @@
+---
+import type { Row } from "../data/types";
+import CodeBlock from "./CodeBlock.astro";
+
+const config = `
+{
+  // or "bento", the board
+  "view": "spotlight",
+  // false: no search field
+  "search": true
+}`;
+
+const query = "fix";
+
+const tabs = [
+  { title: "All", count: 2, active: true },
+  { title: "Agents", count: 1 },
+  { title: "Pull requests", count: 1 },
+  { title: "CI · main", count: 0 },
+  { title: "Pods", count: 0 },
+];
+
+const sections: { title: string; rows: Row[] }[] = [
+  {
+    title: "Agents",
+    rows: [
+      { icon: "✋", title: "Fix flaky login test", subtitle: "web:2 · claude", trailing: "3m", tone: "warning", selected: true },
+    ],
+  },
+  {
+    title: "Pull requests",
+    rows: [{ icon: "👀", title: "fix: retry webhook delivery", subtitle: "acme/api #812", trailing: "3h", tone: "warning" }],
+  },
+];
+
+const actions = [
+  { title: "Jump to Session", keys: "↵" },
+  { title: "Allow Once", keys: "⌘Y" },
+  { title: "Deny", keys: "⌘N" },
+  { title: "Copy Title", keys: "⌘C" },
+];
+---
+
+<section class="section" id="views" aria-labelledby="views-title">
+  <div class="container">
+    <p class="eyebrow">Board or Spotlight</p>
+    <h2 class="section-title" id="views-title">Rather search than look? Swap the board for a list.</h2>
+    <p class="section-lead">
+      Set <code>"view": "spotlight"</code> and the same trigger opens every panel's rows as one list, with a tab per
+      panel. Type to filter them all, and the preview shows the picked row in full: its note, where Enter takes you and
+      what else it can do. Same panels, same scripts.
+    </p>
+
+    <div class="split">
+      <div class="side">
+        <CodeBlock file="config.jsonc" lang="jsonc" code={config} />
+        <p class="hint">Or pick it in Settings → General → View. Saved changes apply within a second.</p>
+      </div>
+
+      <div class="wallpaper canvas">
+        <div class="spot" role="img" aria-label="Spotlight: a search for “fix” lists an agent and a pull request, with the first agent previewed.">
+          <div class="search">
+            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"
+              ><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path
+                d="m11 11 3.5 3.5"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"></path></svg
+            >
+            <span class="query">{query}<i class="caret"></i></span>
+          </div>
+
+          <div class="tabs">
+            {
+              tabs.map((t) => (
+                <span class:list={["tab", { active: t.active, empty: t.count === 0 }]}>
+                  {t.title} <b>{t.count}</b>
+                </span>
+              ))
+            }
+          </div>
+
+          <div class="body">
+            <div class="list">
+              {
+                sections.map((s) => (
+                  <>
+                    <div class="heading">
+                      {s.title} <b>{s.rows.length}</b>
+                    </div>
+                    {s.rows.map((r) => (
+                      <div class:list={["row", { selected: r.selected }]} data-tone={r.tone}>
+                        <span class="icon">{r.icon}</span>
+                        <span class="text">
+                          <span class="title">{r.title}</span>
+                          <span class="sub">{r.subtitle}</span>
+                        </span>
+                        <span class="trailing">{r.trailing}</span>
+                      </div>
+                    ))}
+                  </>
+                ))
+              }
+            </div>
+
+            <div class="preview" data-tone="warning">
+              <div class="p-eyebrow">Agents · Needs you</div>
+              <div class="p-title">
+                <span>✋</span> Fix flaky login test <span class="pill">3m</span>
+              </div>
+              <div class="p-sub">web:2 · claude</div>
+              <div class="note">Allow: npm run test:e2e -- login?</div>
+              <div class="target">tmux switch-client -t web:2</div>
+              <ul class="actions">
+                {
+                  actions.map((a) => (
+                    <li>
+                      {a.title} <kbd>{a.keys}</kbd>
+                    </li>
+                  ))
+                }
+              </ul>
+              <div class="p-foot">Agents <span class="kind">script</span><span class="live">live</span></div>
+            </div>
+          </div>
+
+          <div class="foot">
+            <span><kbd>↵</kbd> Jump to Session</span>
+            <span><kbd>⌘K</kbd> Actions</span>
+            <span><kbd>⇥</kbd> Next tab</span>
+            <span class="esc"><kbd>esc</kbd> Clear</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
+    gap: 20px;
+    margin-top: 56px;
+    align-items: start;
+  }
+
+  @media (max-width: 980px) {
+    .split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hint {
+    margin: 14px 4px 0;
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  .canvas {
+    border-radius: 20px;
+    padding: clamp(16px, 3vw, 36px);
+    overflow: hidden;
+  }
+
+  .spot {
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--panel);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    backdrop-filter: blur(40px) saturate(1.8);
+    box-shadow:
+      0 0 0 1px var(--line) inset,
+      0 30px 70px -20px rgba(0, 0, 0, 0.55);
+    color: var(--fg);
+    font-size: 12.5px;
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 50px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .query {
+    font-size: 17px;
+    color: var(--fg);
+  }
+
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 19px;
+    margin-left: 1px;
+    vertical-align: -3px;
+    background: var(--accent);
+    animation: blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret {
+      animation: none;
+    }
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    height: 40px;
+    align-items: center;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .tab {
+    padding: 4px 9px;
+    border-radius: 7px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .tab b {
+    margin-left: 3px;
+    font-weight: 500;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tab.active {
+    background: rgba(var(--ink), 0.1);
+    color: var(--fg);
+  }
+
+  .tab.empty {
+    opacity: 0.5;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    min-height: 300px;
+  }
+
+  .list {
+    padding: 8px;
+    border-right: 1px solid var(--line);
+    min-width: 0;
+  }
+
+  .heading {
+    padding: 8px 8px 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .heading b {
+    margin-left: 4px;
+    font-weight: 500;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .row.selected {
+    background: rgba(var(--ink), 0.1);
+  }
+
+  .icon {
+    flex: none;
+    width: 18px;
+    text-align: center;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .title,
+  .sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .title {
+    font-weight: 500;
+  }
+
+  .sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .trailing {
+    flex: none;
+    font-size: 11px;
+    color: var(--tone, var(--muted));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px;
+    padding: 16px 16px 0;
+    border-radius: 12px;
+    background: var(--well);
+    box-shadow: 0 0 0 1px var(--line) inset;
+    min-width: 0;
+  }
+
+  .p-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .p-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .pill {
+    margin-left: auto;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--tone);
+    background: color-mix(in srgb, var(--tone) 16%, transparent);
+  }
+
+  .p-sub {
+    margin-top: -4px;
+    color: var(--muted);
+  }
+
+  .note {
+    padding: 7px 10px;
+    border-radius: 7px;
+    font: 11.5px/1.4 var(--mono);
+    color: var(--tone);
+    background: color-mix(in srgb, var(--tone) 11%, transparent);
+  }
+
+  .target {
+    padding: 5px 8px;
+    border-radius: 6px;
+    font: 11px/1.4 var(--mono);
+    color: var(--muted);
+    background: var(--well);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .actions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .actions li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+  }
+
+  kbd {
+    padding: 1px 5px;
+    border-radius: 4px;
+    font: 500 10.5px/1.4 var(--sans);
+    color: var(--muted);
+    background: rgba(var(--ink), 0.08);
+    box-shadow: 0 0 0 1px var(--line) inset;
+  }
+
+  .p-foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: auto -16px 0;
+    padding: 9px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .kind {
+    padding: 1px 5px;
+    border-radius: 4px;
+    font: 500 9.5px/1.3 var(--mono);
+    color: var(--faint);
+    background: var(--well);
+  }
+
+  .live {
+    margin-left: auto;
+    font-weight: 400;
+    color: var(--faint);
+  }
+
+  .foot {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    height: 34px;
+    padding: 0 14px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .esc {
+    margin-left: auto;
+  }
+
+  @media (max-width: 640px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+    .preview {
+      display: none;
+    }
+    .list {
+      border-right: 0;
+    }
+  }
+</style>

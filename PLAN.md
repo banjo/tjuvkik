@@ -16,7 +16,7 @@ In v1:
 
 Later, not in v1, but the code leaves room for them:
 
-- Spotlight view (`"view": "spotlight"`): double-tap fn, keyboard navigation, jumping. It needs the Accessibility permission to take keys.
+- Spotlight view (`"view": "spotlight"`): shipped, with search, tabs per panel and a row preview. See docs/config.md#spotlight.
 - Web modules (HTML in a WKWebView).
 - Fullscreen and Edges layouts.
 - Clicking a row to act on it (jump to an agent, open a PR).
@@ -53,7 +53,7 @@ schemas/                   written by the app, for editor completion through "$s
 // config.jsonc
 {
   "$schema": "./schemas/config.schema.json",
-  "view": "bento",          // "spotlight" later
+  "view": "bento",          // or "spotlight"
   "layout": "framed",       // "fullscreen", "edges" later
   "theme": "dark-glass",    // "light-glass", "dracula", or a file in themes/
   "trigger": { "holdMs": 250 },

@@ -28,6 +28,7 @@
 
 - 👀 Hold fn to glance, let go to close. It never takes focus from your terminal and opens over every Space and full-screen app.
 - 🧩 Anything you can script is a panel: a `panel.jsonc` and a short shell script next to it.
+- 🔎 Rather search than look? `"view": "spotlight"` swaps the board for a list of every panel's rows, with a search field and a preview of the picked row.
 - 🖱️ Act on what you see: click a row or press ⌘K to approve a PR, check out a branch or jump to a session.
 - 🤖 Pipe your coding agents in and get a notification when one needs you.
 - 🔧 Your agent can build panels: `tjuvkik new`, `run`, `preview` and `validate`, with JSON Schema for every file.
@@ -68,7 +69,7 @@ A short setup then picks your trigger, [starter panels](starters/panels) and the
 ## Documentation
 
 - [Install](docs/install.md): Homebrew, first start, permissions, the 🌐 key.
-- [Config](docs/config.md): `config.jsonc`, trigger and which panels to show.
+- [Config](docs/config.md): `config.jsonc`, trigger, board or Spotlight, and which panels to show.
 - [Panels](docs/panels.md): a command that fills a tile.
 - [Script output](docs/script-output.md): the JSON a script panel prints.
 - [Themes](docs/themes.md): colors, blur and corner radius.
